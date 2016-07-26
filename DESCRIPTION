@@ -1,0 +1,25 @@
+Package: Organism.dplyr
+Title: dplry-based Access to Bioconductor Annotation Resources
+Version: 0.0.1
+Authors@R: c(
+    person("Martin", "Morgan", email = "martin.morgan@roswellpark.org",
+        role = c("aut", "cre")),
+    person("Yubo", "Cheng", email="yubo.cheng@roswellpark.org",
+        role="ctb"))
+Description: This package provides an alternative interface to
+    Bioconductor 'annotation' resources, in particular the gene
+    identifier mapping functionality of the 'org' packages (e.g.,
+    org.Hs.eg.db) and the genome coordinate functionality of the
+    'TxDb' packages (e.g., TxDb.Hsapiens.UCSC.hg19.knownGene).
+Depends:
+    R (>= 3.3.1),
+    dplyr
+Imports:
+    AnnotationDbi,
+    RSQLite
+Suggests:
+    org.Hs.eg.db
+License: Artistic-2.0
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 5.0.1
