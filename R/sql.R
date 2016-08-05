@@ -1,5 +1,5 @@
 ##
-## query for org.Hs.eg.db
+## create views for org.Hs.eg.db
 ##
 ## flat1
 sql <- "CREATE TEMPORARY VIEW flat AS 
@@ -25,6 +25,7 @@ sql <- "CREATE TEMPORARY VIEW flat AS
         LEFT OUTER JOIN ec ON genes._id = ec._id
         LEFT OUTER JOIN unigene ON genes._id = unigene._id
         "
+dbSendQuery(conn, sql)
 
 ## flat2
 sql <- "CREATE TEMPORARY VIEW flat AS 
@@ -54,7 +55,6 @@ sql <- "CREATE TEMPORARY VIEW flat AS
 sql <- "CREATE TEMPORARY VIEW view_go AS
         SELECT DISTINCT 
             genes._id AS id, 
-            gene_info.gene_name AS genename, 
             gene_info.symbol AS symbol,
             go.go_id AS goid,
             go.evidence AS evidence, 
@@ -63,12 +63,12 @@ sql <- "CREATE TEMPORARY VIEW view_go AS
         JOIN gene_info ON genes._id = gene_info._id
         LEFT OUTER JOIN go ON genes._id = go._id
         "
+dbSendQuery(conn, sql)
 
 ## protein 
 sql <- "CREATE TEMPORARY VIEW protein AS
         SELECT DISTINCT 
             genes._id AS id, 
-            gene_info.gene_name AS genename, 
             gene_info.symbol AS symbol,
             pfam.ipi_id AS ipiid,
             pfam.pfam_id AS pfam, 
@@ -79,3 +79,26 @@ sql <- "CREATE TEMPORARY VIEW protein AS
         LEFT OUTER JOIN prosite ON genes._id = prosite._id
         AND pfam.ipi_id = prosite.ipi_id
         "
+dbSendQuery(conn, sql)
+
+## dplyr query
+org <- org.Hs.eg.db
+conn = dbconn(org)
+flat <- src_sql("sqlite", conn, path = dbfile(org)) %>% tbl("flat")
+go <- src_sql("sqlite", conn, path = dbfile(org)) %>% tbl("view_go")
+protein <- src_sql("sqlite", conn, path = dbfile(org)) %>% tbl("protein")
+
+result = flat %>% 
+            filter(symbol == "PTEN") %>% 
+            select(ensembl, symbol, location, ec, unigene) 
+distinct(result)
+
+result = inner_join(flat, go) %>% 
+            filter(unigene == "Hs.500466") %>% 
+            select(symbol, goid, evidence, ontology)
+distinct(result)
+
+result = inner_join(flat, protein) %>% 
+            filter(ec == "3.1.3.67") %>% 
+            select(symbol, pfam, prosite)
+distinct(result)
