@@ -1,20 +1,83 @@
+## use case: map from 'A' to 'B'; expect 1:1 mappings ids = tbl %>% map_ids()
+##
+## flat table mapping between these identifiers
+"ENTREZID",
+"ENSEMBL",
+"SYMBOL"
+"UCSCKG",
+"UNIGENE",
+
+sql <- "CREATE TEMPORARY VIEW idmap AS 
+        SELECT DISTINCT
+            genes._id AS entrez,
+            ensembl.ensembl_id AS ensembl, 
+            gene_info.symbol AS symbol
+        FROM genes 
+        JOIN gene_info ON genes._id = gene_info._id
+        JOIN ensembl ON genes._id = ensembl._id
+        LEFT OUTER JOIN ec ON genes._id = ec._id
+        LEFT OUTER JOIN unigene ON genes._id = unigene._id
+        "
+dbSendQuery(conn, sql)
+idmap <- src_sql("sqlite", conn, path = dbfile(org)) %>% tbl("idmap")
+
+ids = idmap %>% filter(symbol %in% c("BRCA1", "BRCA2")) %>% select(entrez, symbol)
+
+## from ENSEMBL, I want...; ids %>% info(GENENAME)
+##
+## SQL mapping from central id (ENSEMBL) to...
+
+"ENTREZID",
+"GENENAME",
+"OMIM",
+"PMID",
+"ACCNUM",
+"REFSEQ",
+
+## from identifer to transcript: ids %>% transcript_ids()
+"ENTREZID",
+"ENSEMBLTRANS",
+
+## from identifer to protien: ids %>% protein_ids()
+"ENTREZID",
+"ENSEMBLPROT",
+"UNIPROT"
+"ENZYME",
+
+## from identifer to protien: ids %>% go_ids()
+## mygo = go %>% filter(ontology=="BP") %>% select(id, goid, symbol) %>% distinct
+##
+"ENTREZID",
+"GO",
+"GOALL",
+"EVIDENCE",
+"ONTOLOGY",
+"EVIDENCEALL",
+"ONTOLOGYALL",
+
+## from identifer to chromosome bands: ids %>% map()
+"ENTREZID",
+"MAP",
+
+## "ALIAS",
+
+
+
+
+
 ##
 ## create views for org.Hs.eg.db
 ##
 ## flat1
 sql <- "CREATE TEMPORARY VIEW flat AS 
         SELECT DISTINCT
-            genes._id AS id, 
-            gene_info.gene_name AS genename, 
-            gene_info.symbol AS symbol, 
-            chromosomes.chromosome AS chromosome, 
-            chromosome_locations.start_location, 
-            chromosome_locations.end_location, 
-            chrlengths.length, 
-            cytogenetic_location AS location, 
+            genes._id AS entrez, 
             ensembl.ensembl_id AS ensembl, 
+            gene_info.symbol AS symbol, 
+            unigene.unigene_id AS unigene,
+            gene_info.gene_name AS genename,
             ec.ec_number AS ec, 
-            unigene.unigene_id AS unigene
+            cytogenetic_location AS map
         FROM genes 
         JOIN gene_info ON genes._id = gene_info._id
         JOIN chromosomes ON genes._id = chromosomes._id
@@ -27,35 +90,10 @@ sql <- "CREATE TEMPORARY VIEW flat AS
         "
 dbSendQuery(conn, sql)
 
-## flat2
-sql <- "CREATE TEMPORARY VIEW flat AS 
-        SELECT DISTINCT
-            genes._id AS id, 
-            gene_info.gene_name AS genename, 
-            gene_info.symbol AS symbol, 
-            chromosomes.chromosome AS chromosome, 
-            cytogenetic_location AS location, 
-            ensembl.ensembl_id AS ensembl, 
-            ec.ec_number AS ec, 
-            unigene.unigene_id AS unigene, 
-            ensembl_prot.prot_id AS prot, 
-            ensembl_trans.trans_id AS trans
-        FROM genes 
-        JOIN gene_info ON genes._id = gene_info._id
-        JOIN chromosomes ON genes._id = chromosomes._id
-        JOIN cytogenetic_locations ON genes._id = cytogenetic_locations._id
-        JOIN ensembl ON genes._id = ensembl._id
-        LEFT OUTER JOIN ec ON genes._id = ec._id
-        LEFT OUTER JOIN unigene ON genes._id = unigene._id
-        LEFT OUTER JOIN ensembl_prot ON genes._id = ensembl_prot._id
-        LEFT OUTER JOIN ensembl_trans ON genes._id = ensembl_trans._id
-        "
-
 ## go 
 sql <- "CREATE TEMPORARY VIEW view_go AS
         SELECT DISTINCT 
-            genes._id AS id, 
-            gene_info.symbol AS symbol,
+            genes._id AS entrez, 
             go.go_id AS goid,
             go.evidence AS evidence, 
             go.ontology AS ontology
@@ -94,7 +132,7 @@ result = flat %>%
 distinct(result)
 
 result = inner_join(flat, go) %>% 
-            filter(unigene == "Hs.500466") %>% 
+            filter(unigene == "Hs.500466") %>%
             select(symbol, goid, evidence, ontology)
 distinct(result)
 
@@ -102,3 +140,31 @@ result = inner_join(flat, protein) %>%
             filter(ec == "3.1.3.67") %>% 
             select(symbol, pfam, prosite)
 distinct(result)
+
+flat2 <- src_sql("sqlite", conn, path = dbfile(org)) %>% tbl("flat2")
+
+
+
+## flat2
+sql <- "CREATE TEMPORARY VIEW flat2 AS 
+        SELECT DISTINCT
+            genes._id AS entrez, 
+            gene_info.gene_name AS genename, 
+            gene_info.symbol AS symbol, 
+            chromosomes.chromosome AS chromosome, 
+            cytogenetic_location AS location, 
+            ensembl.ensembl_id AS ensembl, 
+            ec.ec_number AS ec, 
+            unigene.unigene_id AS unigene, 
+            ensembl_prot.prot_id AS prot, 
+            ensembl_trans.trans_id AS trans
+        FROM genes 
+        JOIN gene_info ON genes._id = gene_info._id
+        JOIN chromosomes ON genes._id = chromosomes._id
+        JOIN cytogenetic_locations ON genes._id = cytogenetic_locations._id
+        JOIN ensembl ON genes._id = ensembl._id
+        LEFT OUTER JOIN ec ON genes._id = ec._id
+        LEFT OUTER JOIN unigene ON genes._id = unigene._id
+        LEFT OUTER JOIN ensembl_prot ON genes._id = ensembl_prot._id
+        LEFT OUTER JOIN ensembl_trans ON genes._id = ensembl_trans._id
+        "
