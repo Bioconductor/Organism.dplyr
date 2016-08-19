@@ -51,27 +51,6 @@ tbl_org_genename <- function(org)
     src_sql("sqlite", conn, path=dbfile(org)) %>% tbl(tblname)
 }
 
-tbl_org <- function(org) {
-    if (is.character(org))
-        org <- loadNamespace(org)[[org]]
-    conn = dbconn(org)
-    if (!"flat" %in% dbListTables(conn)) {
-        sql <- "
-            CREATE TEMPORARY VIEW flat AS
-            SELECT
-                genes._id AS id,
-                ensembl.ensembl_id AS ensembl,
-                genes.gene_id AS entrez,
-                gene_info.symbol AS symbol,
-                gene_info.gene_name AS genename
-            FROM genes
-            LEFT JOIN ensembl ON ensembl._id = genes._id
-            LEFT JOIN gene_info ON gene_info._id = genes._id;"
-            dbSendQuery(conn, sql)
-    }
-    src_sql("sqlite", conn, path = dbfile(org)) %>% tbl("flat")
-}
-
 #' Create a dplyr view of GO details
 #'
 #' @inheritParams tbl_org
