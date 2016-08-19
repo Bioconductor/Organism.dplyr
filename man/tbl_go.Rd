@@ -6,11 +6,6 @@
 \usage{
 tbl_go(org)
 }
-\arguments{
-\item{org}{character(1) naming a \code{org.*} package (e.g.,
-\code{org.Hs.eg.db}) or \code{OrgDb} object instantiating the
-content of an \code{org.*} pacakge.}
-}
 \description{
 Create a dplyr view of GO details
 }

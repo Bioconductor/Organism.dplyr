@@ -2,7 +2,8 @@
 
 export(src_organism)
 export(tbl_go)
-export(tbl_org)
+export(tbl_org_genename)
+export(tbl_org_idmap)
 export(tbl_txdb)
 importFrom(AnnotationDbi,dbconn)
 importFrom(AnnotationDbi,dbfile)

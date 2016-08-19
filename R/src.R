@@ -31,6 +31,26 @@
 #' @importFrom dplyr src_sql "%>%" tbl
 #' 
 #' @export
+tbl_org_idmap <- function(org)
+    .get_tbl(org, "idmap")
+
+#' @export
+tbl_org_genename <- function(org)
+    .get_tbl(org, "genename")
+    
+.get_tbl <- function(org, tblname) {
+    if (is.character(org))
+        org <- loadNamespace(org)[[org]]
+    conn = dbconn(org)
+    if (!tblname %in% dbListTables(conn)) {
+        fname <- paste0("org_", tblname, ".sql")
+        schema <- system.file(package="Organism.dplyr", "schema", fname)
+        sql <- paste(readLines(schema), collapse="\n")
+        dbSendQuery(conn, sql)
+    }
+    src_sql("sqlite", conn, path=dbfile(org)) %>% tbl(tblname)
+}
+
 tbl_org <- function(org) {
     if (is.character(org))
         org <- loadNamespace(org)[[org]]

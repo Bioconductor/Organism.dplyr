@@ -7,10 +7,6 @@
 src_organism(org, txdb)
 }
 \arguments{
-\item{org}{character(1) naming a \code{org.*} package (e.g.,
-\code{org.Hs.eg.db}) or \code{OrgDb} object instantiating the
-content of an \code{org.*} pacakge.}
-
 \item{txdb}{character(1) naming a \code{TxDb.*} package (e.g.,
 \code{TxDb.Hsapiens.UCSC.hg38.knownGene}) or \code{TxDb}
 object instantiating the content of a \code{TxDb.*} pacakge.}
