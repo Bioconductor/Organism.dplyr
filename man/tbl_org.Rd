@@ -5,6 +5,7 @@
 \alias{tbl_org_alias}
 \alias{tbl_org_ensenbltrans}
 \alias{tbl_org_genename}
+\alias{tbl_org_go}
 \alias{tbl_org_go_all}
 \alias{tbl_org_idmap}
 \alias{tbl_org_ipi}
@@ -21,6 +22,8 @@ tbl_org_pmid(org)
 tbl_org_ensenbltrans(org)
 
 tbl_org_protein(org)
+
+tbl_org_go(org)
 
 tbl_org_go_all(org)
 

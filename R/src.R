@@ -39,80 +39,63 @@
 #' @export
 tbl_org_idmap <- function(org) 
 {
-    tbl = .get_tbl(org, "idmap")
-    class(tbl) = c("tbl_org", class(tbl))
-    tbl
+    .get_tbl(org, "idmap")
 }
     
 #' @rdname tbl_org
 #' @export
 tbl_org_genename <- function(org)
 {
-    tbl = .get_tbl(org, "genename")
-    class(tbl) = c("tbl_org", class(tbl))
-    tbl
+    .get_tbl(org, "genename")
 }
 
 #' @rdname tbl_org
 #' @export
 tbl_org_pmid <- function(org)
 {
-    tbl = .get_tbl(org, "pmid")
-    class(tbl) = c("tbl_org", class(tbl))
-    tbl
+    .get_tbl(org, "pmid")
 }
 
 #' @rdname tbl_org
 #' @export
 tbl_org_ensenbltrans <- function(org)
 {
-    tbl = .get_tbl(org, "ensenbltrans")
-    class(tbl) = c("tbl_org", class(tbl))
-    tbl
+    .get_tbl(org, "ensenbltrans")
 }
 
 #' @rdname tbl_org
 #' @export
 tbl_org_protein <- function(org)
 {
-    tbl = .get_tbl(org, "protein")
-    class(tbl) = c("tbl_org", class(tbl))
-    tbl
+    .get_tbl(org, "protein")
 }
 
+#' @rdname tbl_org
 #' @export
 tbl_org_go <- function(org)
 {
-    tbl = .get_tbl(org, "view_go")
-    class(tbl) = c("tbl_org", class(tbl))
-    tbl
+    .get_tbl(org, "view_go")
 }
 
 #' @rdname tbl_org
 #' @export
 tbl_org_go_all <- function(org)
 {
-    tbl = .get_tbl(org, "view_go_all")
-    class(tbl) = c("tbl_org", class(tbl))
-    tbl
+    .get_tbl(org, "view_go_all")
 }
 
 #' @rdname tbl_org
 #' @export
 tbl_org_alias <- function(org)
 {
-    tbl = .get_tbl(org, "view_alias")
-    class(tbl) = c("tbl_org", class(tbl))
-    tbl
+    .get_tbl(org, "view_alias")
 }
 
 #' @rdname tbl_org
 #' @export
 tbl_org_ipi <- function(org)
 {
-    tbl = .get_tbl(org, "ipi")
-    class(tbl) = c("tbl_org", class(tbl))
-    tbl
+    .get_tbl(org, "ipi")
 }
 
 .get_tbl <- function(db, tblname) {
@@ -128,7 +111,9 @@ tbl_org_ipi <- function(org)
         sql <- paste(readLines(schema), collapse="\n")
         dbSendQuery(conn, sql)
     }
-    src_sql("sqlite", conn, path=dbfile(db)) %>% tbl(tblname)
+    tbl = src_sql("sqlite", conn, path=dbfile(db)) %>% tbl(tblname)
+    class(tbl) = c("tbl_org", class(tbl))
+    tbl
 }
 
 #' @rdname tbl_org
