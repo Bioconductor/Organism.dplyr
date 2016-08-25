@@ -100,7 +100,7 @@ tbl_org_ipi <- function(org)
 
 .get_tbl <- function(db, tblname) {
     stopifnot(is.character(db), length(db) == 1L)
-    stopifnot(is.character(tblnames), length(tblname) == 1)
+    stopifnot(is.character(tblname), length(tblname) == 1)
 
     if (substr(db, 1, 3) == "org")
         fname <- paste0("org_", tblname, ".sql")
