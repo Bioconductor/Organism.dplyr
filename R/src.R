@@ -114,7 +114,7 @@ tbl_org_ipi <- function(org)
     dbSendQuery(conn, sql)
 
     tbl = src_sql("sqlite", conn, path=dbfile(db)) %>% tbl(tblname)
-    class(tbl) = c("tbl_org", class(tbl))
+    class(tbl) = c("tbl_organism", class(tbl))
     tbl
 }
 
@@ -123,7 +123,7 @@ tbl_org_ipi <- function(org)
 tbl_go <- function(org) {}
 
 #' @export
-select_.tbl_org <- function(.data, ...) { 
+select_.tbl_organism <- function(.data, ...) { 
     .data = NextMethod(.data, ...) 
     dplyr::distinct_(.data, ...) 
 }
@@ -151,9 +151,7 @@ select_.tbl_org <- function(.data, ...) {
 #' 
 #' @export
 tbl_txdb <- function(txdb) {
-    tbl = .get_tbl(txdb, "txdb")
-    class(tbl) = c("tbl_org", class(tbl))
-    tbl
+    .get_tbl(txdb, "txdb")
 }
 
 #' Create a dplyr view integrating org.* and TxDb.* information
