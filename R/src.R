@@ -34,7 +34,8 @@
 #' @importFrom RSQLite dbSendQuery dbListTables
 #' @importFrom AnnotationDbi dbconn dbfile
 #' @importFrom dplyr src_sql "%>%" tbl select_
-#' 
+#'
+#' @rdname tbl_org
 #' @export
 tbl_org_idmap <- function(org) 
 {
@@ -43,6 +44,7 @@ tbl_org_idmap <- function(org)
     tbl
 }
     
+#' @rdname tbl_org
 #' @export
 tbl_org_genename <- function(org)
 {
@@ -51,6 +53,7 @@ tbl_org_genename <- function(org)
     tbl
 }
 
+#' @rdname tbl_org
 #' @export
 tbl_org_pmid <- function(org)
 {
@@ -59,6 +62,7 @@ tbl_org_pmid <- function(org)
     tbl
 }
 
+#' @rdname tbl_org
 #' @export
 tbl_org_ensenbltrans <- function(org)
 {
@@ -67,6 +71,7 @@ tbl_org_ensenbltrans <- function(org)
     tbl
 }
 
+#' @rdname tbl_org
 #' @export
 tbl_org_protein <- function(org)
 {
@@ -83,6 +88,7 @@ tbl_org_go <- function(org)
     tbl
 }
 
+#' @rdname tbl_org
 #' @export
 tbl_org_go_all <- function(org)
 {
@@ -91,6 +97,7 @@ tbl_org_go_all <- function(org)
     tbl
 }
 
+#' @rdname tbl_org
 #' @export
 tbl_org_alias <- function(org)
 {
@@ -99,6 +106,7 @@ tbl_org_alias <- function(org)
     tbl
 }
 
+#' @rdname tbl_org
 #' @export
 tbl_org_ipi <- function(org)
 {
@@ -106,16 +114,6 @@ tbl_org_ipi <- function(org)
     class(tbl) = c("tbl_org", class(tbl))
     tbl
 }
-
-#' @export
-tbl_org_path <- function(org)
-{
-    tbl = .get_tbl(org, "path")
-    class(tbl) = c("tbl_org", class(tbl))
-    tbl
-}
-
-
 
 .get_tbl <- function(db, tblname) {
     if (is.character(db))
@@ -133,20 +131,15 @@ tbl_org_path <- function(org)
     src_sql("sqlite", conn, path=dbfile(db)) %>% tbl(tblname)
 }
 
+#' @rdname tbl_org
+#' @export
+tbl_go <- function(org) {}
 
 #' @export
 select_.tbl_org <- function(.data, ...) { 
     .data = NextMethod(.data, ...) 
     dplyr::distinct_(.data, ...) 
 }
-
-
-#' Create a dplyr view of GO details
-#'
-#' @inheritParams tbl_org
-#' 
-#' @export
-tbl_go <- function(org) {}
 
 #' Create a dplyr view of genomic coordinates
 #'
@@ -178,7 +171,7 @@ tbl_txdb <- function(txdb) {
 
 #' Create a dplyr view integrating org.* and TxDb.* information
 #'
-#' @inheritParams tbl_org
+#' @inheritParams tbl_org_idmap
 #' @inheritParams tbl_txdb
 #' 
 #' @export
