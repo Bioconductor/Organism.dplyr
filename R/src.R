@@ -99,18 +99,20 @@ tbl_org_ipi <- function(org)
 }
 
 .get_tbl <- function(db, tblname) {
-    if (is.character(db))
-        if (substr(db, 1, 3) == "org")
-            fname <- paste0("org_", tblname, ".sql")
-        else
-            fname <- paste0(tblname, ".sql")
-        db <- loadNamespace(db)[[db]]
+    stopifnot(is.character(db), length(db) == 1L)
+    stopifnot(is.character(tblnames), length(tblname) == 1)
+
+    if (substr(db, 1, 3) == "org")
+        fname <- paste0("org_", tblname, ".sql")
+    else
+        fname <- paste0(tblname, ".sql")
+    db <- loadNamespace(db)[[db]]
     conn = dbconn(db)
-    if (!tblname %in% dbListTables(conn)) {
-        schema <- system.file(package="Organism.dplyr", "schema", fname)
-        sql <- paste(readLines(schema), collapse="\n")
-        dbSendQuery(conn, sql)
-    }
+
+    schema <- system.file(package="Organism.dplyr", "schema", fname)
+    sql <- paste(readLines(schema), collapse="\n")
+    dbSendQuery(conn, sql)
+
     tbl = src_sql("sqlite", conn, path=dbfile(db)) %>% tbl(tblname)
     class(tbl) = c("tbl_org", class(tbl))
     tbl
