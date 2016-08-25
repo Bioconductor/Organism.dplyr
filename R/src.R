@@ -44,9 +44,9 @@ tbl_org_idmap <- function(org)
     
 #' @rdname tbl_org
 #' @export
-tbl_org_genename <- function(org)
+tbl_org_acc <- function(org)
 {
-    .get_tbl(org, "genename")
+    .get_tbl(org, "acc")
 }
 
 #' @rdname tbl_org
@@ -82,13 +82,6 @@ tbl_org_go <- function(org)
 tbl_org_go_all <- function(org)
 {
     .get_tbl(org, "view_go_all")
-}
-
-#' @rdname tbl_org
-#' @export
-tbl_org_alias <- function(org)
-{
-    .get_tbl(org, "view_alias")
 }
 
 #' @rdname tbl_org

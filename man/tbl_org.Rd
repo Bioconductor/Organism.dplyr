@@ -2,9 +2,8 @@
 % Please edit documentation in R/src.R
 \name{tbl_org_idmap}
 \alias{tbl_go}
-\alias{tbl_org_alias}
+\alias{tbl_org_acc}
 \alias{tbl_org_ensenbltrans}
-\alias{tbl_org_genename}
 \alias{tbl_org_go}
 \alias{tbl_org_go_all}
 \alias{tbl_org_idmap}
@@ -15,7 +14,7 @@
 \usage{
 tbl_org_idmap(org)
 
-tbl_org_genename(org)
+tbl_org_acc(org)
 
 tbl_org_pmid(org)
 
@@ -26,8 +25,6 @@ tbl_org_protein(org)
 tbl_org_go(org)
 
 tbl_org_go_all(org)
-
-tbl_org_alias(org)
 
 tbl_org_ipi(org)
 
