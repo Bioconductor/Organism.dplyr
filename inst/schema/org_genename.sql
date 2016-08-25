@@ -1,4 +1,4 @@
-CREATE TEMPORARY VIEW genename AS 
+CREATE TEMPORARY VIEW IF NOT EXISTS genename AS 
 SELECT DISTINCT
     genes.gene_id AS entrez, 
     gene_info.gene_name AS genename, 

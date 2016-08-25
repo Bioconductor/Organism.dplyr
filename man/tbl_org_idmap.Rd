@@ -30,11 +30,16 @@ This function is meant to be a building block for
 presentation of identifiers and genomic coordinates.
 }
 \examples{
-tbl = tbl_org("org.Hs.eg.db")
-tbl
-tbl \%>\% select(ensembl, symbol) \%>\% filter(symbol == "PTEN")
+org = "org.Hs.eg.db"
+idmap = tbl_org_idmap(org)
+idmap
+idmap \%>\% dplyr::select(ensembl, symbol) \%>\% filter(symbol == "PTEN")
 symbols <- paste0("BRCA", 1:2)
-tbl \%>\% select(ensembl, symbol) \%>\% filter(symbol \%in\% symbols)
+idmap \%>\% dplyr::select(ensembl, symbol) \%>\% filter(symbol \%in\% symbols)
+
+ipi = tbl_org_ipi(org)
+inner_join(idmap, ipi) \%>\% filter(map == "17q21") \%>\%
+     dplyr::select(entrez, symbol, ensembl, ipi)
 
 }
 
