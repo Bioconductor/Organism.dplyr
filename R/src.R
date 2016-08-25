@@ -44,9 +44,9 @@ tbl_org_idmap <- function(org)
 }
     
 #' @export
-tbl_org_genename <- function(org)
+tbl_org_acc <- function(org)
 {
-    tbl = .get_tbl(org, "genename")
+    tbl = .get_tbl(org, "acc")
     class(tbl) = c("tbl_org", class(tbl))
     tbl
 }
@@ -92,29 +92,12 @@ tbl_org_go_all <- function(org)
 }
 
 #' @export
-tbl_org_alias <- function(org)
-{
-    tbl = .get_tbl(org, "view_alias")
-    class(tbl) = c("tbl_org", class(tbl))
-    tbl
-}
-
-#' @export
 tbl_org_ipi <- function(org)
 {
     tbl = .get_tbl(org, "ipi")
     class(tbl) = c("tbl_org", class(tbl))
     tbl
 }
-
-#' @export
-tbl_org_path <- function(org)
-{
-    tbl = .get_tbl(org, "path")
-    class(tbl) = c("tbl_org", class(tbl))
-    tbl
-}
-
 
 
 .get_tbl <- function(db, tblname) {
