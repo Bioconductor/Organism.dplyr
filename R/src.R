@@ -72,7 +72,9 @@ tbl_txdb <- function(txdb) {
 #' Create a dplyr view integrating org.* and TxDb.* information
 #'
 #' @inheritParams tbl_txdb
-#' 
+#'
+#' @importFrom RSQLite dbSendQuery
+#' @importFrom AnnotationDbi dbconn dbfile
 #' @export
 src_organism <- function(org, txdb) {
     db <- org
@@ -92,6 +94,7 @@ src_organism <- function(org, txdb) {
     src
 }
 
+#' @importFrom RSQLite dbGetQuery
 #' @export
 src_tbls.src_organism <- function(x) {
     sql <- "SELECT name FROM sqlite_temp_master WHERE type = 'view';"
