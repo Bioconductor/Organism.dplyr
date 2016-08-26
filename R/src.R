@@ -153,4 +153,26 @@ tbl_txdb <- function(txdb) {
 #' @inheritParams tbl_txdb
 #' 
 #' @export
-src_organism <- function(org, txdb) {}
+src_organism <- function(org, txdb) {
+    db <- org
+    db <- loadNamespace(db)[[db]]
+    conn = dbconn(db)
+
+    fname <- system.file(package="Organism.dplyr", "schema", "organism.sql")
+    schemas <- readLines(fname)
+    grps <- cumsum(!nzchar(schemas)) + 1
+    for (schema in split(schemas, grps)) {
+        sql <- paste(schema, collapse="\n")
+        dbSendQuery(conn, sql)
+    }
+
+    src <- src_sql("sqlite", conn, path=dbfile(db))
+    class(src) = c("src_organism", class(src))
+    src
+}
+
+#' @export
+src_tbls.src_organism <- function(x) {
+    sql <- "SELECT name FROM sqlite_temp_master WHERE type = 'view';"
+    dbGetQuery(xx$con, sql)$name
+}

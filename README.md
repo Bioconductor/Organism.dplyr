@@ -1,8 +1,15 @@
 # TODO
 
-1. Update SQL tables
+1. all org & txdb views available in a single sql 'database' -- ATTACH
+   one db to another?
 
-2. Code cleanup
+    - 
+
+# DONE
+
+- Update SQL tables
+
+- Code cleanup
 
    - .get_tbl -- character(1); no need to check if view exists
    - documentation -- @rdname, etc.
