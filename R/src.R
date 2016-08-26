@@ -100,3 +100,10 @@ src_tbls.src_organism <- function(x) {
     sql <- "SELECT name FROM sqlite_temp_master WHERE type = 'view';"
     dbGetQuery(xx$con, sql)$name
 }
+
+#' @export
+tbl.src_organism <- function(src, ...) {
+    tbl <- NextMethod(src, ...)
+    class(tbl) <- c("tbl_organism", class(tbl))
+    tbl
+}
