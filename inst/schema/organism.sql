@@ -41,27 +41,22 @@ FROM genes
 JOIN omim ON genes._id = omim._id
 LEFT OUTER JOIN pubmed ON genes._id = pubmed._id;
 
-CREATE TEMPORARY VIEW IF NOT EXISTS ipi AS
-SELECT DISTINCT
-    genes.gene_id AS entrez,
-    pfam.ipi_id AS ipi,
-    pfam.pfam_id AS pfam,
-    prosite.prosite_id AS prosite
-FROM genes
-LEFT OUTER JOIN pfam ON genes._id = pfam._id
-LEFT OUTER JOIN prosite ON genes._id = prosite._id
-    AND pfam.ipi_id = prosite.ipi_id;
-
 CREATE TEMPORARY VIEW IF NOT EXISTS protein AS
 SELECT DISTINCT
     genes.gene_id AS entrez,
     ec.ec_number AS enzyme,
     ensembl_prot.prot_id AS ensemblprot,
-    uniprot.uniprot_id AS uniprot
+    uniprot.uniprot_id AS uniprot,
+    pfam.ipi_id AS ipi,
+    pfam.pfam_id AS pfam,
+    prosite.prosite_id AS prosite
 FROM genes
 LEFT OUTER JOIN ec ON genes._id = ec._id
 LEFT OUTER JOIN uniprot ON genes._id = uniprot._id
-LEFT OUTER JOIN ensembl_prot ON genes._id = ensembl_prot._id;
+LEFT OUTER JOIN ensembl_prot ON genes._id = ensembl_prot._id
+LEFT OUTER JOIN pfam ON genes._id = pfam._id
+LEFT OUTER JOIN prosite ON genes._id = prosite._id
+    AND pfam.ipi_id = prosite.ipi_id;
 
 CREATE TEMPORARY VIEW IF NOT EXISTS view_go_all AS
 SELECT DISTINCT
