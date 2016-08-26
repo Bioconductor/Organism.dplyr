@@ -1,4 +1,4 @@
-CREATE TEMPORARY VIEW IF NOT EXISTS acc AS 
+CREATE TEMPORARY VIEW IF NOT EXISTS accession AS 
 SELECT DISTINCT
     genes.gene_id AS entrez, 
     accessions.accession AS accnum, 
@@ -9,7 +9,7 @@ LEFT OUTER JOIN accessions ON genes._id = accessions._id
 LEFT OUTER JOIN refseq ON genes._id = refseq._id
     AND refseq.accession = accessions.accession;
 
-CREATE TEMPORARY VIEW IF NOT EXISTS ensenbltrans AS
+CREATE TEMPORARY VIEW IF NOT EXISTS transcript AS
 SELECT DISTINCT
     genes.gene_id AS entrez,
     unigene.unigene_id AS unigene,
@@ -18,7 +18,7 @@ FROM genes
 LEFT OUTER JOIN unigene ON genes._id = unigene._id
 LEFT OUTER JOIN ensembl_trans ON genes._id = ensembl_trans._id;
 
-CREATE TEMPORARY VIEW IF NOT EXISTS idmap AS 
+CREATE TEMPORARY VIEW IF NOT EXISTS id AS 
 SELECT DISTINCT
     genes.gene_id AS entrez,
     cytogenetic_location AS map, 
@@ -32,6 +32,15 @@ JOIN cytogenetic_locations ON genes._id = cytogenetic_locations._id
 JOIN ensembl ON genes._id = ensembl._id
 LEFT OUTER JOIN alias ON genes._id = alias._id;
 
+CREATE TEMPORARY VIEW IF NOT EXISTS omim_pmid AS
+SELECT DISTINCT
+    genes.gene_id AS entrez,
+    omim.omim_id AS omim,
+    pubmed.pubmed_id AS pmid
+FROM genes
+JOIN omim ON genes._id = omim._id
+LEFT OUTER JOIN pubmed ON genes._id = pubmed._id;
+
 CREATE TEMPORARY VIEW IF NOT EXISTS ipi AS
 SELECT DISTINCT
     genes.gene_id AS entrez,
@@ -42,15 +51,6 @@ FROM genes
 LEFT OUTER JOIN pfam ON genes._id = pfam._id
 LEFT OUTER JOIN prosite ON genes._id = prosite._id
     AND pfam.ipi_id = prosite.ipi_id;
-
-CREATE TEMPORARY VIEW IF NOT EXISTS pmid AS
-SELECT DISTINCT
-    genes.gene_id AS entrez,
-    omim.omim_id AS omim,
-    pubmed.pubmed_id AS pmid
-FROM genes
-JOIN omim ON genes._id = omim._id
-LEFT OUTER JOIN pubmed ON genes._id = pubmed._id;
 
 CREATE TEMPORARY VIEW IF NOT EXISTS protein AS
 SELECT DISTINCT
