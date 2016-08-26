@@ -69,6 +69,23 @@ tbl_txdb <- function(txdb) {
     .get_tbl(txdb, "txdb")
 }
 
+.get_tbl <- function(db, tblname) {
+    stopifnot(is.character(db), length(db) == 1L)
+    stopifnot(is.character(tblname), length(tblname) == 1)
+
+    fname <- paste0(tblname, ".sql")
+    db <- loadNamespace(db)[[db]]
+    conn = dbconn(db)
+
+    schema <- system.file(package="Organism.dplyr", "schema", fname)
+    sql <- paste(readLines(schema), collapse="\n")
+    dbSendQuery(conn, sql)
+
+    tbl = src_sql("sqlite", conn, path=dbfile(db)) %>% tbl(tblname)
+    class(tbl) = c("tbl_organism", class(tbl))
+    tbl
+}
+
 #' Create a dplyr view integrating org.* and TxDb.* information
 #'
 #' @inheritParams tbl_txdb
