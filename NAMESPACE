@@ -2,6 +2,7 @@
 
 S3method(select_,tbl_organism)
 S3method(src_tbls,src_organism)
+S3method(tbl,src_organism)
 export(src_organism)
 export(tbl_txdb)
 importFrom(AnnotationDbi,dbconn)
@@ -12,4 +13,5 @@ importFrom(RSQLite,dbSendQuery)
 importFrom(dplyr,"%>%")
 importFrom(dplyr,select_)
 importFrom(dplyr,src_sql)
+importFrom(dplyr,src_tbls)
 importFrom(dplyr,tbl)

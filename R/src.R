@@ -111,13 +111,15 @@ src_organism <- function(org, txdb) {
     src
 }
 
+#' @importFrom dplyr src_tbls
 #' @importFrom RSQLite dbGetQuery
 #' @export
 src_tbls.src_organism <- function(x) {
     sql <- "SELECT name FROM sqlite_temp_master WHERE type = 'view';"
-    dbGetQuery(xx$con, sql)$name
+    dbGetQuery(x$con, sql)$name
 }
 
+#' @importFrom dplyr tbl
 #' @export
 tbl.src_organism <- function(src, ...) {
     tbl <- NextMethod(src, ...)
