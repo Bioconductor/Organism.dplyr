@@ -21,8 +21,8 @@ SELECT DISTINCT
     cds.cds_strand AS cdsstrand, 
     cds.cds_start AS cdsstart, 
     cds.cds_end AS cdsend
-FROM gene
-LEFT OUTER JOIN transcript ON transcript._tx_id = gene._tx_id
-LEFT OUTER JOIN splicing ON splicing._tx_id = gene._tx_id
-LEFT OUTER JOIN exon ON exon._exon_id = splicing._exon_id
-LEFT OUTER JOIN cds ON cds._cds_id = splicing._cds_id
+FROM txdb.gene
+LEFT OUTER JOIN txdb.transcript ON txdb.transcript._tx_id = txdb.gene._tx_id
+LEFT OUTER JOIN txdb.splicing ON txdb.splicing._tx_id = txdb.gene._tx_id
+LEFT OUTER JOIN txdb.exon ON txdb.exon._exon_id = txdb.splicing._exon_id
+LEFT OUTER JOIN txdb.cds ON txdb.cds._cds_id = txdb.splicing._cds_id;
