@@ -42,14 +42,12 @@
 #' @export
 src_organism <- function(org, txdb) {
     db <- loadNamespace(org)[[org]]
-    con = dbconn(db)
+    con <- dbconn(db)
     
     .get_view(con, org, "organism")
     
-    views = dbGetQuery(con,
-                       "SELECT name FROM sqlite_temp_master WHERE type='view'")$name
-
-    if (!("txdb" %in% views))
+    tbls <- dbGetQuery(src$con, "pragma database_list;")$name
+    if (!("txdb" %in% tbls))
         .get_view(con, txdb, "txdb")
     
     src <- src_sql("sqlite", con, path=dbfile(con))
@@ -63,7 +61,8 @@ src_organism <- function(org, txdb) {
         dbGetQuery(con, paste0("ATTACH '", dbfile(db), "' AS ", tblname))
     }
     
-    fname <- system.file(package="Organism.dplyr", "schema", paste0(tblname, ".sql"))
+    fname <- system.file(package="Organism.dplyr", "schema",
+                         paste0(tblname, ".sql"))
     schemas <- readLines(fname)
     grps <- cumsum(!nzchar(schemas)) + 1
     for (schema in split(schemas, grps)) {
