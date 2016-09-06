@@ -25,11 +25,11 @@ SELECT DISTINCT
     gene.gene_id AS entrez,
     transcript._tx_id AS txid,
     exon._exon_id AS exonid,
-    exon.exon_chrom AS exonchrom,
-    exon.exon_strand AS exonstrand,
-    exon.exon_start AS exonstart,
-    exon.exon_end AS exonend,
-    splicing.exon_rank AS exonrank
+    exon.exon_chrom AS chrom,
+    exon.exon_strand AS strand,
+    exon.exon_start AS start,
+    exon.exon_end AS end,
+    splicing.exon_rank AS rank
 FROM txdb.gene
 LEFT OUTER JOIN txdb.transcript ON txdb.transcript._tx_id = txdb.gene._tx_id
 LEFT OUTER JOIN txdb.splicing ON txdb.splicing._tx_id = txdb.gene._tx_id
@@ -40,10 +40,10 @@ SELECT DISTINCT
     gene.gene_id AS entrez,
     transcript._tx_id AS txid,
     cds._cds_id AS cdsid,
-    cds.cds_chrom AS cdschrom,
-    cds.cds_strand AS cdsstrand,
-    cds.cds_start AS cdsstart,
-    cds.cds_end AS cdsend
+    cds.cds_chrom AS chrom,
+    cds.cds_strand AS strand,
+    cds.cds_start AS start,
+    cds.cds_end AS end
 FROM txdb.gene
 LEFT OUTER JOIN txdb.transcript ON txdb.transcript._tx_id = txdb.gene._tx_id
 LEFT OUTER JOIN txdb.splicing ON txdb.splicing._tx_id = txdb.gene._tx_id
