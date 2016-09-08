@@ -41,13 +41,27 @@ presentation of identifiers and genomic coordinates.
 Create a dplyr view integrating org.* and TxDb.* information
 }
 \examples{
+# human
 organism <- src_organism("org.Hs.eg.db", "TxDb.Hsapiens.UCSC.hg38.knownGene")
 src_tbls(organism)
-tbl <- tbl(organism, "id")
-tbl
-tbl \%>\% dplyr::select(ensembl, symbol) \%>\% filter(symbol == "PTEN")
-inner_join(tbl, tbl(organism, "txdb")) \%>\% filter(symbol == "PTEN") \%>\%
-     dplyr::select(entrez, symbol, txid, txname, txstart, txend)
+id <- tbl(organism, "id")
+id
+id \%>\% dplyr::select(ensembl, symbol) \%>\% filter(symbol == "PTEN")
+inner_join(id, tbl(organism, "ranges_tx")) \%>\% filter(symbol == "PTEN") \%>\%
+     dplyr::select(entrez, symbol, id, start, end)
+
+# mouse
+organism <- src_organism("org.Mm.eg.db", "TxDb.Mmusculus.UCSC.mm10.knownGene")
+inner_join(tbl(organism, "id"), tbl(organism, "ranges_gene")) \%>\% 
+     filter(entrez == "11287") \%>\%
+     dplyr::select(entrez, symbol, chrom, start, end)
+
+# rat
+organism <- src_organism("org.Rn.eg.db", "TxDb.Rnorvegicus.UCSC.rn4.ensGene")
+inner_join(tbl(organism, "id"), tbl(organism, "ranges_gene"), by = c("ensembl" = "entrez")) \%>\% 
+     filter(entrez.y == "ENSRNOG00000028896") \%>\%
+     dplyr::select(entrez.x, symbol, chrom, start, end)
+
 
 }
 
