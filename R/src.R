@@ -48,37 +48,47 @@
 #' 
 #' # rat
 #' organism <- src_organism("org.Rn.eg.db", "TxDb.Rnorvegicus.UCSC.rn4.ensGene")
-#' inner_join(tbl(organism, "id"), tbl(organism, "ranges_gene"), by = c("ensembl" = "entrez")) %>% 
+#' inner_join(tbl(organism, "id"), tbl(organism, "ranges_gene"), by = c("ensembl" = "geneid")) %>% 
 #'      filter(entrez.y == "ENSRNOG00000028896") %>%
 #'      dplyr::select(entrez.x, symbol, chrom, start, end)
 #' 
 #' 
 #' @export
 src_organism <- function(org, txdb) {
-    db <- loadNamespace(org)[[org]]
-    con <- dbconn(db)
+    if (is.character(org))
+        org <- loadNamespace(org)[[org]]
+    stopifnot(is(org, "OrgDb"))
+
+    if (is.character(txdb))
+        txdb <- loadNamespace(txdb)[[txdb]]
+    stopifnot(is(txdb, "TxDb"))
+
+    stopifnot(identical(taxonomyId(org), taxonomyId(txdb)))
+
+    org_meta <- metadata(org)
+    org_schema <- org_meta$value[org_meta$name == "DBSCHEMA"]
+    txdb_schema <- "txdb"
+
+    .add_view(dbconn(org), org, org_schema)
+    .add_view(dbconn(org), txdb, txdb_schema)
     
-    schema <- dbGetQuery(con, 
-                         "select value from metadata where name = 'DBSCHEMA'")$value
-    .get_view(con, org, paste0("organism_", schema))
-    
-    tbls <- dbGetQuery(con, "pragma database_list;")$name
-    if (!(missing(txdb)) && !("txdb" %in% tbls))
-        .get_view(con, txdb, "txdb")
-    
-    src <- src_sql("sqlite", con, path=dbfile(con))
+    src <- src_sql("sqlite", dbconn(org), path=dbfile(org))
     class(src) = c("src_organism", class(src))
     src
 }
 
-.get_view <- function(con, db, tblname) {
-    if (!(substr(db, 1, 3) == "org")) {
-        db <- loadNamespace(db)[[db]]
+.add_view <- function(con, db, tblname) {
+    tbls <- dbGetQuery(con, "pragma database_list;")$name
+    if (tblname %in% tbls)
+        return()
+    if (is(db, "TxDb"))
         dbGetQuery(con, paste0("ATTACH '", dbfile(db), "' AS ", tblname))
-    }
     
-    fname <- system.file(package="Organism.dplyr", "schema",
-                         paste0(tblname, ".sql"))
+    fname <- system.file(
+        package="Organism.dplyr", "schema", paste0(tblname, ".sql"))
+    if (!file.exists(fname))
+        stop(sQuote(tblname), " schema not unsupported")
+
     schemas <- readLines(fname)
     grps <- cumsum(!nzchar(schemas)) + 1
     for (schema in split(schemas, grps)) {
