@@ -1,6 +1,6 @@
 CREATE TEMPORARY VIEW IF NOT EXISTS ranges_gene AS
 SELECT DISTINCT
-    gene.gene_id AS entrez,
+    gene.gene_id AS geneid,
     tx_chrom AS chrom,
     MIN(tx_start) AS start,
     MAX(tx_end) AS end,
@@ -11,7 +11,7 @@ GROUP BY txdb.gene.gene_id;
 
 CREATE TEMPORARY VIEW IF NOT EXISTS ranges_tx AS
 SELECT DISTINCT
-    gene.gene_id AS entrez,
+    gene.gene_id AS geneid,
     transcript._tx_id AS id,
     transcript.tx_chrom AS chrom,
     transcript.tx_strand AS strand,
@@ -22,7 +22,7 @@ LEFT OUTER JOIN txdb.transcript ON txdb.transcript._tx_id = txdb.gene._tx_id;
 
 CREATE TEMPORARY VIEW IF NOT EXISTS ranges_exon AS
 SELECT DISTINCT
-    gene.gene_id AS entrez,
+    gene.gene_id AS geneid,
     transcript._tx_id AS txid,
     exon._exon_id AS exonid,
     exon.exon_chrom AS chrom,
@@ -37,7 +37,7 @@ LEFT OUTER JOIN txdb.exon ON txdb.exon._exon_id = txdb.splicing._exon_id;
 
 CREATE TEMPORARY VIEW IF NOT EXISTS ranges_cds AS
 SELECT DISTINCT
-    gene.gene_id AS entrez,
+    gene.gene_id AS geneid,
     transcript._tx_id AS txid,
     cds._cds_id AS cdsid,
     cds.cds_chrom AS chrom,
@@ -51,7 +51,7 @@ LEFT OUTER JOIN txdb.cds ON txdb.cds._cds_id = txdb.splicing._cds_id;
 
 CREATE TEMPORARY VIEW IF NOT EXISTS id_ranges AS
 SELECT DISTINCT
-    gene.gene_id AS entrez,
+    gene.gene_id AS geneid,
     transcript._tx_id AS txid,
     transcript.tx_name AS txname,
     transcript.tx_type AS txtype,
