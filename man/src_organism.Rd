@@ -58,7 +58,7 @@ inner_join(tbl(organism, "id"), tbl(organism, "ranges_gene")) \%>\%
 
 # rat
 organism <- src_organism("org.Rn.eg.db", "TxDb.Rnorvegicus.UCSC.rn4.ensGene")
-inner_join(tbl(organism, "id"), tbl(organism, "ranges_gene"), by = c("ensembl" = "entrez")) \%>\% 
+inner_join(tbl(organism, "id"), tbl(organism, "ranges_gene"), by = c("ensembl" = "geneid")) \%>\% 
      filter(entrez.y == "ENSRNOG00000028896") \%>\%
      dplyr::select(entrez.x, symbol, chrom, start, end)
 
