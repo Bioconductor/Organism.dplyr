@@ -28,7 +28,8 @@
 #'     table.
 #'     
 #' @importFrom RSQLite dbSendQuery dbGetQuery
-#' @importFrom AnnotationDbi dbconn dbfile
+#' @importFrom AnnotationDbi dbconn dbfile taxonomyId
+#' @importFrom S4Vectors metadata
 #' 
 #' @examples
 #' # human
