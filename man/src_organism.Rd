@@ -63,11 +63,9 @@ inner_join(tbl(organism, "id"), tbl(organism, "ranges_gene")) \%>\%
 
 # rat
 organism <- src_organism("org.Rn.eg.db", "TxDb.Rnorvegicus.UCSC.rn4.ensGene")
-id <- tbl(organism, "id")
-ranges_gene <- tbl(organism, "ranges_gene")
-inner_join(id, ranges_gene) \%>\% 
-    filter(ensembl == "ENSRNOG00000028896") \%>\%
-    dplyr::select(ensembl, symbol, chrom, start, end)
+inner_join(tbl(organism, "id"), tbl(organism, "ranges_gene"), by = c("ensembl" = "geneid")) \%>\% 
+     filter(entrez.y == "ENSRNOG00000028896") \%>\%
+     dplyr::select(entrez.x, symbol, chrom, start, end)
 
 # transcripts()
 txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
