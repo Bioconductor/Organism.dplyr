@@ -12,7 +12,7 @@ GROUP BY txdb.gene.gene_id;
 CREATE TEMPORARY VIEW IF NOT EXISTS ranges_tx AS
 SELECT DISTINCT
     gene.gene_id AS geneid,
-    transcript._tx_id AS id,
+    transcript._tx_id AS txid,
     transcript.tx_chrom AS chrom,
     transcript.tx_strand AS strand,
     transcript.tx_start AS start,

@@ -16,7 +16,8 @@ Depends:
     dplyr
 Imports:
     AnnotationDbi,
-    RSQLite
+    RSQLite,
+    S4Vectors
 Suggests:
     org.Hs.eg.db
 License: Artistic-2.0

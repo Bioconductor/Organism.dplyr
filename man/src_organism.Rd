@@ -2,10 +2,13 @@
 % Please edit documentation in R/src.R
 \name{src_organism}
 \alias{select_.tbl_organism}
+\alias{src_by_organism}
 \alias{src_organism}
 \title{Create a dplyr view into an org package}
 \usage{
 src_organism(org, txdb)
+
+src_by_organism(organism)
 
 \method{select_}{tbl_organism}(.data, ...)
 }
@@ -42,13 +45,15 @@ Create a dplyr view integrating org.* and TxDb.* information
 }
 \examples{
 # human
-organism <- src_organism("org.Hs.eg.db", "TxDb.Hsapiens.UCSC.hg38.knownGene")
+library(org.Hs.eg.db)
+library(TxDb.Hsapiens.UCSC.hg38.knownGene)
+organism <- src_organism(org.Hs.eg.db, TxDb.Hsapiens.UCSC.hg38.knownGene)
 src_tbls(organism)
 id <- tbl(organism, "id")
 id
 id \%>\% dplyr::select(ensembl, symbol) \%>\% filter(symbol == "PTEN")
 inner_join(id, tbl(organism, "ranges_tx")) \%>\% filter(symbol == "PTEN") \%>\%
-     dplyr::select(entrez, symbol, id, start, end)
+     dplyr::select(entrez, symbol, txid, start, end)
 
 # mouse
 organism <- src_organism("org.Mm.eg.db", "TxDb.Mmusculus.UCSC.mm10.knownGene")
@@ -58,9 +63,22 @@ inner_join(tbl(organism, "id"), tbl(organism, "ranges_gene")) \%>\%
 
 # rat
 organism <- src_organism("org.Rn.eg.db", "TxDb.Rnorvegicus.UCSC.rn4.ensGene")
-inner_join(tbl(organism, "id"), tbl(organism, "ranges_gene"), by = c("ensembl" = "entrez")) \%>\% 
-     filter(entrez.y == "ENSRNOG00000028896") \%>\%
-     dplyr::select(entrez.x, symbol, chrom, start, end)
+id <- tbl(organism, "id")
+ranges_gene <- tbl(organism, "ranges_gene")
+inner_join(id, ranges_gene) \%>\% 
+    filter(ensembl == "ENSRNOG00000028896") \%>\%
+    dplyr::select(ensembl, symbol, chrom, start, end)
+
+# transcripts()
+txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
+transcripts(txdb, filter=list(tx_name="uc001aaa.3"))
+
+human <- src_organism("org.Hs.eg.db", "TxDb.Hsapiens.UCSC.hg38.knownGene")
+
+tx <- inner_join(tbl(human, "ranges_tx"), tbl(human, "id_ranges")) \%>\%
+    dplyr::select(chrom, start, end, strand, txid, txname)
+
+tx \%>\% filter(txname == "uc001aaa.3")
 
 
 }

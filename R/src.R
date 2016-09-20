@@ -28,17 +28,20 @@
 #'     table.
 #'     
 #' @importFrom RSQLite dbSendQuery dbGetQuery
-#' @importFrom AnnotationDbi dbconn dbfile
+#' @importFrom AnnotationDbi dbconn dbfile taxonomyId
+#' @importFrom S4Vectors metadata
 #' 
 #' @examples
 #' # human
-#' organism <- src_organism("org.Hs.eg.db", "TxDb.Hsapiens.UCSC.hg38.knownGene")
+#' library(org.Hs.eg.db)
+#' library(TxDb.Hsapiens.UCSC.hg38.knownGene)
+#' organism <- src_organism(org.Hs.eg.db, TxDb.Hsapiens.UCSC.hg38.knownGene)
 #' src_tbls(organism)
 #' id <- tbl(organism, "id")
 #' id
 #' id %>% dplyr::select(ensembl, symbol) %>% filter(symbol == "PTEN")
 #' inner_join(id, tbl(organism, "ranges_tx")) %>% filter(symbol == "PTEN") %>%
-#'      dplyr::select(entrez, symbol, id, start, end)
+#'      dplyr::select(entrez, symbol, txid, start, end)
 #' 
 #' # mouse
 #' organism <- src_organism("org.Mm.eg.db", "TxDb.Mmusculus.UCSC.mm10.knownGene")
@@ -48,9 +51,22 @@
 #' 
 #' # rat
 #' organism <- src_organism("org.Rn.eg.db", "TxDb.Rnorvegicus.UCSC.rn4.ensGene")
-#' inner_join(tbl(organism, "id"), tbl(organism, "ranges_gene"), by = c("ensembl" = "geneid")) %>% 
-#'      filter(entrez.y == "ENSRNOG00000028896") %>%
-#'      dplyr::select(entrez.x, symbol, chrom, start, end)
+#' id <- tbl(organism, "id")
+#' ranges_gene <- tbl(organism, "ranges_gene")
+#' inner_join(id, ranges_gene) %>% 
+#'     filter(ensembl == "ENSRNOG00000028896") %>%
+#'     dplyr::select(ensembl, symbol, chrom, start, end)
+#' 
+#' # transcripts()
+#' txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
+#' transcripts(txdb, filter=list(tx_name="uc001aaa.3"))
+#' 
+#' human <- src_organism("org.Hs.eg.db", "TxDb.Hsapiens.UCSC.hg38.knownGene")
+#' 
+#' tx <- inner_join(tbl(human, "ranges_tx"), tbl(human, "id_ranges")) %>%
+#'     dplyr::select(chrom, start, end, strand, txid, txname)
+#' 
+#' tx %>% filter(txname == "uc001aaa.3")
 #' 
 #' 
 #' @export
@@ -67,7 +83,12 @@ src_organism <- function(org, txdb) {
 
     org_meta <- metadata(org)
     org_schema <- org_meta$value[org_meta$name == "DBSCHEMA"]
-    txdb_schema <- "txdb"
+    txdb_meta <- metadata(txdb)
+    txdb_type <- txdb_meta$value[txdb_meta$name == "Type of Gene ID"]
+    if (txdb_type == "Entrez Gene ID")
+        txdb_schema <- "txdb_entrez"
+    else if (txdb_type == "Ensembl gene ID")
+        txdb_schema <- "txdb_ensembl"
 
     .add_view(dbconn(org), org, org_schema)
     .add_view(dbconn(org), txdb, txdb_schema)
@@ -97,6 +118,19 @@ src_organism <- function(org, txdb) {
     }
 }
 
+#' @rdname src_organism
+#' @export
+src_by_organism <- function(organism) {
+    stopifnot(is.character(organism))
+    if (sapply(organism, tolower) == "homo sapiens")
+        src <- src_organism(org.Hs.eg.db, TxDb.Hsapiens.UCSC.hg38.knownGene)
+    if (sapply(organism, tolower) == "mus musculus")
+        src <- src_organism(org.Mm.eg.db, TxDb.Mmusculus.UCSC.mm10.ensGene)
+    if (sapply(organism, tolower) == "caenorhabditis elegans")
+        src <- src_organism(org.Ce.eg.db, TxDb.Celegans.UCSC.ce11.refGene)
+    src
+}
+
 #' @importFrom RSQLite dbSendQuery dbListTables
 #' @importFrom AnnotationDbi dbconn dbfile
 #' @importFrom dplyr src_sql "%>%" tbl select_
@@ -112,7 +146,7 @@ select_.tbl_organism <- function(.data, ...) {
 #' @importFrom RSQLite dbGetQuery
 #' @export
 src_tbls.src_organism <- function(x) {
-    sql <- "SELECT name FROM sqlite_temp_master WHERE type = 'view';"
+    sql <- "SELECT name FROM sqlite_temp_master"
     dbGetQuery(x$con, sql)$name
 }
 
