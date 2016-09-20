@@ -2,13 +2,13 @@
 % Please edit documentation in R/src.R
 \name{src_organism}
 \alias{select_.tbl_organism}
-\alias{src_by_organism}
 \alias{src_organism}
+\alias{src_ucsc}
 \title{Create a dplyr view into an org package}
 \usage{
 src_organism(org, txdb)
 
-src_by_organism(organism)
+src_ucsc(organism, genome = NULL, id = NULL)
 
 \method{select_}{tbl_organism}(.data, ...)
 }

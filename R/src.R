@@ -85,10 +85,12 @@ src_organism <- function(org, txdb) {
     org_schema <- org_meta$value[org_meta$name == "DBSCHEMA"]
     txdb_meta <- metadata(txdb)
     txdb_type <- txdb_meta$value[txdb_meta$name == "Type of Gene ID"]
-    if (txdb_type == "Entrez Gene ID")
+    if (startsWith(tolower(txdb_type), "entrez"))
         txdb_schema <- "txdb_entrez"
-    else if (txdb_type == "Ensembl gene ID")
+    else if (startsWith(tolower(txdb_type), "ensembl"))
         txdb_schema <- "txdb_ensembl"
+    else
+        stop("unknown TxDb type: ", sQuote(txdb_type))
 
     .add_view(dbconn(org), org, org_schema)
     .add_view(dbconn(org), txdb, txdb_schema)
@@ -119,16 +121,56 @@ src_organism <- function(org, txdb) {
 }
 
 #' @rdname src_organism
+#' @importFrom GenomeInfoDb genomeBuilds
 #' @export
-src_by_organism <- function(organism) {
-    stopifnot(is.character(organism))
-    if (sapply(organism, tolower) == "homo sapiens")
-        src <- src_organism(org.Hs.eg.db, TxDb.Hsapiens.UCSC.hg38.knownGene)
-    if (sapply(organism, tolower) == "mus musculus")
-        src <- src_organism(org.Mm.eg.db, TxDb.Mmusculus.UCSC.mm10.ensGene)
-    if (sapply(organism, tolower) == "caenorhabditis elegans")
-        src <- src_organism(org.Ce.eg.db, TxDb.Celegans.UCSC.ce11.refGene)
-    src
+src_ucsc <- function(organism, genome = NULL, id = NULL, verbose=TRUE) {
+    stopifnot(is.character(organism), length(organism) == 1L)
+    if (!missing(genome))
+        stopifnot(is.character(genome), length(genome) == 1L)
+    if (!missing(id))
+        stopifnot(is.character(id), length(id) == 1L)
+
+    filename <- system.file(
+        package = "GenomeInfoDb", "extdata", "dataFiles",
+        "genomeMappingTbl.csv")
+    builds <- read.csv(filename, header = TRUE, stringsAsFactors = FALSE)
+    idx <- rowSums(builds[,1:2] == tolower(organism)) > 0
+    if (!any(idx))
+        stop("could not match organism ", organism,
+             "; see GenomeInfoDb::listSpecies()")
+    builds <- builds[idx,]
+
+    species <- tail(builds$speciesLong, 1L)
+    twoletter <- sub("([A-z]).* ([a-z]).*", "\\U\\1\\L\\2", species, perl=TRUE)
+    binomial <- sub("([A-z]).* ([[:alpha:]]+)", "\\U\\1\\L\\2", species,
+                    perl=TRUE)
+    org <- sprintf("org.%s.eg.db", twoletter)
+
+    if (missing(genome))
+        genome <- tail(builds$ucscID, 1L)
+
+    if (missing(id)) {
+        ids <- c("knownGene", "ensGene", "refGene")
+        pkgs <- grep("TxDb", row.names(installed.packages()), value=TRUE)
+        found <- FALSE
+        for (id in ids) {
+            txdb <- sprintf("TxDb.%s.UCSC.%s.%s", binomial, genome, id)
+            if (txdb %in% pkgs) {
+                found <- TRUE
+                break
+            }
+        }
+        if (!found)
+            stop("could not guess TxDb package for:",
+                 "\n  organism = ", organism,
+                 "\n  genome = ", genome,
+                 "\n  id = ", paste(ids, collapse=", "))
+    }
+    txdb <- sprintf("TxDb.%s.UCSC.%s.%s", binomial, genome, id)
+
+    if (verbose)
+        message("using ", org, ", ", txdb)
+    src_organism(org, txdb)
 }
 
 #' @importFrom RSQLite dbSendQuery dbListTables
