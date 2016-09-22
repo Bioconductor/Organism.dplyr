@@ -118,6 +118,8 @@ src_organism <- function(org, txdb) {
         sql <- paste(schema, collapse="\n")
         dbSendQuery(con, sql)
     }
+    if (is(db, "TxDb"))
+        dbGetQuery(con, paste0("DETACH '", tblname, "'"))
 }
 
 #' @rdname src_organism
@@ -188,7 +190,7 @@ select_.tbl_organism <- function(.data, ...) {
 #' @importFrom RSQLite dbGetQuery
 #' @export
 src_tbls.src_organism <- function(x) {
-    sql <- "SELECT name FROM sqlite_temp_master"
+    sql <- "SELECT name FROM sqlite_temp_master WHERE type in ('view','table')"
     dbGetQuery(x$con, sql)$name
 }
 
