@@ -29,14 +29,27 @@ transcripts1 <- function(src) {
 #' @rdname src_organism
 #' @export
 transcripts2 <- function(src) {
-    inner_join(tbl(src, "ranges_tx"), tbl(src, "id"))
+    inner_join(tbl(src, "id"), tbl(src, "ranges_tx"))
 }
 
- 
+#'
+#' @examples
+#' filters <- list(
+#'     symbol=c("PTEN", "BRCA1"),
+#'     entrez="1223",
+#'     go=c("GO:0003674", GO:0004867"))
+#' transcripts3(src, filter=filters)
+transcripts3 <- function(src, filter=list(symbol="PTEN")) {
+    fields <- names(filter)
+    for (i in src_tbls)
+        if (fields %in% colnames(tbl(human, i)))
+}
 
-   
-    
+.tbl_join <- function(src, x, y)
+    inner_join(tbl(src, x), tbl(src, y))
 
+transcripts4 <- function(src, x)
+    .tbl_join(src, x, "ranges_tx")
 
 # # exons()
 # exons <- function(src) {

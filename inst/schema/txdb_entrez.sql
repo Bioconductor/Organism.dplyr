@@ -1,12 +1,12 @@
 CREATE TEMPORARY TABLE IF NOT EXISTS ranges_gene AS
 SELECT DISTINCT
     gene.gene_id AS entrez,
-    gene._tx_id AS txid,
-    transcript.tx_chrom AS chrom,
-    MIN(tx_start) AS genestart,
-    MAX(tx_end) AS geneend,
-    transcript.tx_strand AS strand,
-    transcript.tx_name AS txname
+    gene._tx_id AS tx_id,
+    transcript.tx_chrom AS tx_chrom,
+    MIN(tx_start) AS gene_start,
+    MAX(tx_end) AS gene_end,
+    transcript.tx_strand AS tx_strand,
+    transcript.tx_name AS tx_name
 FROM txdb_entrez.gene
 LEFT OUTER JOIN txdb_entrez.transcript ON txdb_entrez.transcript._tx_id = txdb_entrez.gene._tx_id
 GROUP BY entrez, chrom, txid, strand, txname;

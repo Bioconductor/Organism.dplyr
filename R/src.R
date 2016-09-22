@@ -190,7 +190,7 @@ select_.tbl_organism <- function(.data, ...) {
 #' @importFrom RSQLite dbGetQuery
 #' @export
 src_tbls.src_organism <- function(x) {
-    sql <- "SELECT name FROM sqlite_temp_master WHERE type in ('view','table')"
+    sql <- "SELECT name FROM sqlite_temp_master WHERE type IN ('view', 'table')"
     dbGetQuery(x$con, sql)$name
 }
 
