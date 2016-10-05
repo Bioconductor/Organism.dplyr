@@ -1,10 +1,12 @@
-# transcripts(), exons(), cds(), genes(), promoters(), transcriptsBy(), exonsBy(), 
-# cdsBy(), intronsByTranscript(), fiveUTRsByTranscript() and threeUTRsByTranscript()
+# transcripts(), exons(), cds(), genes(), promoters(),
+# transcriptsBy(), exonsBy(), cdsBy(), intronsByTranscript(),
+# fiveUTRsByTranscript() and threeUTRsByTranscript()
 
 # txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
 # organism <- src_organism("org.Hs.eg.db", "TxDb.Hsapiens.UCSC.hg38.knownGene")
 
 # transcripts()
+
 #' Generic functions to extract genomic features from an object.
 #' 
 #' @param x object created by src_organism
@@ -27,25 +29,25 @@ setMethod("transcripts", "src_organism", function(x, filter) {
     fields <- names(filter)
     tbls <- src_tbls(x)
     table <- tbl(x, "ranges_tx")
-    filters <- list()
+
     for (i in tbls) {
         keep <- fields[fields %in% colnames(tbl(x, i))]
-        if (!is.null(keep) && !(length(keep) == 1 && keep == "entrez")) {
-            table <- inner_join(table, tbl(x, i))
-            filters <- c(filters, 
-                lapply(keep, 
-                    function(keep) {
-                        if (length(filter[[keep]]) == 1)
-                            paste0(keep, "==\"", filter[[keep]],"\"")
-                        else
-                            paste0(keep, " %in% c", sprintf("(%s)",
-                             paste0("'", filter[[keep]], "'", collapse=", ")))
-                    }
-                ))
-        } 
+        if (is.null(keep) || (length(keep) == 1L && keep == "entrez"))
+            next
+        filters <- sapply(keep, function(keep1) {
+            values <- paste0(sQuote(filter[[keep1]]), collapse=", ")
+            op <- if (length(filter[[keep1]]) == 1) "==" else "%in%"
+            sprintf("%s %s c(%s)", keep1, op, values)
+        })
+        filters <- paste0(filters, collapse=" & ") 
+        table <- inner_join(table, tbl(x, i)) %>% filter_(filters)
     }
-    table %>% filter_(paste0(unlist(filters), collapse=" & ")) %>%
-        dplyr::select(entrez, tx_chrom, tx_start, tx_end, tx_id, tx_name)
+
+    fields <- 
+        c("entrez", "tx_chrom", "tx_start", "tx_end", "tx_id", "tx_name",
+          fields)
+    fields <- paste(sQuote(fields), collapse=", ")
+    table %>% dplyr::select_(fields)
 })
 
 

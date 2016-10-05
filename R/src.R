@@ -203,3 +203,5 @@ tbl.src_organism <- function(src, ...) {
     class(tbl) <- c("tbl_organism", class(tbl))
     tbl
 }
+
+setOldClass("src_organism")
