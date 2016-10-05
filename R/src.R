@@ -30,6 +30,7 @@
 #' @importFrom RSQLite dbSendQuery dbGetQuery
 #' @importFrom AnnotationDbi dbconn dbfile taxonomyId
 #' @importFrom S4Vectors metadata
+#' @importFrom methods is
 #' 
 #' @examples
 #' # human
@@ -41,32 +42,32 @@
 #' id
 #' id %>% dplyr::select(ensembl, symbol) %>% filter(symbol == "PTEN")
 #' inner_join(id, tbl(organism, "ranges_tx")) %>% filter(symbol == "PTEN") %>%
-#'      dplyr::select(entrez, symbol, txid, start, end)
-#' 
-#' # mouse
-#' organism <- src_organism("org.Mm.eg.db", "TxDb.Mmusculus.UCSC.mm10.knownGene")
-#' inner_join(tbl(organism, "id"), tbl(organism, "ranges_gene")) %>% 
-#'      filter(entrez == "11287") %>%
-#'      dplyr::select(entrez, symbol, chrom, start, end)
-#' 
-#' # rat
-#' organism <- src_organism("org.Rn.eg.db", "TxDb.Rnorvegicus.UCSC.rn4.ensGene")
-#' id <- tbl(organism, "id")
-#' ranges_gene <- tbl(organism, "ranges_gene")
-#' inner_join(id, ranges_gene) %>% 
-#'     filter(ensembl == "ENSRNOG00000028896") %>%
-#'     dplyr::select(ensembl, symbol, chrom, start, end)
-#' 
-#' # transcripts()
-#' txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
-#' transcripts(txdb, filter=list(tx_name="uc001aaa.3"))
-#' 
-#' human <- src_organism("org.Hs.eg.db", "TxDb.Hsapiens.UCSC.hg38.knownGene")
-#' 
-#' tx <- inner_join(tbl(human, "ranges_tx"), tbl(human, "id_ranges")) %>%
-#'     dplyr::select(chrom, start, end, strand, txid, txname)
-#' 
-#' tx %>% filter(txname == "uc001aaa.3")
+#'      dplyr::select(entrez, symbol, tx_id, tx_start, tx_end)
+# 
+# # mouse
+# organism <- src_organism("org.Mm.eg.db", "TxDb.Mmusculus.UCSC.mm10.knownGene")
+# inner_join(tbl(organism, "id"), tbl(organism, "ranges_gene")) %>% 
+#      filter(entrez == "11287") %>%
+#      dplyr::select(entrez, symbol, tx_chrom, gene_start, gene_end)
+# 
+# # rat
+# organism <- src_organism("org.Rn.eg.db", "TxDb.Rnorvegicus.UCSC.rn4.ensGene")
+# id <- tbl(organism, "id")
+# ranges_gene <- tbl(organism, "ranges_gene")
+# inner_join(id, ranges_gene) %>% 
+#     filter(ensembl == "ENSRNOG00000028896") %>%
+#     dplyr::select(ensembl, symbol, chrom, start, end)
+# 
+# # transcripts()
+# txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
+# transcripts(txdb, filter=list(tx_name="uc001aaa.3"))
+# 
+# human <- src_organism("org.Hs.eg.db", "TxDb.Hsapiens.UCSC.hg38.knownGene")
+# 
+# tx <- inner_join(tbl(human, "ranges_tx"), tbl(human, "id_ranges")) %>%
+#     dplyr::select(chrom, start, end, strand, txid, txname)
+# 
+# tx %>% filter(txname == "uc001aaa.3")
 #' 
 #' 
 #' @export
@@ -124,6 +125,7 @@ src_organism <- function(org, txdb) {
 
 #' @rdname src_organism
 #' @importFrom GenomeInfoDb genomeBuilds
+#' @importFrom utils read.csv tail
 #' @export
 src_ucsc <- function(organism, genome = NULL, id = NULL, verbose=TRUE) {
     stopifnot(is.character(organism), length(organism) == 1L)
@@ -142,7 +144,7 @@ src_ucsc <- function(organism, genome = NULL, id = NULL, verbose=TRUE) {
              "; see GenomeInfoDb::listSpecies()")
     builds <- builds[idx,]
 
-    species <- tail(builds$speciesLong, 1L)
+    species <- tail(builds$organism, 1L)
     twoletter <- sub("([A-z]).* ([a-z]).*", "\\U\\1\\L\\2", species, perl=TRUE)
     binomial <- sub("([A-z]).* ([[:alpha:]]+)", "\\U\\1\\L\\2", species,
                     perl=TRUE)

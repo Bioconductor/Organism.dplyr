@@ -18,9 +18,12 @@ Imports:
     AnnotationDbi,
     RSQLite,
     S4Vectors,
-    GenomeInfoDb
+    GenomeInfoDb,
+    GenomicFeatures,
+    methods
 Suggests:
-    org.Hs.eg.db
+    org.Hs.eg.db,
+    TxDb.Hsapiens.UCSC.hg38.knownGene
 License: Artistic-2.0
 Encoding: UTF-8
 LazyData: true

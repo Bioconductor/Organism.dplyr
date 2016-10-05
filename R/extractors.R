@@ -5,45 +5,49 @@
 # organism <- src_organism("org.Hs.eg.db", "TxDb.Hsapiens.UCSC.hg38.knownGene")
 
 # transcripts()
-#' @param src object created by src_organism
+#' Generic functions to extract genomic features from an object.
 #' 
+#' @param x object created by src_organism
+#' 
+#' @param filter Either NULL or a named list of vectors to be used to 
+#'     restrict the output.
+#'     
 #' @examples
 #' organism <- src_organism("org.Hs.eg.db", "TxDb.Hsapiens.UCSC.hg38.knownGene")
-#' inner_join(transcripts1(organism), tbl(organism, "id"), copy = TRUE) %>% 
-#'      filter(symbol == "PTEN") %>%
-#'      dplyr::select(entrez, chrom, txstart, txend, txid, txname)
+#' filter <- list(symbol=c("PTEN", "BRCA1"), 
+#'                entrez="5728", 
+#'                go=c("GO:0000079", "GO:0001933"))
+#' transcripts(organism, filter)
 #' 
 #' @rdname src_organism
+#' @importFrom GenomicFeatures transcripts
 #' @export
-transcripts1 <- function(src) {
-    tbl(src, "ranges_tx")  %>%
-        dplyr::select(entrez, chrom, txstart, txend, txid, txname)
-}
 
-
-#' @examples
-#' transcripts2(organism) %>%
-#'      filter(symbol == "PTEN") %>%
-#'      dplyr::select(entrez, chrom, txstart, txend, txid, txname)
-#' 
-#' @rdname src_organism
-#' @export
-transcripts2 <- function(src) {
-    inner_join(tbl(src, "id"), tbl(src, "ranges_tx"))
-}
-
-#'
-#' @examples
-#' filters <- list(
-#'     symbol=c("PTEN", "BRCA1"),
-#'     entrez="1223",
-#'     go=c("GO:0003674", GO:0004867"))
-#' transcripts3(src, filter=filters)
-transcripts3 <- function(src, filter=list(symbol="PTEN")) {
+setMethod("transcripts", "src_organism", function(x, filter) {
     fields <- names(filter)
-    for (i in src_tbls)
-        if (fields %in% colnames(tbl(human, i)))
-}
+    tbls <- src_tbls(x)
+    table <- tbl(x, "ranges_tx")
+    filters <- list()
+    for (i in tbls) {
+        keep <- fields[fields %in% colnames(tbl(x, i))]
+        if (!is.null(keep) && !(length(keep) == 1 && keep == "entrez")) {
+            table <- inner_join(table, tbl(x, i))
+            filters <- c(filters, 
+                lapply(keep, 
+                    function(keep) {
+                        if (length(filter[[keep]]) == 1)
+                            paste0(keep, "==\"", filter[[keep]],"\"")
+                        else
+                            paste0(keep, " %in% c", sprintf("(%s)",
+                             paste0("'", filter[[keep]], "'", collapse=", ")))
+                    }
+                ))
+        } 
+    }
+    table %>% filter_(paste0(unlist(filters), collapse=" & ")) %>%
+        dplyr::select(entrez, tx_chrom, tx_start, tx_end, tx_id, tx_name)
+})
+
 
 .tbl_join <- function(src, x, y)
     inner_join(tbl(src, x), tbl(src, y))
