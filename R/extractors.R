@@ -41,19 +41,12 @@
 
 setMethod("transcripts", "src_organism", function(x, filter = NULL) {
     table <- tbl(x, "ranges_tx")
-
-    .tbl_join(x, table, filter) %>% 
-        dplyr::select(entrez, tx_chrom, tx_start, tx_end, tx_strand, 
-                      tx_id, tx_name)
-
-    # fields <- 
-    #     c("entrez", "tx_chrom", "tx_start", "tx_end", "tx_id", "tx_name",
-    #       fields)
-    # fields <- paste(sQuote(fields), collapse=", ")
-    # fields <- paste0("'", fields, "'", collapse=", ")
-    # table %>% dplyr::select_(fields)
+    table <- .tbl_join(x, table, filter)
+    fields <- unique(
+        c("tx_id", "tx_chrom", "tx_start", "tx_end", "tx_name",
+          names(filter)))
+    do.call(select_, c(list(table), as.list(fields)))
 })
-
 
 #' @rdname src_organism
 #' @importFrom GenomicFeatures exons
