@@ -1,19 +1,15 @@
 CREATE TEMPORARY TABLE IF NOT EXISTS ranges_gene AS
 SELECT DISTINCT
     gene.gene_id AS entrez,
-    gene._tx_id AS tx_id,
     tx_chrom,
     MIN(tx_start) AS gene_start,
     MAX(tx_end) AS gene_end,
-    tx_strand,
-    tx_name
+    tx_strand
 FROM txdb_entrez.gene
-LEFT OUTER JOIN txdb_entrez.transcript ON txdb_entrez.transcript._tx_id = txdb_entrez.gene._tx_id
-GROUP BY entrez, tx_chrom, tx_id, tx_strand, tx_name;
+LEFT OUTER JOIN txdb_entrez.transcript ON transcript._tx_id = gene._tx_id
+GROUP BY entrez, tx_chrom, tx_strand;
 
 CREATE INDEX IF NOT EXISTS entrez_ranges_gene on ranges_gene (entrez); 
-
-CREATE INDEX IF NOT EXISTS txid_ranges_gene on ranges_gene (tx_id); 
 
 CREATE TEMPORARY TABLE IF NOT EXISTS ranges_tx AS
 SELECT DISTINCT
@@ -25,8 +21,8 @@ SELECT DISTINCT
     tx_end,
     tx_name,
     tx_type
-FROM txdb_entrez.gene
-LEFT OUTER JOIN txdb_entrez.transcript ON txdb_entrez.transcript._tx_id = txdb_entrez.gene._tx_id;
+FROM txdb_entrez.transcript
+LEFT OUTER JOIN txdb_entrez.gene ON transcript._tx_id = gene._tx_id;
 
 CREATE INDEX IF NOT EXISTS entrez_ranges_tx on ranges_tx (entrez); 
 
@@ -43,10 +39,10 @@ SELECT DISTINCT
     exon_end,
     exon_name,
     exon_rank
-FROM txdb_entrez.gene
-LEFT OUTER JOIN txdb_entrez.transcript ON txdb_entrez.transcript._tx_id = txdb_entrez.gene._tx_id
-LEFT OUTER JOIN txdb_entrez.splicing ON txdb_entrez.splicing._tx_id = txdb_entrez.gene._tx_id
-LEFT OUTER JOIN txdb_entrez.exon ON txdb_entrez.exon._exon_id = txdb_entrez.splicing._exon_id;
+FROM txdb_entrez.exon
+LEFT OUTER JOIN txdb_entrez.splicing ON exon._exon_id = splicing._exon_id
+LEFT OUTER JOIN txdb_entrez.transcript ON splicing._tx_id = transcript._tx_id
+LEFT OUTER JOIN txdb_entrez.gene ON transcript._tx_id = gene._tx_id;
 
 CREATE INDEX IF NOT EXISTS entrez_ranges_exon on ranges_exon (entrez); 
 
@@ -65,10 +61,10 @@ SELECT DISTINCT
     cds_end,
     cds_name,
     exon_rank
-FROM txdb_entrez.gene
-LEFT OUTER JOIN txdb_entrez.transcript ON txdb_entrez.transcript._tx_id = txdb_entrez.gene._tx_id
-LEFT OUTER JOIN txdb_entrez.splicing ON txdb_entrez.splicing._tx_id = txdb_entrez.gene._tx_id
-LEFT OUTER JOIN txdb_entrez.cds ON txdb_entrez.cds._cds_id = txdb_entrez.splicing._cds_id;
+FROM txdb_entrez.cds
+LEFT OUTER JOIN txdb_entrez.splicing ON cds._cds_id = splicing._cds_id
+LEFT OUTER JOIN txdb_entrez.transcript ON splicing._tx_id = transcript._tx_id
+LEFT OUTER JOIN txdb_entrez.gene ON transcript._tx_id = gene._tx_id;
 
 CREATE INDEX IF NOT EXISTS entrez_ranges_cds on ranges_cds (entrez); 
 

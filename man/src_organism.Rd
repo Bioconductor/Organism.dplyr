@@ -2,10 +2,17 @@
 % Please edit documentation in R/src.R, R/extractors.R
 \docType{methods}
 \name{src_organism}
+\alias{cds,src_organism-method}
+\alias{cdsBy,src_organism-method}
+\alias{exons,src_organism-method}
+\alias{exonsBy,src_organism-method}
+\alias{genes,src_organism-method}
+\alias{promoters,src_organism-method}
 \alias{select_.tbl_organism}
 \alias{src_organism}
 \alias{src_ucsc}
 \alias{transcripts,src_organism-method}
+\alias{transcriptsBy,src_organism-method}
 \title{Create a dplyr view into an org package}
 \usage{
 src_organism(org, txdb)
@@ -14,7 +21,22 @@ src_ucsc(organism, genome = NULL, id = NULL, verbose = TRUE)
 
 \method{select_}{tbl_organism}(.data, ...)
 
-\S4method{transcripts}{src_organism}(x, filter)
+\S4method{transcripts}{src_organism}(x, filter = NULL)
+
+\S4method{exons}{src_organism}(x, filter = NULL)
+
+\S4method{cds}{src_organism}(x, filter = NULL)
+
+\S4method{genes}{src_organism}(x, filter = NULL)
+
+\S4method{promoters}{src_organism}(x, upstream, downstream, filter = NULL)
+
+\S4method{transcriptsBy}{src_organism}(x, by = c("gene", "exon", "cds"),
+  filter = NULL)
+
+\S4method{exonsBy}{src_organism}(x, by = c("gene", "tx"), filter = NULL)
+
+\S4method{cdsBy}{src_organism}(x, by = c("gene", "tx"), filter = NULL)
 }
 \arguments{
 \item{org}{character(1) naming a \code{org.*} package (e.g.,
@@ -29,6 +51,14 @@ object instantiating the content of a \code{TxDb.*} pacakge.}
 
 \item{filter}{Either NULL or a named list of vectors to be used to 
 restrict the output.}
+
+\item{upstream}{For \code{promoters()}: An integer(1) value indicating the 
+number of bases upstream from the transcription start site.}
+
+\item{downstream}{For \code{promoters()}: An integer(1) value indicating 
+the number of bases downstream from the transcription start site.}
+
+\item{by}{One of "gene", "exon", "cds" or "tx". Determines the grouping.}
 }
 \value{
 A dplyr \code{tbl_sql} instance representing the data
@@ -68,10 +98,19 @@ inner_join(id, tbl(organism, "ranges_tx")) \%>\% filter(symbol == "PTEN") \%>\%
 
 
 organism <- src_organism("org.Hs.eg.db", "TxDb.Hsapiens.UCSC.hg38.knownGene")
-filter <- list(symbol=c("PTEN", "BRCA1"), 
+filters <- list(symbol=c("PTEN", "BRCA1"), 
                entrez="5728", 
                go=c("GO:0000079", "GO:0001933"))
-transcripts(organism, filter)
+transcripts(organism, filters)
+
+promoters(organism, upstream=100, downstream=50, 
+          filter = list(symbol="BRCA1"))
+
+transcriptsBy(organism, by = "gene", filter = list(symbol="PTEN"))
+
+exonsBy(organism, by = "gene", filter = list(symbol="PTEN"))
+
+cdsBy(organism, by = "gene", filter = list(symbol="PTEN"))
 
 }
 
