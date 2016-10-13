@@ -1,23 +1,31 @@
+.tbl_filter <- function(keep1, table, filter) {
+    values <- paste0("'", filter[[keep1]], "'", collapse=", ")
+    op <- if (length(filter[[keep1]]) == 1) "==" else "%in%"
+    sprintf("%s %s c(%s)", keep1, op, values)
+}
+
 .tbl_join <- function(x, table, filter) {
-    if (!is.null(filter)) {
-        fields <- names(filter)
-        tbls <- src_tbls(x)
-        
-        for (i in tbls) {
-            keep <- fields[fields %in% colnames(tbl(x, i))]
-            if (is.null(keep) || length(keep) == 0 ||
-                (length(keep) == 1L && keep == "entrez"))
-                next
-            filters <- sapply(keep, function(keep1) {
-                # values <- paste0(sQuote(filter[[keep1]]), collapse=", ")
-                values <- paste0("'", filter[[keep1]], "'", collapse=", ")
-                op <- if (length(filter[[keep1]]) == 1) "==" else "%in%"
-                sprintf("%s %s c(%s)", keep1, op, values)
-            })
-            filters <- paste0(filters, collapse=" & ") 
-            table <- inner_join(table, tbl(x, i)) %>% filter_(filters)
-        }
+    if (is.null(filter))
+        return(table)
+
+    if ("entrez" %in% names(filter)) {
+        filters <- .tbl_filter("entrez", table, filter)
+        table <- table %>% filter_(filters)
+        filter <- filter[names(filter) != "entrez"]
     }
+
+    fields <- names(filter)
+    tbls <- src_tbls(x)
+    
+    for (i in tbls) {
+        keep <- fields[fields %in% colnames(tbl(x, i))]
+        if (is.null(keep) || length(keep) == 0)
+            next
+        filters <- sapply(keep, .tbl_filter, table, filter)
+        filters <- paste0(filters, collapse=" & ") 
+        table <- inner_join(table, tbl(x, i)) %>% filter_(filters)
+    }
+
     table
 }
 
