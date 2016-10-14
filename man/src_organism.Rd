@@ -34,9 +34,9 @@ src_ucsc(organism, genome = NULL, id = NULL, verbose = TRUE)
 \S4method{transcriptsBy}{src_organism}(x, by = c("gene", "exon", "cds"),
   filter = NULL)
 
-\S4method{exonsBy}{src_organism}(x, by = c("gene", "tx"), filter = NULL)
+\S4method{exonsBy}{src_organism}(x, by = c("tx", "gene"), filter = NULL)
 
-\S4method{cdsBy}{src_organism}(x, by = c("gene", "tx"), filter = NULL)
+\S4method{cdsBy}{src_organism}(x, by = c("tx", "gene"), filter = NULL)
 }
 \arguments{
 \item{org}{character(1) naming a \code{org.*} package (e.g.,
@@ -47,15 +47,15 @@ content of an \code{org.*} pacakge.}
 \code{TxDb.Hsapiens.UCSC.hg38.knownGene}) or \code{TxDb}
 object instantiating the content of a \code{TxDb.*} pacakge.}
 
-\item{x}{object created by src_organism}
+\item{x}{A src_organism object}
 
-\item{filter}{Either NULL or a named list of vectors to be used to 
+\item{filter}{Either NULL or a named list of vectors to be used to
 restrict the output.}
 
-\item{upstream}{For \code{promoters()}: An integer(1) value indicating the 
-number of bases upstream from the transcription start site.}
+\item{upstream}{For \code{promoters()}: An integer(1) value indicating 
+the number of bases upstream from the transcription start site.}
 
-\item{downstream}{For \code{promoters()}: An integer(1) value indicating 
+\item{downstream}{For \code{promoters()}: An integer(1) value indicating
 the number of bases downstream from the transcription start site.}
 
 \item{by}{One of "gene", "exon", "cds" or "tx". Determines the grouping.}
@@ -97,13 +97,14 @@ inner_join(id, tbl(organism, "ranges_tx")) \%>\% filter(symbol == "PTEN") \%>\%
      dplyr::select(entrez, symbol, tx_id, tx_start, tx_end)
 
 
-organism <- src_organism("org.Hs.eg.db", "TxDb.Hsapiens.UCSC.hg38.knownGene")
-filters <- list(symbol=c("PTEN", "BRCA1"), 
-               entrez="5728", 
+organism <- src_organism("org.Hs.eg.db", 
+                         "TxDb.Hsapiens.UCSC.hg38.knownGene")
+filters <- list(symbol=c("PTEN", "BRCA1"),
+               entrez="5728",
                go=c("GO:0000079", "GO:0001933"))
 transcripts(organism, filters)
 
-promoters(organism, upstream=100, downstream=50, 
+promoters(organism, upstream=100, downstream=50,
           filter = list(symbol="BRCA1"))
 
 transcriptsBy(organism, by = "gene", filter = list(symbol="PTEN"))

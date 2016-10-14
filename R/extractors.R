@@ -37,7 +37,8 @@
 #'     restrict the output.
 #'
 #' @examples
-#' organism <- src_organism("org.Hs.eg.db", "TxDb.Hsapiens.UCSC.hg38.knownGene")
+#' organism <- src_organism("org.Hs.eg.db", 
+#'                          "TxDb.Hsapiens.UCSC.hg38.knownGene")
 #' filters <- list(symbol=c("PTEN", "BRCA1"),
 #'                entrez="5728",
 #'                go=c("GO:0000079", "GO:0001933"))
@@ -51,8 +52,8 @@ setMethod("transcripts", "src_organism", function(x, filter = NULL) {
     table <- tbl(x, "ranges_tx")
     table <- .tbl_join(x, table, filter)
     fields <- unique(
-        c("tx_id", "tx_chrom", "tx_start", "tx_end", "tx_name",
-          names(filter)))
+        c("tx_id", "entrez", "tx_chrom", "tx_start", "tx_end", "tx_strand", 
+          "tx_name", names(filter)))
     do.call(select_, c(list(table), as.list(fields)))
 })
 
@@ -62,9 +63,11 @@ setMethod("transcripts", "src_organism", function(x, filter = NULL) {
 
 setMethod("exons", "src_organism", function(x, filter = NULL) {
     table <- tbl(x, "ranges_exon")
-    .tbl_join(x, table, filter) %>%
-        dplyr::select(entrez, exon_chrom, exon_start, exon_end,
-                      exon_strand, tx_id, exon_id, exon_name, exon_rank)
+    table <- .tbl_join(x, table, filter)
+    fields <- unique(
+        c("exon_id", "tx_id", "entrez", "exon_chrom", "exon_start", 
+          "exon_end", "exon_strand", "exon_name", "exon_rank", names(filter)))
+    do.call(select_, c(list(table), as.list(fields)))
 })
 
 
@@ -74,9 +77,11 @@ setMethod("exons", "src_organism", function(x, filter = NULL) {
 
 setMethod("cds", "src_organism", function(x, filter = NULL) {
     table <- tbl(x, "ranges_cds")
-    .tbl_join(x, table, filter) %>%
-        dplyr::select(entrez, cds_chrom, cds_start, cds_end,
-                      cds_strand, tx_id, cds_id, cds_name, exon_rank)
+    table <- .tbl_join(x, table, filter)
+    fields <- unique(
+        c("cds_id", "tx_id", "entrez", "cds_chrom", "cds_start", "cds_end", 
+          "cds_strand", "cds_name", "exon_rank", names(filter)))
+    do.call(select_, c(list(table), as.list(fields)))
 })
 
 
@@ -86,14 +91,16 @@ setMethod("cds", "src_organism", function(x, filter = NULL) {
 
 setMethod("genes", "src_organism", function(x, filter = NULL) {
     table <- tbl(x, "ranges_gene")
-    .tbl_join(x, table, filter) %>%
-        dplyr::select(entrez, tx_chrom, gene_start, gene_end,
-                      tx_strand)
+    table <- .tbl_join(x, table, filter)
+    fields <- unique(
+        c("entrez", "tx_chrom", "gene_start", "gene_end", "tx_strand", 
+          names(filter)))
+    do.call(select_, c(list(table), as.list(fields)))
 })
 
 
-#' @param upstream For \code{promoters()}: An integer(1) value indicating the
-#' number of bases upstream from the transcription start site.
+#' @param upstream For \code{promoters()}: An integer(1) value indicating 
+#' the number of bases upstream from the transcription start site.
 #'
 #' @param downstream For \code{promoters()}: An integer(1) value indicating
 #' the number of bases downstream from the transcription start site.
@@ -109,23 +116,35 @@ setMethod("genes", "src_organism", function(x, filter = NULL) {
 
 setMethod("promoters", "src_organism",
 function(x, upstream, downstream, filter = NULL) {
+    if (!isSingleNumber(upstream)) 
+        stop("'upstream' must be a single integer")
+    if (!is.integer(upstream)) 
+        upstream <- as.numeric(upstream)
+    if (!isSingleNumber(downstream)) 
+        stop("'downstream' must be a single integer")
+    if (!is.integer(downstream)) 
+        downstream <- as.numeric(downstream)
+    if (upstream < 0 | downstream < 0) 
+        stop("'upstream' and 'downstream' must be integers >= 0")
+    # if (any(strand(x) == "*")) 
+    #     warning("'*' ranges were treated as '+'")
     if(missing(upstream))
         upstream = 0
     if(missing(downstream))
         downstream = 2200
-
-    tmp <- transcripts(organism, filter = filter) %>%
-           mutate(start = if(tx_strand == "+" | tx_strand == "*")
-                              tx_start - upstream
-                          else if (tx_strand == "-")
-                              tx_end - downstream + 1,
-                  end = if(tx_strand == "+" | tx_strand == "*")
-                            tx_start + downstream - 1
-                        else if (tx_strand == "-")
-                            tx_end + upstream)
-
-    tmp %>%
-    dplyr::select(tx_id, entrez, tx_chrom, start, end, tx_strand, tx_name)
+    
+    table <- transcripts(organism, filter = filter) %>%
+        mutate(start = ifelse(tx_strand == "-", 
+                              tx_end - downstream + 1, 
+                              tx_start - upstream),
+            end = ifelse(tx_strand == "-", 
+                         tx_end + upstream, 
+                         tx_start + downstream - 1))
+    
+    fields <- unique(
+        c("tx_id", "entrez", "tx_chrom", "start", "end", "tx_strand", 
+          "tx_name", names(filter)))
+    do.call(select_, c(list(table), as.list(fields)))
 })
 
 
@@ -145,20 +164,24 @@ function(x, by = c("gene", "exon", "cds"), filter = NULL) {
     tx <- transcripts(x, filter = filter)
 
     if (by == "gene") {
-        inner_join(tx, tbl(x, "ranges_gene")) %>%
-            dplyr::select(entrez, tx_chrom, tx_start, tx_end,
-                          tx_strand, tx_id, tx_name)
+        table <- inner_join(tx, tbl(x, "ranges_gene")) 
+        fields <- unique(
+            c("entrez", "tx_id", "tx_chrom", "tx_start", "tx_end",  
+              "tx_strand", "tx_name", names(filter)))
     }
     else if (by == "exon") {
-        inner_join(tx, tbl(x, "ranges_exon"), by = "tx_id") %>%
-            dplyr::select(exon_id, tx_chrom, tx_start, tx_end,
-                          tx_strand, tx_id, tx_name, exon_rank)
+        table <- inner_join(tx, tbl(x, "ranges_exon"), by = "tx_id") 
+        fields <- unique(
+            c("exon_id", "tx_id", "tx_chrom", "tx_start", "tx_end",  
+              "tx_strand", "tx_name", "exon_rank", names(filter)))
     }
     else if (by == "cds") {
-        inner_join(tx, tbl(x, "ranges_cds"), by = "tx_id") %>%
-            dplyr::select(cds_id, tx_chrom, tx_start, tx_end,
-                          tx_strand, tx_id, tx_name, exon_rank)
+        table <- inner_join(tx, tbl(x, "ranges_cds"), by = "tx_id") 
+        fields <- unique(
+            c("cds_id", "tx_id", "tx_chrom", "tx_start", "tx_end",  
+              "tx_strand", "tx_name", "exon_rank", names(filter)))
     }
+    do.call(select_, c(list(table), as.list(fields)))
 })
 
 
@@ -170,20 +193,23 @@ function(x, by = c("gene", "exon", "cds"), filter = NULL) {
 #' @export
 
 setMethod("exonsBy", "src_organism",
-function(x, by = c("gene", "tx"), filter = NULL) {
+function(x, by = c("tx", "gene"), filter = NULL) {
     by <- match.arg(by)
     exons <- exons(x, filter = filter)
 
-    if (by == "gene") {
-        inner_join(exons, tbl(x, "ranges_gene")) %>%
-            dplyr::select(entrez, exon_chrom, exon_start, exon_end,
-                          exon_strand, exon_id, exon_name)
+    if (by == "tx") {
+        table <- inner_join(exons, tbl(x, "ranges_tx"), by = "tx_id") 
+        fields <- unique(
+            c("tx_id", "exon_id", "exon_chrom", "exon_start", "exon_end",  
+              "exon_strand", "exon_name", "exon_rank", names(filter)))
     }
-    else if (by == "tx") {
-        inner_join(exons, tbl(x, "ranges_tx"), by = "tx_id") %>%
-            dplyr::select(tx_id, exon_chrom, exon_start, exon_end,
-                          exon_strand, exon_id, exon_name, exon_rank)
+    else if (by == "gene") {
+        table <- inner_join(exons, tbl(x, "ranges_gene"))
+        fields <- unique(
+            c("entrez", "exon_id", "exon_chrom", "exon_start", "exon_end",  
+              "exon_strand", "exon_name", names(filter)))
     }
+    do.call(select_, c(list(table), as.list(fields)))
 })
 
 
@@ -195,18 +221,21 @@ function(x, by = c("gene", "tx"), filter = NULL) {
 #' @export
 
 setMethod("cdsBy", "src_organism",
-function(x, by = c("gene", "tx"), filter = NULL) {
+function(x, by = c("tx", "gene"), filter = NULL) {
     by <- match.arg(by)
     cds <- cds(x, filter = filter)
 
-    if (by == "gene") {
-        inner_join(cds, tbl(x, "ranges_gene")) %>%
-            dplyr::select(entrez, cds_chrom, cds_start, cds_end,
-                          cds_strand, cds_id, cds_name)
+    if (by == "tx") {
+        table <- inner_join(cds, tbl(x, "ranges_tx"), by = "tx_id") 
+        fields <- unique(
+            c("tx_id", "cds_id", "cds_chrom", "cds_start", "cds_end",  
+              "cds_strand", "cds_name", "exon_rank", names(filter)))
     }
-    else if (by == "tx") {
-        inner_join(cds, tbl(x, "ranges_tx"), by = "tx_id") %>%
-            dplyr::select(tx_id, cds_chrom, cds_start, cds_end,
-                          cds_strand, cds_id, cds_name, exon_rank)
+    else if (by == "gene") {
+        table <- inner_join(cds, tbl(x, "ranges_gene"))
+        fields <- unique(
+            c("entrez", "cds_id", "cds_chrom", "cds_start", "cds_end", 
+              "cds_strand", "cds_name", names(filter)))
     }
+    do.call(select_, c(list(table), as.list(fields)))
 })
