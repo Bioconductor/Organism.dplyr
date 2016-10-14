@@ -30,13 +30,13 @@ CREATE INDEX IF NOT EXISTS txid_ranges_tx on ranges_tx (tx_id);
 
 CREATE TEMPORARY TABLE IF NOT EXISTS ranges_exon AS
 SELECT DISTINCT
-    gene.gene_id AS entrez,
-    transcript._tx_id AS tx_id,
-    exon._exon_id AS exon_id,
     exon_chrom,
     exon_strand,
     exon_start,
     exon_end,
+    gene.gene_id AS entrez,
+    transcript._tx_id AS tx_id,
+    exon._exon_id AS exon_id,
     exon_name,
     exon_rank
 FROM txdb_entrez.exon

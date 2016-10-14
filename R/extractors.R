@@ -65,8 +65,9 @@ setMethod("exons", "src_organism", function(x, filter = NULL) {
     table <- tbl(x, "ranges_exon")
     table <- .tbl_join(x, table, filter)
     fields <- unique(
-        c("exon_id", "tx_id", "entrez", "exon_chrom", "exon_start", 
-          "exon_end", "exon_strand", "exon_name", "exon_rank", names(filter)))
+        c("exon_chrom", "exon_start", "exon_end", "exon_strand",
+          "entrez", "tx_id", "exon_id", "exon_name", "exon_rank",
+          names(filter)))
     do.call(select_, c(list(table), as.list(fields)))
 })
 
@@ -238,4 +239,26 @@ function(x, by = c("tx", "gene"), filter = NULL) {
               "cds_strand", "cds_name", names(filter)))
     }
     do.call(select_, c(list(table), as.list(fields)))
+})
+
+
+setMethod("intronsByTranscript", "src_organism",
+function(x, filter=NULL) {
+    tx <- transcripts(x, filter=filter)
+    exn <- exonsBy(x, filter=filter)
+
+    tx_gr <- tx %>% select(tx_id, tx_chrom, tx_start, tx_end, tx_strand) %>%
+        collect(n=Inf) %>% as("GRanges")
+    exn_grl <- exn %>%
+        select(tx_id, exon_id, exon_chrom, exon_start, exon_end,
+               exon_strand) %>%
+        collect(n=Inf) %>% as("GRanges") %>% split(.$tx_id)
+    
+    tx_gr<- tx_gr[match(names(exn_grl), mcols(tx_gr)[, "tx_id"])]
+    ans <- unlist(psetdiff(tx_gr, exn_grl))
+
+    mcols(ans)[, "tx_id"] <- names(ans)
+    unname(ans) %>% as.data.frame %>% tbl_df %>%
+        select(tx_id, intron_chrom=seqnames, intron_start=start,
+               intron_end=end, intron_strand=strand)
 })
