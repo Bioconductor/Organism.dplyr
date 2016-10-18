@@ -20,6 +20,8 @@ Imports:
     S4Vectors,
     GenomeInfoDb,
     GenomicFeatures,
+    IRanges,
+    GenomicRanges,
     methods
 Suggests:
     org.Hs.eg.db,

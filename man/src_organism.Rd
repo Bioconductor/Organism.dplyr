@@ -6,11 +6,14 @@
 \alias{cdsBy,src_organism-method}
 \alias{exons,src_organism-method}
 \alias{exonsBy,src_organism-method}
+\alias{fiveUTRsByTranscript,src_organism-method}
 \alias{genes,src_organism-method}
+\alias{intronsByTranscript,src_organism-method}
 \alias{promoters,src_organism-method}
 \alias{select_.tbl_organism}
 \alias{src_organism}
 \alias{src_ucsc}
+\alias{threeUTRsByTranscript,src_organism-method}
 \alias{transcripts,src_organism-method}
 \alias{transcriptsBy,src_organism-method}
 \title{Create a dplyr view into an org package}
@@ -37,6 +40,12 @@ src_ucsc(organism, genome = NULL, id = NULL, verbose = TRUE)
 \S4method{exonsBy}{src_organism}(x, by = c("tx", "gene"), filter = NULL)
 
 \S4method{cdsBy}{src_organism}(x, by = c("tx", "gene"), filter = NULL)
+
+\S4method{intronsByTranscript}{src_organism}(x, filter = NULL)
+
+\S4method{fiveUTRsByTranscript}{src_organism}(x, filter = NULL)
+
+\S4method{threeUTRsByTranscript}{src_organism}(x, filter = NULL)
 }
 \arguments{
 \item{org}{character(1) naming a \code{org.*} package (e.g.,
@@ -112,6 +121,12 @@ transcriptsBy(organism, by = "gene", filter = list(symbol="PTEN"))
 exonsBy(organism, by = "gene", filter = list(symbol="PTEN"))
 
 cdsBy(organism, by = "gene", filter = list(symbol="PTEN"))
+
+intronsByTranscript(organism, filter = list(symbol="PTEN"))
+
+fiveUTRsByTranscript(organism, filter = list(symbol="PTEN"))
+
+threeUTRsByTranscript(organism, filter = list(symbol="PTEN"))
 
 }
 
