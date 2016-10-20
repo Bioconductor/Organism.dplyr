@@ -56,6 +56,12 @@ content of an \code{org.*} pacakge.}
 \code{TxDb.Hsapiens.UCSC.hg38.knownGene}) or \code{TxDb}
 object instantiating the content of a \code{TxDb.*} pacakge.}
 
+\item{organism}{}
+
+\item{genome}{}
+
+\item{id}{}
+
 \item{x}{A src_organism object}
 
 \item{filter}{Either NULL or a named list of vectors to be used to
@@ -105,6 +111,8 @@ id \%>\% dplyr::select(ensembl, symbol) \%>\% filter(symbol == "PTEN")
 inner_join(id, tbl(organism, "ranges_tx")) \%>\% filter(symbol == "PTEN") \%>\%
      dplyr::select(entrez, symbol, tx_id, tx_start, tx_end)
 
+
+human <- src_ucsc("human")
 
 organism <- src_organism("org.Hs.eg.db", 
                          "TxDb.Hsapiens.UCSC.hg38.knownGene")

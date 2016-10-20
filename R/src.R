@@ -86,10 +86,14 @@ src_organism <- function(org, txdb) {
     org_schema <- org_meta$value[org_meta$name == "DBSCHEMA"]
     txdb_meta <- metadata(txdb)
     txdb_type <- txdb_meta$value[txdb_meta$name == "Type of Gene ID"]
-    if (startsWith(tolower(txdb_type), "entrez"))
+    if (startsWith(tolower(txdb_type), "entrez")) {
         txdb_schema <- "txdb_entrez"
-    else if (startsWith(tolower(txdb_type), "ensembl"))
+        schema <- "entrez"
+    }
+    else if (startsWith(tolower(txdb_type), "ensembl")) {
         txdb_schema <- "txdb_ensembl"
+        schema <- "ensembl"
+    }
     else
         stop("unknown TxDb type: ", sQuote(txdb_type))
 
@@ -98,6 +102,7 @@ src_organism <- function(org, txdb) {
     
     src <- src_sql("sqlite", dbconn(org), path=dbfile(org))
     class(src) = c("src_organism", class(src))
+    attr(src, 'schema') <- schema
     src
 }
 
@@ -123,9 +128,18 @@ src_organism <- function(org, txdb) {
         dbGetQuery(con, paste0("DETACH '", tblname, "'"))
 }
 
+#' @param organism
+#' 
+#' @param genome
+#' 
+#' @param id
+#' 
+#' @examples 
+#' human <- src_ucsc("human")
+#' 
 #' @rdname src_organism
 #' @importFrom GenomeInfoDb genomeBuilds
-#' @importFrom utils read.csv tail
+#' @importFrom utils read.csv tail installed.packages
 #' @export
 src_ucsc <- function(organism, genome = NULL, id = NULL, verbose=TRUE) {
     stopifnot(is.character(organism), length(organism) == 1L)
@@ -133,7 +147,8 @@ src_ucsc <- function(organism, genome = NULL, id = NULL, verbose=TRUE) {
         stopifnot(is.character(genome), length(genome) == 1L)
     if (!missing(id))
         stopifnot(is.character(id), length(id) == 1L)
-
+    
+    # OrgDb
     filename <- system.file(
         package = "GenomeInfoDb", "extdata", "dataFiles",
         "genomeMappingTbl.csv")
@@ -149,14 +164,17 @@ src_ucsc <- function(organism, genome = NULL, id = NULL, verbose=TRUE) {
     binomial <- sub("([A-z]).* ([[:alpha:]]+)", "\\U\\1\\L\\2", species,
                     perl=TRUE)
     org <- sprintf("org.%s.eg.db", twoletter)
-
-    if (missing(genome))
-        genome <- tail(builds$ucscID, 1L)
-
-    if (missing(id)) {
+    
+    # TxDb
+    pkgs <- grep("TxDb", row.names(installed.packages()), value=TRUE)
+    pkgs <- grep(binomial, pkgs, value=TRUE)
+    if (length(pkgs) == 0)
+        stop("No TxDb package available for organism: ", organism)
+    
+    found <- FALSE
+    if (missing(id) & missing(genome)) {
         ids <- c("knownGene", "ensGene", "refGene")
-        pkgs <- grep("TxDb", row.names(installed.packages()), value=TRUE)
-        found <- FALSE
+        genome <- tail(builds$ucscID, 1L)
         for (id in ids) {
             txdb <- sprintf("TxDb.%s.UCSC.%s.%s", binomial, genome, id)
             if (txdb %in% pkgs) {
@@ -164,17 +182,42 @@ src_ucsc <- function(organism, genome = NULL, id = NULL, verbose=TRUE) {
                 break
             }
         }
-        if (!found)
-            stop("could not guess TxDb package for:",
-                 "\n  organism = ", organism,
-                 "\n  genome = ", genome,
-                 "\n  id = ", paste(ids, collapse=", "))
+    } else if (missing(id)) {
+        txdb <- .findPkg(pkgs, genome)
+    } else if (missing(genome)) {
+        txdb <- .findPkg(pkgs, id)
+    } else {
+        txdb <- sprintf("TxDb.%s.UCSC.%s.%s", binomial, genome, id)
+        if (txdb %in% pkgs) 
+            found <- TRUE
     }
-    txdb <- sprintf("TxDb.%s.UCSC.%s.%s", binomial, genome, id)
-
+    
+    if (!is.null(txdb)) 
+        found <- TRUE
+    
+    if (!found)
+        stop("could not guess TxDb package for:",
+             "\n  organism = ", organism,
+             if (!missing(genome))
+                 "\n  genome = ", genome,
+             if (!missing(id))
+                 "\n  genome = ", id)
+    
     if (verbose)
         message("using ", org, ", ", txdb)
     src_organism(org, txdb)
+}
+
+.findPkg <- function(pkgs, var) {
+    txdb <- NULL
+    pkgs <- grep(var, pkgs, value=TRUE)
+    if (length(pkgs) != 0) {
+        txdb = ifelse(length(pkgs) == 1, 
+                      pkgs, 
+                      names(tail(sapply(pkgs, function(pkg) 
+                          unlist(strsplit(pkg, "[.]"))[4]), 1L)))
+        }
+    txdb
 }
 
 #' @importFrom RSQLite dbSendQuery dbListTables

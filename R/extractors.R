@@ -4,14 +4,14 @@
     sprintf("%s %s c(%s)", keep1, op, values)
 }
 
-.tbl_join <- function(x, table, filter) {
+.tbl_join <- function(x, table, filter, schema) {
     if (is.null(filter))
         return(table)
 
-    if ("entrez" %in% names(filter)) {
-        filters <- .tbl_filter("entrez", table, filter)
+    if (schema %in% names(filter)) {
+        filters <- .tbl_filter(schema, table, filter)
         table <- table %>% filter_(filters)
-        filter <- filter[names(filter) != "entrez"]
+        filter <- filter[names(filter) != schema]
     }
 
     fields <- names(filter)
@@ -50,10 +50,11 @@
 
 setMethod("transcripts", "src_organism", function(x, filter = NULL) {
     table <- tbl(x, "ranges_tx")
-    table <- .tbl_join(x, table, filter) %>% arrange(tx_id)
+    schema <- attr(x, "schema")
+    table <- .tbl_join(x, table, filter, schema) %>% arrange(tx_id)
     fields <- unique(
         c("tx_chrom", "tx_start", "tx_end", "tx_strand", 
-          "entrez", "tx_id", "tx_name", names(filter)))
+          schema, "tx_id", "tx_name", names(filter)))
     do.call(select_, c(list(table), as.list(fields)))
 })
 
@@ -63,10 +64,11 @@ setMethod("transcripts", "src_organism", function(x, filter = NULL) {
 
 setMethod("exons", "src_organism", function(x, filter = NULL) {
     table <- tbl(x, "ranges_exon")
-    table <- .tbl_join(x, table, filter) %>% arrange(exon_id)
+    schema <- attr(x, "schema")
+    table <- .tbl_join(x, table, filter, schema) %>% arrange(exon_id)
     fields <- unique(
         c("exon_chrom", "exon_start", "exon_end", "exon_strand",
-          "entrez", "tx_id", "exon_id", "exon_name", "exon_rank",
+          schema, "tx_id", "exon_id", "exon_name", "exon_rank",
           names(filter)))
     do.call(select_, c(list(table), as.list(fields)))
 })
@@ -78,10 +80,11 @@ setMethod("exons", "src_organism", function(x, filter = NULL) {
 
 setMethod("cds", "src_organism", function(x, filter = NULL) {
     table <- tbl(x, "ranges_cds")
-    table <- .tbl_join(x, table, filter) %>% arrange(cds_id)
+    schema <- attr(x, "schema")
+    table <- .tbl_join(x, table, filter, schema) %>% arrange(cds_id)
     fields <- unique(
         c("cds_chrom", "cds_start", "cds_end", "cds_strand", 
-          "entrez", "tx_id", "cds_id", "cds_name", "exon_rank", names(filter)))
+          schema, "tx_id", "cds_id", "cds_name", "exon_rank", names(filter)))
     do.call(select_, c(list(table), as.list(fields)))
 })
 
@@ -92,10 +95,11 @@ setMethod("cds", "src_organism", function(x, filter = NULL) {
 
 setMethod("genes", "src_organism", function(x, filter = NULL) {
     table <- tbl(x, "ranges_gene")
-    table <- .tbl_join(x, table, filter) %>% arrange(entrez)
+    schema <- attr(x, "schema")
+    table <- .tbl_join(x, table, filter, schema) %>% arrange_(schema)
     fields <- unique(
         c("tx_chrom", "gene_start", "gene_end", "tx_strand", 
-          "entrez", names(filter)))
+          schema, names(filter)))
     do.call(select_, c(list(table), as.list(fields)))
 })
 
@@ -113,6 +117,7 @@ setMethod("genes", "src_organism", function(x, filter = NULL) {
 #' @rdname src_organism
 #' @importFrom GenomicFeatures promoters
 #' @importFrom dplyr mutate
+#' @importFrom S4Vectors isSingleNumber
 #' @export
 
 setMethod("promoters", "src_organism",
@@ -143,9 +148,10 @@ function(x, upstream, downstream, filter = NULL) {
                          tx_start + downstream - 1)) %>%
         arrange(tx_id)
     
+    schema <- attr(x, "schema")
     fields <- unique(
         c("tx_chrom", "start", "end", "tx_strand", 
-          "entrez", "tx_id", "tx_name", names(filter)))
+          schema, "tx_id", "tx_name", names(filter)))
     do.call(select_, c(list(table), as.list(fields)))
 })
 
@@ -164,13 +170,14 @@ setMethod("transcriptsBy", "src_organism",
 function(x, by = c("gene", "exon", "cds"), filter = NULL) {
     by <- match.arg(by)
     tx <- transcripts(x, filter = filter)
+    schema <- attr(x, "schema")
 
     if (by == "gene") {
         table <- inner_join(tx, tbl(x, "ranges_gene")) 
         fields <- unique(
             c("tx_chrom", "tx_start", "tx_end", "tx_strand",  
-              "entrez", "tx_id", "tx_name", names(filter)))
-        do.call(select_, c(list(table), as.list(fields))) %>% arrange(entrez)
+              schema, "tx_id", "tx_name", names(filter)))
+        do.call(select_, c(list(table), as.list(fields))) %>% arrange_(schema)
     }
     else if (by == "exon") {
         table <- inner_join(tx, tbl(x, "ranges_exon"), by = "tx_id") 
@@ -200,6 +207,7 @@ setMethod("exonsBy", "src_organism",
 function(x, by = c("tx", "gene"), filter = NULL) {
     by <- match.arg(by)
     exons <- exons(x, filter = filter)
+    schema <- attr(x, "schema")
 
     if (by == "tx") {
         table <- inner_join(exons, tbl(x, "ranges_tx"), by = "tx_id") 
@@ -212,8 +220,8 @@ function(x, by = c("tx", "gene"), filter = NULL) {
         table <- inner_join(exons, tbl(x, "ranges_gene")) 
         fields <- unique(
             c("exon_chrom", "exon_start", "exon_end", "exon_strand",  
-              "entrez", "exon_id", "exon_name", names(filter)))
-        do.call(select_, c(list(table), as.list(fields))) %>% arrange(entrez)
+              schema, "exon_id", "exon_name", names(filter)))
+        do.call(select_, c(list(table), as.list(fields))) %>% arrange_(schema)
     }
 })
 
@@ -229,6 +237,7 @@ setMethod("cdsBy", "src_organism",
 function(x, by = c("tx", "gene"), filter = NULL) {
     by <- match.arg(by)
     cds <- cds(x, filter = filter)
+    schema <- attr(x, "schema")
 
     if (by == "tx") {
         table <- inner_join(cds, tbl(x, "ranges_tx"), by = "tx_id") 
@@ -241,8 +250,8 @@ function(x, by = c("tx", "gene"), filter = NULL) {
         table <- inner_join(cds, tbl(x, "ranges_gene")) 
         fields <- unique(
             c("cds_chrom", "cds_start", "cds_end", "cds_strand", 
-              "entrez", "cds_id", "cds_name", names(filter)))
-        do.call(select_, c(list(table), as.list(fields))) %>% arrange(entrez)
+              schema, "cds_id", "cds_name", names(filter)))
+        do.call(select_, c(list(table), as.list(fields))) %>% arrange_(schema)
     }
 })
 
@@ -252,7 +261,7 @@ function(x, by = c("tx", "gene"), filter = NULL) {
 #'
 #' @rdname src_organism
 #' @importFrom GenomicFeatures intronsByTranscript
-#' @importFrom GenomicRanges split
+#' @importFrom GenomicRanges split mcols mcols<-
 #' @importFrom IRanges psetdiff
 #' @export
 setMethod("intronsByTranscript", "src_organism",
