@@ -6,7 +6,7 @@ SELECT DISTINCT
     tx_strand,
     gene.gene_id AS ensembl
 FROM txdb_ensembl.gene
-LEFT OUTER JOIN txdb_ensembl.transcript ON transcript._tx_id = gene._tx_id
+JOIN txdb_ensembl.transcript ON transcript._tx_id = gene._tx_id
 GROUP BY ensembl, tx_chrom, tx_strand;
 
 CREATE INDEX IF NOT EXISTS ensembl_ranges_gene on ranges_gene (ensembl); 
@@ -39,9 +39,9 @@ SELECT DISTINCT
     exon._exon_id AS exon_id,
     exon_name,
     exon_rank
-FROM txdb_ensembl.splicing
-LEFT OUTER JOIN txdb_ensembl.exon ON exon._exon_id = splicing._exon_id
-LEFT OUTER JOIN txdb_ensembl.transcript ON splicing._tx_id = transcript._tx_id
+FROM txdb_ensembl.exon
+JOIN txdb_ensembl.splicing ON exon._exon_id = splicing._exon_id
+JOIN txdb_ensembl.transcript ON splicing._tx_id = transcript._tx_id
 LEFT OUTER JOIN txdb_ensembl.gene ON transcript._tx_id = gene._tx_id;
 
 CREATE INDEX IF NOT EXISTS ensembl_ranges_exon on ranges_exon (ensembl); 
@@ -61,13 +61,10 @@ SELECT DISTINCT
     cds._cds_id AS cds_id,
     cds_name,
     exon_rank
-FROM txdb_ensembl.splicing
-LEFT OUTER JOIN txdb_ensembl.cds ON cds._cds_id = splicing._cds_id
-LEFT OUTER JOIN txdb_ensembl.transcript ON splicing._tx_id = transcript._tx_id
-LEFT OUTER JOIN txdb_ensembl.gene ON transcript._tx_id = gene._tx_id
-WHERE splicing._tx_id NOT IN 
-    (SELECT _tx_id FROM (SELECT distinct _tx_id, _cds_id from splicing)  
-         GROUP BY _tx_id HAVING count(*) = 1 AND _cds_id is NULL);
+FROM txdb_ensembl.cds
+JOIN txdb_ensembl.splicing ON cds._cds_id = splicing._cds_id
+JOIN txdb_ensembl.transcript ON splicing._tx_id = transcript._tx_id
+LEFT OUTER JOIN txdb_ensembl.gene ON transcript._tx_id = gene._tx_id;
 
 CREATE INDEX IF NOT EXISTS ensembl_ranges_cds on ranges_cds (ensembl); 
 

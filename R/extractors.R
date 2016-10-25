@@ -4,19 +4,22 @@
     sprintf("%s %s c(%s)", keep1, op, values)
 }
 
-.tbl_join <- function(x, table, filter, schema) {
+.tbl_join <- function(x, table, tbls, filter) {
     if (is.null(filter))
         return(table)
-
-    if (schema %in% names(filter)) {
-        filters <- .tbl_filter(schema, table, filter)
-        table <- table %>% filter_(filters)
-        filter <- filter[names(filter) != schema]
-    }
-
+    
     fields <- names(filter)
-    tbls <- src_tbls(x)
-
+    
+    fields1 <- fields[fields %in% colnames(table)]
+    if (length(fields1) != 0) {
+        # filters <- .tbl_filter(schema, table, filter)
+        filters <- sapply(fields1, .tbl_filter, table, filter)
+        filters <- paste0(filters, collapse=" & ")
+        table <- table %>% filter_(filters)
+        filter <- filter[setdiff(fields, fields1)]
+    }
+    
+    fields <- names(filter)
     for (i in tbls) {
         keep <- fields[fields %in% colnames(tbl(x, i))]
         if (is.null(keep) || length(keep) == 0)
@@ -24,8 +27,8 @@
         filters <- sapply(keep, .tbl_filter, table, filter)
         filters <- paste0(filters, collapse=" & ")
         table <- inner_join(table, tbl(x, i)) %>% filter_(filters)
+        fields <- setdiff(fields, keep)
     }
-
     table
 }
 
@@ -37,8 +40,7 @@
 #'     restrict the output.
 #'
 #' @examples
-#' organism <- src_organism("org.Hs.eg.db", 
-#'                          "TxDb.Hsapiens.UCSC.hg38.knownGene")
+#' organism <- src_ucsc("human")
 #' filters <- list(symbol=c("PTEN", "BRCA1"),
 #'                entrez="5728",
 #'                go=c("GO:0000079", "GO:0001933"))
@@ -50,42 +52,60 @@
 
 setMethod("transcripts", "src_organism", function(x, filter = NULL) {
     table <- tbl(x, "ranges_tx")
+    tbls <- setdiff(src_tbls(x), "ranges_tx")
     schema <- attr(x, "schema")
-    table <- .tbl_join(x, table, filter, schema) %>% arrange(tx_id)
+    table <- .tbl_join(x, table, tbls, filter) %>% arrange(tx_id)
     fields <- unique(
         c("tx_chrom", "tx_start", "tx_end", "tx_strand", 
           schema, "tx_id", "tx_name", names(filter)))
     do.call(select_, c(list(table), as.list(fields)))
 })
 
-#' @rdname src_organism
-#' @importFrom GenomicFeatures exons
-#' @export
-
-setMethod("exons", "src_organism", function(x, filter = NULL) {
+.exons <- function(x, filter = NULL) {
     table <- tbl(x, "ranges_exon")
+    tbls <- setdiff(src_tbls(x), "ranges_exon")
     schema <- attr(x, "schema")
-    table <- .tbl_join(x, table, filter, schema) %>% arrange(exon_id)
+    table <- .tbl_join(x, table, tbls, filter) %>% arrange(exon_id)
     fields <- unique(
         c("exon_chrom", "exon_start", "exon_end", "exon_strand",
           schema, "tx_id", "exon_id", "exon_name", "exon_rank",
           names(filter)))
     do.call(select_, c(list(table), as.list(fields)))
+}
+
+#' @examples 
+#' exons(organism, filter=list(symbol="PTEN"))
+#' 
+#' @rdname src_organism
+#' @importFrom GenomicFeatures exons
+#' @export
+
+setMethod("exons", "src_organism", function(x, filter = NULL) {
+    .exons(x, filter) %>% collect(n = Inf) %>% 
+        dplyr::select(-c(entrez, tx_id, exon_rank)) %>% distinct() %>% 
+        arrange(exon_id)
 })
 
+
+.cds <- function(x, filter = NULL) {
+    table <- tbl(x, "ranges_cds")
+    tbls <- setdiff(src_tbls(x), "ranges_cds")
+    schema <- attr(x, "schema")
+    table <- .tbl_join(x, table, tbls, filter) %>% arrange(cds_id)
+    fields <- unique(
+        c("cds_chrom", "cds_start", "cds_end", "cds_strand", 
+          schema, "tx_id", "cds_id", "cds_name", "exon_rank", names(filter)))
+    do.call(select_, c(list(table), as.list(fields)))
+}
 
 #' @rdname src_organism
 #' @importFrom GenomicFeatures cds
 #' @export
 
 setMethod("cds", "src_organism", function(x, filter = NULL) {
-    table <- tbl(x, "ranges_cds")
-    schema <- attr(x, "schema")
-    table <- .tbl_join(x, table, filter, schema) %>% arrange(cds_id)
-    fields <- unique(
-        c("cds_chrom", "cds_start", "cds_end", "cds_strand", 
-          schema, "tx_id", "cds_id", "cds_name", "exon_rank", names(filter)))
-    do.call(select_, c(list(table), as.list(fields)))
+    .cds(x, filter) %>% collect(n = Inf) %>% 
+        dplyr::select(-c(entrez, tx_id, exon_rank)) %>% distinct() %>% 
+        arrange(cds_id)
 })
 
 
@@ -95,8 +115,9 @@ setMethod("cds", "src_organism", function(x, filter = NULL) {
 
 setMethod("genes", "src_organism", function(x, filter = NULL) {
     table <- tbl(x, "ranges_gene")
+    tbls <- setdiff(src_tbls(x), "ranges_gene")
     schema <- attr(x, "schema")
-    table <- .tbl_join(x, table, filter, schema) %>% arrange_(schema)
+    table <- .tbl_join(x, table, tbls, filter) %>% arrange_(schema)
     fields <- unique(
         c("tx_chrom", "gene_start", "gene_end", "tx_strand", 
           schema, names(filter)))
@@ -206,7 +227,7 @@ function(x, by = c("gene", "exon", "cds"), filter = NULL) {
 setMethod("exonsBy", "src_organism",
 function(x, by = c("tx", "gene"), filter = NULL) {
     by <- match.arg(by)
-    exons <- exons(x, filter = filter)
+    exons <- .exons(x, filter = filter)
     schema <- attr(x, "schema")
 
     if (by == "tx") {
@@ -236,7 +257,7 @@ function(x, by = c("tx", "gene"), filter = NULL) {
 setMethod("cdsBy", "src_organism",
 function(x, by = c("tx", "gene"), filter = NULL) {
     by <- match.arg(by)
-    cds <- cds(x, filter = filter)
+    cds <- .cds(x, filter = filter)
     schema <- attr(x, "schema")
 
     if (by == "tx") {
@@ -288,15 +309,23 @@ function(x, filter=NULL) {
 
 
 .getSplicings <- function(x, filter=NULL) {
-    exon <- exons(x, filter=filter)
-    cds <- cds(x, filter=filter)
+    exon <- .exons(x, filter=filter)
+    cds <- .cds(x, filter=filter)
     
-    inner_join(exon, cds, by = c("tx_id", "exon_rank")) %>%
+    exon_txid <- exon %>% dplyr::select(tx_id) %>% collect(n = Inf) %>% .[["tx_id"]]
+    cds_txid <- cds %>% dplyr::select(tx_id) %>% collect(n = Inf) %>% .[["tx_id"]]
+    exclude <- setdiff(exon_txid, cds_txid)
+    
+    splicings <- 
+    left_join(exon, cds, by = c("tx_id", "exon_rank")) %>% 
         dplyr::select(tx_id, exon_rank, exon_id, exon_name, exon_chrom, 
                       exon_strand, exon_start, exon_end, cds_id, cds_start,  
                       cds_end) %>% 
         collect(n=Inf) %>%
         arrange(tx_id, exon_rank)
+    if(length(exclude) != 0) 
+        splicings <- splicings %>% filter(!tx_id %in% exclude)
+    splicings
 }
 
 #' @examples

@@ -114,12 +114,13 @@ inner_join(id, tbl(organism, "ranges_tx")) \%>\% filter(symbol == "PTEN") \%>\%
 
 human <- src_ucsc("human")
 
-organism <- src_organism("org.Hs.eg.db", 
-                         "TxDb.Hsapiens.UCSC.hg38.knownGene")
+organism <- src_ucsc("human")
 filters <- list(symbol=c("PTEN", "BRCA1"),
                entrez="5728",
                go=c("GO:0000079", "GO:0001933"))
 transcripts(organism, filters)
+
+exons(organism, filter=list(symbol="PTEN"))
 
 promoters(organism, upstream=100, downstream=50,
           filter = list(symbol="BRCA1"))
