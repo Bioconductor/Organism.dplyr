@@ -4,35 +4,54 @@
 \name{src_organism}
 \alias{cds,src_organism-method}
 \alias{cdsBy,src_organism-method}
+\alias{cds_tbl}
 \alias{exons,src_organism-method}
 \alias{exonsBy,src_organism-method}
+\alias{exons_tbl}
 \alias{fiveUTRsByTranscript,src_organism-method}
 \alias{genes,src_organism-method}
+\alias{genes_tbl}
 \alias{intronsByTranscript,src_organism-method}
 \alias{promoters,src_organism-method}
+\alias{promoters_tbl}
 \alias{select_.tbl_organism}
 \alias{src_organism}
 \alias{src_ucsc}
 \alias{threeUTRsByTranscript,src_organism-method}
 \alias{transcripts,src_organism-method}
 \alias{transcriptsBy,src_organism-method}
+\alias{transcriptsBy_tbl}
+\alias{transcripts_tbl}
 \title{Create a dplyr view into an org package}
 \usage{
-src_organism(org, txdb)
+src_organism(org = NULL, txdb = NULL, dbpath = NULL)
 
-src_ucsc(organism, genome = NULL, id = NULL, verbose = TRUE)
+src_ucsc(organism, genome = NULL, id = NULL, dbpath = NULL,
+  verbose = TRUE)
 
 \method{select_}{tbl_organism}(.data, ...)
 
+transcripts_tbl(x, filter = NULL)
+
 \S4method{transcripts}{src_organism}(x, filter = NULL)
+
+exons_tbl(x, filter = NULL)
 
 \S4method{exons}{src_organism}(x, filter = NULL)
 
+cds_tbl(x, filter = NULL)
+
 \S4method{cds}{src_organism}(x, filter = NULL)
+
+genes_tbl(x, filter = NULL)
 
 \S4method{genes}{src_organism}(x, filter = NULL)
 
+promoters_tbl(x, upstream, downstream, filter = NULL)
+
 \S4method{promoters}{src_organism}(x, upstream, downstream, filter = NULL)
+
+transcriptsBy_tbl(x, by = c("gene", "exon", "cds"), filter = NULL, schema)
 
 \S4method{transcriptsBy}{src_organism}(x, by = c("gene", "exon", "cds"),
   filter = NULL)
