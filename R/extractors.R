@@ -213,18 +213,31 @@ function(x, upstream, downstream, filter = NULL) {
         as("GRanges")
 })
 
-# .splitby <- function(by, schema) {
-#     # if (by == "gene") {
-#     #     ifelse(schema == "entrez", split(.$entrez), split(.$ensembl))
-#     # }
-#     switch (by,
-#             "gene" = ifelse(schema == "entrez", 
-#                             split(.$entrez), split(.$ensembl)),
-#             "tx" = split(.$tx_id),
-#             "exon" = split(.$exon_id),
-#             "cds" = split(.$cds_id)
-#     )
-# }
+
+.toGRangesList <- function(x, type, by, filter = NULL) {
+    schema <- x$schema
+    table <- 
+        switch (type,
+                "transcripts" = transcriptsBy_tbl(x, by, filter, schema),
+                "exons" = exonsBy_tbl(x, by, filter, schema),
+                "cds" = cdsBy_tbl(x, by, filter, schema)
+    )
+    table <- table %>% collect(n=Inf) %>% as("GRanges")
+    
+    if (by == "gene") {
+        table <- switch (schema,
+                         "entrez" = table %>% split(.$entrez), 
+                         "ensembl" = table %>% split(.$ensembl)
+        )
+    }
+    else if (by == "exon") {
+        table <- table %>% split(.$exon_id)
+    }
+    else if (by == "cds") {
+        table <- table %>% split(.$cds_id)
+    }
+    table
+}
 
 
 #' @rdname src_organism
@@ -273,25 +286,19 @@ function(x, by = c("gene", "exon", "cds"), filter = NULL, schema) {
 
 setMethod("transcriptsBy", "src_organism",
 function(x, by = c("gene", "exon", "cds"), filter = NULL) {
-    schema <- x$schema
-    transcriptsBy_tbl(x, by, filter, schema) %>% collect(n=Inf) %>% 
-        as("GRanges")
+    by <- match.arg(by)
+    .toGRangesList(x, "transcripts", by, filter)
 })
 
 
-#' @examples
-#' exonsBy(organism, by = "gene", filter = list(symbol="PTEN"))
-#'
 #' @rdname src_organism
-#' @importFrom GenomicFeatures exonsBy
 #' @export
 
-setMethod("exonsBy", "src_organism",
-function(x, by = c("tx", "gene"), filter = NULL) {
+exonsBy_tbl <- 
+function(x, by = c("tx", "gene"), filter = NULL, schema) {
     by <- match.arg(by)
     exons <- .exons(x, filter = filter)
-    schema <- x$schema
-
+    
     if (by == "tx") {
         table <- inner_join(exons, tbl(x, "ranges_tx"), by = "tx_id") 
         fields <- unique(
@@ -307,22 +314,30 @@ function(x, by = c("tx", "gene"), filter = NULL) {
         do.call(select_, c(list(table), as.list(fields))) %>% 
             arrange_(schema)
     }
+}
+
+#' @examples
+#' exonsBy(organism, by = "gene", filter = list(symbol="PTEN"))
+#'
+#' @rdname src_organism
+#' @importFrom GenomicFeatures exonsBy
+#' @export
+
+setMethod("exonsBy", "src_organism",
+function(x, by = c("tx", "gene"), filter = NULL) {
+    by <- match.arg(by)
+    .toGRangesList(x, "exons", by, filter)
 })
 
 
-#' @examples
-#' cdsBy(organism, by = "gene", filter = list(symbol="PTEN"))
-#'
 #' @rdname src_organism
-#' @importFrom GenomicFeatures cdsBy
 #' @export
 
-setMethod("cdsBy", "src_organism",
-function(x, by = c("tx", "gene"), filter = NULL) {
+cdsBy_tbl <- 
+function(x, by = c("tx", "gene"), filter = NULL, schema) {
     by <- match.arg(by)
     cds <- .cds(x, filter = filter)
-    schema <- x$schema
-
+    
     if (by == "tx") {
         table <- inner_join(cds, tbl(x, "ranges_tx"), by = "tx_id") 
         fields <- unique(
@@ -338,6 +353,19 @@ function(x, by = c("tx", "gene"), filter = NULL) {
         do.call(select_, c(list(table), as.list(fields))) %>% 
             arrange_(schema)
     }
+}
+
+#' @examples
+#' cdsBy(organism, by = "gene", filter = list(symbol="PTEN"))
+#'
+#' @rdname src_organism
+#' @importFrom GenomicFeatures cdsBy
+#' @export
+
+setMethod("cdsBy", "src_organism",
+function(x, by = c("tx", "gene"), filter = NULL) {
+    by <- match.arg(by)
+    .toGRangesList(x, "cds", by, filter)
 })
 
 
@@ -351,8 +379,8 @@ function(x, by = c("tx", "gene"), filter = NULL) {
 #' @export
 setMethod("intronsByTranscript", "src_organism",
 function(x, filter=NULL) {
-    tx <- transcripts(x, filter=filter)
-    exn <- exonsBy(x, filter=filter)
+    tx <- transcripts_tbl(x, filter=filter)
+    exn <- exonsBy_tbl(x, filter=filter)
 
     tx_gr <- tx %>% 
         dplyr::select(tx_id, tx_chrom, tx_start, tx_end, tx_strand) %>%
@@ -363,13 +391,21 @@ function(x, filter=NULL) {
         as("GRanges") %>% split(.$tx_id)
     
     tx_gr<- tx_gr[match(names(exn_grl), mcols(tx_gr)[, "tx_id"])]
-    ans <- unlist(psetdiff(tx_gr, exn_grl))
+    ans <- psetdiff(tx_gr, exn_grl)
+    ans
+})
 
+#' @rdname src_organism
+#' @export
+
+intronsByTranscript_tbl <- 
+function(x, filter = NULL) {
+    ans <- unlist(intronsByTranscript(x, filter))
     mcols(ans)[, "tx_id"] <- names(ans)
-    unname(ans) %>% as.data.frame %>% tbl_df %>%
+    unname(unlist(ans)) %>% as.data.frame %>% tbl_df %>%
         dplyr::select(tx_id, intron_chrom=seqnames, intron_start=start,
                intron_end=end, intron_strand=strand)
-})
+}
 
 
 .getSplicings <- function(x, filter=NULL) {
@@ -420,6 +456,15 @@ function(x, filter=NULL) {
                       tx_id, exon_id, exon_name, exon_rank)
 }
 
+
+#' @rdname src_organism
+#' @export
+
+fiveUTRsByTranscript_tbl <- 
+function(x, filter = NULL) {
+    .UTRsByTranscript(x, filter, "-", "+")
+}
+
 #' @examples
 #' fiveUTRsByTranscript(organism, filter = list(symbol="PTEN"))
 #' 
@@ -427,9 +472,18 @@ function(x, filter=NULL) {
 #' @importFrom GenomicFeatures fiveUTRsByTranscript
 #' @export
 setMethod("fiveUTRsByTranscript", "src_organism",function(x, filter=NULL) {
-    .UTRsByTranscript(x, filter, "-", "+")
+    fiveUTRsByTranscript_tbl(x, filter) %>% collect(n=Inf) %>% 
+        as("GRanges") %>% split(.$tx_id)
 })
 
+
+#' @rdname src_organism
+#' @export
+
+threeUTRsByTranscript_tbl <- 
+function(x, filter = NULL) {
+    .UTRsByTranscript(x, filter, "+", "-")
+}
 
 #' @examples
 #' threeUTRsByTranscript(organism, filter = list(symbol="PTEN"))
@@ -438,5 +492,6 @@ setMethod("fiveUTRsByTranscript", "src_organism",function(x, filter=NULL) {
 #' @importFrom GenomicFeatures threeUTRsByTranscript
 #' @export
 setMethod("threeUTRsByTranscript", "src_organism",function(x, filter=NULL) {
-    .UTRsByTranscript(x, filter, "+", "-")
+    threeUTRsByTranscript_tbl(x, filter) %>% collect(n=Inf) %>% 
+        as("GRanges") %>% split(.$tx_id)
 })

@@ -4,20 +4,25 @@
 \name{src_organism}
 \alias{cds,src_organism-method}
 \alias{cdsBy,src_organism-method}
+\alias{cdsBy_tbl}
 \alias{cds_tbl}
 \alias{exons,src_organism-method}
 \alias{exonsBy,src_organism-method}
+\alias{exonsBy_tbl}
 \alias{exons_tbl}
 \alias{fiveUTRsByTranscript,src_organism-method}
+\alias{fiveUTRsByTranscript_tbl}
 \alias{genes,src_organism-method}
 \alias{genes_tbl}
 \alias{intronsByTranscript,src_organism-method}
+\alias{intronsByTranscript_tbl}
 \alias{promoters,src_organism-method}
 \alias{promoters_tbl}
 \alias{select_.tbl_organism}
 \alias{src_organism}
 \alias{src_ucsc}
 \alias{threeUTRsByTranscript,src_organism-method}
+\alias{threeUTRsByTranscript_tbl}
 \alias{transcripts,src_organism-method}
 \alias{transcriptsBy,src_organism-method}
 \alias{transcriptsBy_tbl}
@@ -56,13 +61,23 @@ transcriptsBy_tbl(x, by = c("gene", "exon", "cds"), filter = NULL, schema)
 \S4method{transcriptsBy}{src_organism}(x, by = c("gene", "exon", "cds"),
   filter = NULL)
 
+exonsBy_tbl(x, by = c("tx", "gene"), filter = NULL, schema)
+
 \S4method{exonsBy}{src_organism}(x, by = c("tx", "gene"), filter = NULL)
+
+cdsBy_tbl(x, by = c("tx", "gene"), filter = NULL, schema)
 
 \S4method{cdsBy}{src_organism}(x, by = c("tx", "gene"), filter = NULL)
 
 \S4method{intronsByTranscript}{src_organism}(x, filter = NULL)
 
+intronsByTranscript_tbl(x, filter = NULL)
+
+fiveUTRsByTranscript_tbl(x, filter = NULL)
+
 \S4method{fiveUTRsByTranscript}{src_organism}(x, filter = NULL)
+
+threeUTRsByTranscript_tbl(x, filter = NULL)
 
 \S4method{threeUTRsByTranscript}{src_organism}(x, filter = NULL)
 }
@@ -74,6 +89,9 @@ content of an \code{org.*} pacakge.}
 \item{txdb}{character(1) naming a \code{TxDb.*} package (e.g.,
 \code{TxDb.Hsapiens.UCSC.hg38.knownGene}) or \code{TxDb}
 object instantiating the content of a \code{TxDb.*} pacakge.}
+
+\item{dbpath}{path and file name where SQLite file will be accessed
+or created if not already exists.}
 
 \item{organism}{}
 
@@ -127,7 +145,8 @@ src_tbls(organism)
 id <- tbl(organism, "id")
 id
 id \%>\% dplyr::select(ensembl, symbol) \%>\% filter(symbol == "PTEN")
-inner_join(id, tbl(organism, "ranges_tx")) \%>\% filter(symbol == "PTEN") \%>\%
+inner_join(id, tbl(organism, "ranges_tx")) \%>\% 
+     filter(symbol == "PTEN") \%>\%
      dplyr::select(entrez, symbol, tx_id, tx_start, tx_end)
 
 

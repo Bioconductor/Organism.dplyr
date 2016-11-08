@@ -23,6 +23,9 @@
 #' @param txdb character(1) naming a \code{TxDb.*} package (e.g.,
 #'     \code{TxDb.Hsapiens.UCSC.hg38.knownGene}) or \code{TxDb}
 #'     object instantiating the content of a \code{TxDb.*} pacakge.
+#'     
+#' @param dbpath path and file name where SQLite file will be accessed
+#'      or created if not already exists.
 #' 
 #' @return A dplyr \code{tbl_sql} instance representing the data
 #'     table.
@@ -43,23 +46,9 @@
 #' id <- tbl(organism, "id")
 #' id
 #' id %>% dplyr::select(ensembl, symbol) %>% filter(symbol == "PTEN")
-#' inner_join(id, tbl(organism, "ranges_tx")) %>% filter(symbol == "PTEN") %>%
+#' inner_join(id, tbl(organism, "ranges_tx")) %>% 
+#'      filter(symbol == "PTEN") %>%
 #'      dplyr::select(entrez, symbol, tx_id, tx_start, tx_end)
-# 
-# # mouse
-# organism <- src_organism("org.Mm.eg.db", "TxDb.Mmusculus.UCSC.mm10.knownGene")
-# inner_join(tbl(organism, "id"), tbl(organism, "ranges_gene")) %>% 
-#      filter(entrez == "11287") %>%
-#      dplyr::select(entrez, symbol, tx_chrom, gene_start, gene_end)
-# 
-# # rat
-# organism <- src_organism("org.Rn.eg.db", "TxDb.Rnorvegicus.UCSC.rn4.ensGene")
-# id <- tbl(organism, "id")
-# ranges_gene <- tbl(organism, "ranges_gene")
-# inner_join(id, ranges_gene) %>% 
-#     filter(ensembl == "ENSRNOG00000028896") %>%
-#     dplyr::select(ensembl, symbol, chrom, start, end)
-# 
 #' 
 #' 
 #' @export
@@ -222,7 +211,8 @@ src_ucsc <- function(organism, genome = NULL, id = NULL,
     builds <- builds[idx,]
 
     species <- tail(builds$organism, 1L)
-    twoletter <- sub("([A-z]).* ([a-z]).*", "\\U\\1\\L\\2", species, perl=TRUE)
+    twoletter <- 
+        sub("([A-z]).* ([a-z]).*", "\\U\\1\\L\\2", species, perl=TRUE)
     binomial <- sub("([A-z]).* ([[:alpha:]]+)", "\\U\\1\\L\\2", species,
                     perl=TRUE)
     org <- sprintf("org.%s.eg.db", twoletter)
