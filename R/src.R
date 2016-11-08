@@ -68,7 +68,7 @@ src_organism <- function(org=NULL, txdb=NULL, dbpath=NULL) {
         stopifnot(is(txdb, "TxDb"))
         
         stopifnot(identical(taxonomyId(org), taxonomyId(txdb)))
-        if (!(missing(dbpath) || is.null(dbpath)) && file.exists(dbpath)) {
+        if ((!is.null(dbpath)) && file.exists(dbpath)) {
             ## FIXME: check metadata of org, txdb match tables in dbpath
         }
         
