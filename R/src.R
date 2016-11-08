@@ -34,7 +34,7 @@
 #' @importFrom AnnotationDbi dbconn dbfile taxonomyId
 #' @importFrom S4Vectors metadata
 #' @importFrom methods is
-#' @importFrom tools file_ext
+#' @importFrom tools file_ext file_path_sans_ext
 #' @importFrom dplyr tbl
 #' 
 #' @examples
@@ -53,12 +53,11 @@
 #' 
 #' @export
 src_organism <- function(org=NULL, txdb=NULL, dbpath=NULL) {
-    if (missing(org) & missing(txdb)) {
-        if (!(!missing(dbpath) & 
-            file.exists(dbpath) & 
+    if (missing(org) && missing(txdb)) {
+        if (!(!missing(dbpath) && file.exists(dbpath) && 
             file_ext(dbpath) == "sqlite"))
-            stop("please input valid path of sqlite file")
-    } else if (!missing(org) & !missing(txdb)) {
+            stop("input valid sqlite file path")
+    } else if (!missing(org) && !missing(txdb)) {
         # check org, txdb
         if (is.character(org))
             org <- loadNamespace(org)[[org]]
@@ -77,46 +76,32 @@ src_organism <- function(org=NULL, txdb=NULL, dbpath=NULL) {
         
         if (startsWith(tolower(txdb_type), "entrez")) {
             txdb_schema <- "txdb_entrez"
-            schema <- "entrez"
         }
         else if (startsWith(tolower(txdb_type), "ensembl")) {
             txdb_schema <- "txdb_ensembl"
-            schema <- "ensembl"
         }
         else
             stop("unknown TxDb type: ", sQuote(txdb_type))
     } else
-        stop("please specify org and txdb or dbpath")
+        stop("specify 'org' and 'txdb' or 'dbpath'")
     
     # check dbpath
-    found <- FALSE
-    if (missing(dbpath) | is.null(dbpath)) {
-        org_name <- head(tail(strsplit(dbfile(org), "/")[[1]],3),1)
-        txdb_name <- head(tail(strsplit(dbfile(txdb), "/")[[1]],3),1)
-        filename <- paste0(org_schema, txdb_name)
-        
-        file <- list.files(path=tempdir(),pattern=".sqlite$")
-        file <- file[startsWith(file, filename)]
-        if (length(file) != 0) {
-            dbpath <- paste0(tempdir(), "/", file)
-            found <- TRUE
-        } else {
-            dbpath <- tempfile(filename, fileext=".sqlite")
-        }
-    } else {
-        if (file.exists(dbpath) & file_ext(dbpath) == "sqlite")
-            found <- TRUE
+    if (missing(dbpath) || is.null(dbpath)) {
+        org_name <- file_path_sans_ext(basename(dbfile(org)))
+        txdb_name <- file_path_sans_ext(basename(dbfile(txdb)))
+        filename <- sprintf("%s_%s.sqlite", org_name, txdb_name)
+        dbpath <- file.path(tempdir(), filename)
     }
-    
+
     ## create db connection
+    found <- file.exists(dbpath)
     con <- dbConnect(SQLite(), dbpath)
     if (!found) {
+        message("creating 'src_organism' database...")
         withCallingHandlers({
             .add_view(con, org, org_schema)
             .add_view(con, txdb, txdb_schema)
-            # stop("oops", call.=FALSE)
         }, error=function(e) {
-            # evalq(rm(con), sys.frame())           
             dbDisconnect(con)         # clean-up
             file.remove(dbpath)
             stop(e)                   # signal condition to user
@@ -124,12 +109,8 @@ src_organism <- function(org=NULL, txdb=NULL, dbpath=NULL) {
     }
     
     src <- src_sql("sqlite", con, path=dbfile(con))
-    class(src) = c("src_organism", class(src))
-    
-    if (!exists("schema")) {
-        schema <- tail(names(as.data.frame(tbl(src, "ranges_gene"))), 1)
-    }
-    src$schema <- schema
+    src$schema <- tail(colnames(tbl(src, "ranges_gene")), 1)
+    class(src) <- c("src_organism", class(src))
     src
 }
 
