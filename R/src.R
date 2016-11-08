@@ -53,12 +53,12 @@
 #' 
 #' @export
 src_organism <- function(org=NULL, txdb=NULL, dbpath=NULL) {
-    if (missing(org) && missing(txdb)) {
-        if (!(!missing(dbpath) && file.exists(dbpath) && 
+    if (is.null(org) && is.null(txdb)) {
+        if (!(!is.null(dbpath) && file.exists(dbpath) && 
             file_ext(dbpath) == "sqlite"))
             stop("input valid sqlite file path")
-    } else if (!missing(org) && !missing(txdb)) {
-        # check org, txdb
+    } else if (!is.null(org) && !is.null(txdb)) {
+        ## check org, txdb
         if (is.character(org))
             org <- loadNamespace(org)[[org]]
         stopifnot(is(org, "OrgDb"))
@@ -68,6 +68,9 @@ src_organism <- function(org=NULL, txdb=NULL, dbpath=NULL) {
         stopifnot(is(txdb, "TxDb"))
         
         stopifnot(identical(taxonomyId(org), taxonomyId(txdb)))
+        if (!(missing(dbpath) || is.null(dbpath)) && file.exists(dbpath)) {
+            ## FIXME: check metadata of org, txdb match tables in dbpath
+        }
         
         org_meta <- metadata(org)
         org_schema <- org_meta$value[org_meta$name == "DBSCHEMA"]
@@ -76,17 +79,15 @@ src_organism <- function(org=NULL, txdb=NULL, dbpath=NULL) {
         
         if (startsWith(tolower(txdb_type), "entrez")) {
             txdb_schema <- "txdb_entrez"
-        }
-        else if (startsWith(tolower(txdb_type), "ensembl")) {
+        } else if (startsWith(tolower(txdb_type), "ensembl")) {
             txdb_schema <- "txdb_ensembl"
-        }
-        else
+        } else
             stop("unknown TxDb type: ", sQuote(txdb_type))
     } else
         stop("specify 'org' and 'txdb' or 'dbpath'")
     
-    # check dbpath
-    if (missing(dbpath) || is.null(dbpath)) {
+    ## check dbpath
+    if (is.null(dbpath)) {
         org_name <- file_path_sans_ext(basename(dbfile(org)))
         txdb_name <- file_path_sans_ext(basename(dbfile(txdb)))
         filename <- sprintf("%s_%s.sqlite", org_name, txdb_name)
