@@ -31,11 +31,14 @@
 #'     table.
 #'     
 #' @importFrom RSQLite dbSendQuery dbGetQuery dbConnect dbDisconnect SQLite
+#'             dbWriteTable
 #' @importFrom AnnotationDbi dbconn dbfile taxonomyId
 #' @importFrom S4Vectors metadata
 #' @importFrom methods is
 #' @importFrom tools file_ext file_path_sans_ext
-#' @importFrom dplyr tbl
+#' @importFrom dplyr tbl 
+#' @importFrom data.table setDT
+#' @importFrom GenomeInfoDb as.data.frame
 #' 
 #' @examples
 #' # human
@@ -102,6 +105,14 @@ src_organism <- function(org=NULL, txdb=NULL, dbpath=NULL) {
         withCallingHandlers({
             .add_view(con, org, org_schema)
             .add_view(con, txdb, txdb_schema)
+            
+            # create seqinfo table
+            seqinfo <- GenomicFeatures:::get_TxDb_seqinfo0(txdb)
+            seqinfo <- as.data.frame(seqinfo)
+            setDT(seqinfo, keep.rownames = TRUE)[]
+            names(seqinfo) <- 
+                c("seqnames", "seqlengths", "isCircular", "genome")
+            dbWriteTable(con, "seqinfo", seqinfo)
         }, error=function(e) {
             dbDisconnect(con)         # clean-up
             file.remove(dbpath)

@@ -82,3 +82,6 @@ SELECT DISTINCT
     go_all.ontology AS ontologyall
 FROM genes
 LEFT OUTER JOIN go_all ON genes._id = go_all._id;
+
+CREATE TABLE IF NOT EXISTS metadata_org AS
+SELECT * FROM metadata;

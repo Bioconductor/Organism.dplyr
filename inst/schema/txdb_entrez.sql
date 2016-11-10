@@ -71,3 +71,6 @@ CREATE INDEX IF NOT EXISTS entrez_ranges_cds on ranges_cds (entrez);
 CREATE INDEX IF NOT EXISTS txid_ranges_cds on ranges_cds (tx_id);
 
 CREATE INDEX IF NOT EXISTS cdsid_ranges_cds on ranges_cds (cds_id);
+
+CREATE TABLE IF NOT EXISTS metadata_txdb AS
+SELECT * FROM metadata;

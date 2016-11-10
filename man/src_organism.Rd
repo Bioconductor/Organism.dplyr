@@ -56,16 +56,16 @@ promoters_tbl(x, upstream, downstream, filter = NULL)
 
 \S4method{promoters}{src_organism}(x, upstream, downstream, filter = NULL)
 
-transcriptsBy_tbl(x, by = c("gene", "exon", "cds"), filter = NULL, schema)
+transcriptsBy_tbl(x, by = c("gene", "exon", "cds"), filter = NULL)
 
 \S4method{transcriptsBy}{src_organism}(x, by = c("gene", "exon", "cds"),
   filter = NULL)
 
-exonsBy_tbl(x, by = c("tx", "gene"), filter = NULL, schema)
+exonsBy_tbl(x, by = c("tx", "gene"), filter = NULL)
 
 \S4method{exonsBy}{src_organism}(x, by = c("tx", "gene"), filter = NULL)
 
-cdsBy_tbl(x, by = c("tx", "gene"), filter = NULL, schema)
+cdsBy_tbl(x, by = c("tx", "gene"), filter = NULL)
 
 \S4method{cdsBy}{src_organism}(x, by = c("tx", "gene"), filter = NULL)
 
@@ -104,7 +104,7 @@ or created if not already exists.}
 \item{filter}{Either NULL or a named list of vectors to be used to
 restrict the output.}
 
-\item{upstream}{For \code{promoters()}: An integer(1) value indicating 
+\item{upstream}{For \code{promoters()}: An integer(1) value indicating
 the number of bases upstream from the transcription start site.}
 
 \item{downstream}{For \code{promoters()}: An integer(1) value indicating

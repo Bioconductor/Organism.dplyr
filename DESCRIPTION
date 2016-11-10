@@ -22,7 +22,8 @@ Imports:
     GenomicFeatures,
     IRanges,
     GenomicRanges,
-    methods
+    methods,
+    data.table
 Suggests:
     org.Hs.eg.db,
     TxDb.Hsapiens.UCSC.hg38.knownGene
