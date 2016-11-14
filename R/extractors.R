@@ -35,7 +35,7 @@
     drop <- setdiff(fields, names(filter))
     keep <- res[[2]][!(res[[2]] %in% drop)]
     
-    table <- res[[1]] %>% collect(n = Inf) 
+    table <- res[[1]]
     do.call(select_, c(list(table), as.list(keep))) %>% distinct() 
 }
 

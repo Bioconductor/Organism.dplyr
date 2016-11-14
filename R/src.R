@@ -30,21 +30,19 @@
 #' @return A dplyr \code{tbl_sql} instance representing the data
 #'     table.
 #'     
-#' @importFrom RSQLite dbSendQuery dbGetQuery dbConnect dbDisconnect SQLite
-#'             dbWriteTable
-#' @importFrom AnnotationDbi dbconn dbfile taxonomyId
+#' @importFrom RSQLite dbGetQuery dbConnect dbDisconnect SQLite dbWriteTable
+#' @importFrom AnnotationDbi dbconn dbfile 
 #' @importFrom S4Vectors metadata
 #' @importFrom methods is
-#' @importFrom tools file_ext file_path_sans_ext
+#' @importFrom tools file_ext 
 #' @importFrom dplyr tbl 
 #' @importFrom data.table setDT
 #' @importFrom GenomeInfoDb as.data.frame
 #' 
 #' @examples
 #' # human
-#' library(org.Hs.eg.db)
 #' library(TxDb.Hsapiens.UCSC.hg38.knownGene)
-#' organism <- src_organism(org.Hs.eg.db, TxDb.Hsapiens.UCSC.hg38.knownGene)
+#' organism <- src_organism(TxDb.Hsapiens.UCSC.hg38.knownGene)
 #' src_tbls(organism)
 #' id <- tbl(organism, "id")
 #' id
@@ -55,30 +53,37 @@
 #' 
 #' 
 #' @export
-src_organism <- function(org=NULL, txdb=NULL, dbpath=NULL) {
-    if (is.null(org) && is.null(txdb)) {
+src_organism <- function(txdb=NULL, dbpath=NULL) {
+    if (is.null(txdb)) {
         if (!(!is.null(dbpath) && file.exists(dbpath) && 
             file_ext(dbpath) == "sqlite"))
             stop("input valid sqlite file path")
-    } else if (!is.null(org) && !is.null(txdb)) {
+        else
+            stop("specify 'txdb' or 'dbpath'")
+    } else {
         ## check org, txdb
-        if (is.character(org))
-            org <- loadNamespace(org)[[org]]
-        stopifnot(is(org, "OrgDb"))
-        
         if (is.character(txdb))
             txdb <- loadNamespace(txdb)[[txdb]]
         stopifnot(is(txdb, "TxDb"))
         
-        stopifnot(identical(taxonomyId(org), taxonomyId(txdb)))
-        if ((!is.null(dbpath)) && file.exists(dbpath)) {
-            ## FIXME: check metadata of org, txdb match tables in dbpath
-        }
+        txdb_name <- basename(dbfile(txdb))
+        org <- strsplit(txdb_name, "[.]")[[1]][2]
+        org <- sprintf("org.%s.eg.db", substr(org, 1, 2))
+        org <- loadNamespace(org)[[org]]
         
         org_meta <- metadata(org)
         org_schema <- org_meta$value[org_meta$name == "DBSCHEMA"]
         txdb_meta <- metadata(txdb)
         txdb_type <- txdb_meta$value[txdb_meta$name == "Type of Gene ID"]
+        
+        ## check metadata of org, txdb match tables in dbpath
+        if ((!is.null(dbpath)) && file.exists(dbpath)) {
+            con <- dbConnect(SQLite(), dbpath)
+            src <- src_sql("sqlite", con, path=dbfile(con))
+            txdb_md <- tbl(src, "metadata_txdb") %>% collect()
+            if (!identical(txdb_meta$value, txdb_md$value))
+                stop("sqlite file schema different from 'txdb'")
+        }
         
         if (startsWith(tolower(txdb_type), "entrez")) {
             txdb_schema <- "txdb_entrez"
@@ -86,15 +91,11 @@ src_organism <- function(org=NULL, txdb=NULL, dbpath=NULL) {
             txdb_schema <- "txdb_ensembl"
         } else
             stop("unknown TxDb type: ", sQuote(txdb_type))
-    } else
-        stop("specify 'org' and 'txdb' or 'dbpath'")
+    } 
     
     ## check dbpath
     if (is.null(dbpath)) {
-        org_name <- file_path_sans_ext(basename(dbfile(org)))
-        txdb_name <- file_path_sans_ext(basename(dbfile(txdb)))
-        filename <- sprintf("%s_%s.sqlite", org_name, txdb_name)
-        dbpath <- file.path(tempdir(), filename)
+        dbpath <- file.path(tempdir(), txdb_name)
     }
 
     ## create db connection
@@ -121,7 +122,7 @@ src_organism <- function(org=NULL, txdb=NULL, dbpath=NULL) {
     }
     
     src <- src_sql("sqlite", con, path=dbfile(con))
-    src$schema <- tail(colnames(tbl(src, "ranges_gene")), 1)
+    src$schema <- tail(colnames(tbl(src, "ranges_gene")), 1L)
     class(src) <- c("src_organism", class(src))
     src
 }
@@ -131,7 +132,6 @@ src_organism <- function(org=NULL, txdb=NULL, dbpath=NULL) {
     if (tblname %in% tbls)
         return()
     else {
-        # ifelse(is(db, "OrgDb"), dbname <- "org", dbname <- tblname)
         dbGetQuery(con, paste0("ATTACH '", dbfile(db), "' AS ", tblname))
         
         fname <- system.file(
@@ -143,33 +143,12 @@ src_organism <- function(org=NULL, txdb=NULL, dbpath=NULL) {
         grps <- cumsum(!nzchar(schemas)) + 1
         for (schema in split(schemas, grps)) {
             sql <- paste(schema, collapse="\n")
-            dbSendQuery(con, sql)
+            dbGetQuery(con, sql)
         }
         dbGetQuery(con, paste0("DETACH '", tblname, "'"))
     }
 }
 
-# .add_view <- function(con, db, tblname) {
-#     tbls <- dbGetQuery(con, "pragma database_list;")$name
-#     if (tblname %in% tbls)
-#         return()
-#     if (is(db, "TxDb"))
-#         dbGetQuery(con, paste0("ATTACH '", dbfile(db), "' AS ", tblname))
-#     
-#     fname <- system.file(
-#         package="Organism.dplyr", "schema", paste0(tblname, ".sql"))
-#     if (!file.exists(fname))
-#         stop(sQuote(tblname), " schema not unsupported")
-# 
-#     schemas <- readLines(fname)
-#     grps <- cumsum(!nzchar(schemas)) + 1
-#     for (schema in split(schemas, grps)) {
-#         sql <- paste(schema, collapse="\n")
-#         dbSendQuery(con, sql)
-#     }
-#     if (is(db, "TxDb"))
-#         dbGetQuery(con, paste0("DETACH '", tblname, "'"))
-# }
 
 #' @param organism
 #' 
@@ -250,7 +229,7 @@ src_ucsc <- function(organism, genome = NULL, id = NULL,
     
     if (verbose)
         message("using ", org, ", ", txdb)
-    src_organism(org, txdb, dbpath)
+    src_organism(txdb, dbpath)
 }
 
 .findPkg <- function(pkgs, var) {
@@ -265,8 +244,7 @@ src_ucsc <- function(organism, genome = NULL, id = NULL,
     txdb
 }
 
-#' @importFrom RSQLite dbSendQuery dbListTables
-#' @importFrom AnnotationDbi dbconn dbfile
+
 #' @importFrom dplyr src_sql "%>%" tbl select_
 #' 
 #' @rdname src_organism

@@ -29,7 +29,7 @@
 \alias{transcripts_tbl}
 \title{Create a dplyr view into an org package}
 \usage{
-src_organism(org = NULL, txdb = NULL, dbpath = NULL)
+src_organism(txdb = NULL, dbpath = NULL)
 
 src_ucsc(organism, genome = NULL, id = NULL, dbpath = NULL,
   verbose = TRUE)
@@ -82,10 +82,6 @@ threeUTRsByTranscript_tbl(x, filter = NULL)
 \S4method{threeUTRsByTranscript}{src_organism}(x, filter = NULL)
 }
 \arguments{
-\item{org}{character(1) naming a \code{org.*} package (e.g.,
-\code{org.Hs.eg.db}) or \code{OrgDb} object instantiating the
-content of an \code{org.*} pacakge.}
-
 \item{txdb}{character(1) naming a \code{TxDb.*} package (e.g.,
 \code{TxDb.Hsapiens.UCSC.hg38.knownGene}) or \code{TxDb}
 object instantiating the content of a \code{TxDb.*} pacakge.}
@@ -111,6 +107,10 @@ the number of bases upstream from the transcription start site.}
 the number of bases downstream from the transcription start site.}
 
 \item{by}{One of "gene", "exon", "cds" or "tx". Determines the grouping.}
+
+\item{org}{character(1) naming a \code{org.*} package (e.g.,
+\code{org.Hs.eg.db}) or \code{OrgDb} object instantiating the
+content of an \code{org.*} pacakge.}
 }
 \value{
 A dplyr \code{tbl_sql} instance representing the data
@@ -138,9 +138,8 @@ Create a dplyr view integrating org.* and TxDb.* information
 }
 \examples{
 # human
-library(org.Hs.eg.db)
 library(TxDb.Hsapiens.UCSC.hg38.knownGene)
-organism <- src_organism(org.Hs.eg.db, TxDb.Hsapiens.UCSC.hg38.knownGene)
+organism <- src_organism(TxDb.Hsapiens.UCSC.hg38.knownGene)
 src_tbls(organism)
 id <- tbl(organism, "id")
 id
