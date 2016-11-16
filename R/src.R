@@ -15,10 +15,6 @@
 #'
 #'
 #' Create a dplyr view integrating org.* and TxDb.* information
-#' 
-#' @param org character(1) naming a \code{org.*} package (e.g.,
-#'     \code{org.Hs.eg.db}) or \code{OrgDb} object instantiating the
-#'     content of an \code{org.*} pacakge.
 #'     
 #' @param txdb character(1) naming a \code{TxDb.*} package (e.g.,
 #'     \code{TxDb.Hsapiens.UCSC.hg38.knownGene}) or \code{TxDb}
@@ -57,9 +53,7 @@ src_organism <- function(txdb=NULL, dbpath=NULL) {
     if (is.null(txdb)) {
         if (!(!is.null(dbpath) && file.exists(dbpath) && 
             file_ext(dbpath) == "sqlite"))
-            stop("input valid sqlite file path")
-        else
-            stop("specify 'txdb' or 'dbpath'")
+            stop("input valid sqlite file path or specify 'txdb'")
     } else {
         ## check org, txdb
         if (is.character(txdb))

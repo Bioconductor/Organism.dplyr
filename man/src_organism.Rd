@@ -107,10 +107,6 @@ the number of bases upstream from the transcription start site.}
 the number of bases downstream from the transcription start site.}
 
 \item{by}{One of "gene", "exon", "cds" or "tx". Determines the grouping.}
-
-\item{org}{character(1) naming a \code{org.*} package (e.g.,
-\code{org.Hs.eg.db}) or \code{OrgDb} object instantiating the
-content of an \code{org.*} pacakge.}
 }
 \value{
 A dplyr \code{tbl_sql} instance representing the data
