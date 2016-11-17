@@ -27,6 +27,7 @@
 #'     table.
 #'     
 #' @importFrom RSQLite dbGetQuery dbConnect dbDisconnect SQLite dbWriteTable
+#' @importFrom DBI dbListTables
 #' @importFrom AnnotationDbi dbconn dbfile 
 #' @importFrom S4Vectors metadata
 #' @importFrom methods is
@@ -108,6 +109,25 @@ src_organism <- function(txdb=NULL, dbpath=NULL) {
             names(seqinfo) <- 
                 c("seqnames", "seqlengths", "isCircular", "genome")
             dbWriteTable(con, "seqinfo", seqinfo)
+            
+            # check ensembl length
+            if (txdb_schema == "txdb_ensembl") {
+                orgens <- .getEnsLen(con, "id")
+                txdbens <- .getEnsLen(con, "ranges_gene")
+                
+                if (orgens != txdbens) {
+                    tbls <- dbListTables(con)
+                    if (orgens < txdbens) {
+                        tbls <- tbls[startsWith(tbls, "ranges")]
+                        for (tablename in tbls)
+                            .alter_table(con, tablename, orgens)
+                    } else {
+                        tbls <- tbls[startsWith(tbls, "id")]
+                        for (tablename in tbls)
+                            .alter_table(con, tablename, txdbens)
+                    }
+                }
+            }
         }, error=function(e) {
             dbDisconnect(con)         # clean-up
             file.remove(dbpath)
@@ -116,9 +136,32 @@ src_organism <- function(txdb=NULL, dbpath=NULL) {
     }
     
     src <- src_sql("sqlite", con, path=dbfile(con))
-    src$schema <- tail(colnames(tbl(src, "ranges_gene")), 1L)
+    # src$schema <- tail(colnames(tbl(src, "ranges_gene")), 1L)
+    schema <- tail(colnames(tbl(src, "ranges_gene")), 1L)
+    ifelse(startsWith(schema, "entrez"), 
+           src$schema <- "entrez", 
+           src$schema <- "ensembl")
+    
     class(src) <- c("src_organism", class(src))
     src
+}
+
+.getEnsLen <- function(con, tablename) {
+    dbGetQuery(con, 
+               paste0("SELECT LENGTH(ensembl) FROM ", tablename, 
+                      " WHERE ensembl is NOT NULL LIMIT 1")) [[1]]
+}
+
+.alter_table <- function(con, tablename, length) {
+    dbGetQuery(con,
+               paste0("ALTER TABLE ", tablename, 
+                      " ADD COLUMN ensembl_original CHARACTER"))
+    dbGetQuery(con,
+               paste0("UPDATE ", tablename, 
+                      " SET ensembl_original = ensembl"))
+    dbGetQuery(con,
+               paste0("UPDATE ", tablename, 
+                      " SET ensembl = substr(ensembl, 1, ", length, ")"))
 }
 
 .add_view <- function(con, db, tblname) {
@@ -144,11 +187,11 @@ src_organism <- function(txdb=NULL, dbpath=NULL) {
 }
 
 
-#' @param organism
+#' @param organism organism name
 #' 
-#' @param genome
+#' @param genome genome name
 #' 
-#' @param id
+#' @param id choose from "knownGene", "ensGene" and "refGene"
 #' 
 #' @examples 
 #' human <- src_ucsc("human")

@@ -89,11 +89,11 @@ object instantiating the content of a \code{TxDb.*} pacakge.}
 \item{dbpath}{path and file name where SQLite file will be accessed
 or created if not already exists.}
 
-\item{organism}{}
+\item{organism}{organism name}
 
-\item{genome}{}
+\item{genome}{genome name}
 
-\item{id}{}
+\item{id}{choose from "knownGene", "ensGene" and "refGene"}
 
 \item{x}{A src_organism object}
 

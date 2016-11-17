@@ -16,6 +16,7 @@ Depends:
     dplyr
 Imports:
     AnnotationDbi,
+    DBI,
     RSQLite,
     S4Vectors,
     GenomeInfoDb,

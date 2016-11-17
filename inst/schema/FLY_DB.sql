@@ -9,7 +9,7 @@ JOIN accessions ON genes._id = accessions._id
 LEFT OUTER JOIN refseq ON genes._id = refseq._id
     AND refseq.accession = accessions.accession
 LEFT OUTER JOIN ensembl ON genes._id = ensembl._id;
-
+    
 CREATE INDEX IF NOT EXISTS entrez_accession on id_accession (entrez);
 
 CREATE INDEX IF NOT EXISTS ensembl_accession on id_accession (ensembl);
@@ -33,19 +33,42 @@ CREATE TABLE IF NOT EXISTS id AS
 SELECT DISTINCT
     genes.gene_id AS entrez,
     ensembl.ensembl_id AS ensembl,
+    cytogenetic_location AS map,
     gene_info.symbol AS symbol,
     gene_info.gene_name AS genename,
     alias.alias_symbol AS alias
 FROM genes
 JOIN gene_info ON genes._id = gene_info._id
 LEFT OUTER JOIN ensembl ON genes._id = ensembl._id
-LEFT OUTER JOIN alias ON genes._id = alias._id;
+LEFT OUTER JOIN cytogenetic_locations ON genes._id = cytogenetic_locations._id
+JOIN alias ON genes._id = alias._id;
 
 CREATE INDEX IF NOT EXISTS entrez_id on id (entrez);
 
 CREATE INDEX IF NOT EXISTS ensembl_id on id (ensembl);
 
 CREATE INDEX IF NOT EXISTS symbol_id on id (symbol);
+
+CREATE TABLE IF NOT EXISTS id_flybase AS
+SELECT DISTINCT
+    genes.gene_id AS entrez,
+    ensembl.ensembl_id AS ensembl,
+    flybase.flybase_id AS flybase,
+    flybase_cg.flybase_cg_id AS flybase_cg,
+    flybase_prot.prot_id AS flybase_prot
+FROM genes 
+LEFT OUTER JOIN ensembl ON genes._id = ensembl._id
+LEFT OUTER JOIN flybase ON genes._id = flybase._id
+LEFT OUTER JOIN flybase_cg ON genes._id = flybase_cg._id
+LEFT OUTER JOIN flybase_prot ON genes._id = flybase_prot._id;
+
+CREATE INDEX IF NOT EXISTS entrez_flybase on id_flybase (entrez);
+
+CREATE INDEX IF NOT EXISTS ensembl_flybase on id_flybase (ensembl);
+
+CREATE INDEX IF NOT EXISTS flybase_flybase on id_flybase (flybase);
+
+CREATE INDEX IF NOT EXISTS flybase_cg_flybase on id_flybase (flybase_cg);
 
 CREATE TABLE IF NOT EXISTS id_pm AS
 SELECT DISTINCT
@@ -66,19 +89,13 @@ SELECT DISTINCT
     ensembl.ensembl_id AS ensembl,
     ec.ec_number AS enzyme,
     ensembl_prot.prot_id AS ensemblprot,
-    uniprot.uniprot_id AS uniprot,
-    pfam.ipi_id AS ipi,
-    pfam.pfam_id AS pfam,
-    prosite.prosite_id AS prosite
+    uniprot.uniprot_id AS uniprot
 FROM genes
 LEFT OUTER JOIN ensembl ON genes._id = ensembl._id
 LEFT OUTER JOIN ec ON genes._id = ec._id
 LEFT OUTER JOIN uniprot ON genes._id = uniprot._id
-LEFT OUTER JOIN ensembl_prot ON genes._id = ensembl_prot._id
-LEFT OUTER JOIN pfam ON genes._id = pfam._id
-LEFT OUTER JOIN prosite ON genes._id = prosite._id
-    AND pfam.ipi_id = prosite.ipi_id;
-
+LEFT OUTER JOIN ensembl_prot ON genes._id = ensembl_prot._id;
+    
 CREATE INDEX IF NOT EXISTS entrez_protein on id_protein (entrez);
 
 CREATE INDEX IF NOT EXISTS ensembl_protein on id_protein (ensembl);
