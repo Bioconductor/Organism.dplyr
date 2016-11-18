@@ -34,39 +34,8 @@
         fields <- setdiff(fields, keep)
     }
     
-    ## filter by granges
-    granges <- filter$granges
-    if (!is.null(granges)) {
-        stopifnot(is(granges, "GRanges"))
-        for(i in seq_along(granges)) {
-            seqnames = as.character(seqnames(granges[i]))
-            start = start(granges[i])
-            end = end(granges[i])
-            strand = as.character(strand(granges[i]))
-            
-            prefix <- 
-                GenomicRanges:::.collect_prefixes(colnames(table), "start")
-            table1 <- table
-            
-            if (!is.null(seqnames))
-                table1 <- table1 %>% 
-                filter_(paste0(prefix, "chrom == '", seqnames, "'"))
-            if (!is.null(start))
-                table1 <- table1 %>% 
-                filter_(paste0(prefix, "start < ", end))
-            if (!is.null(end))
-                table1 <- table1 %>% 
-                filter_(paste0(prefix, "end > ", start))
-            if (!is.null(strand) && strand != "*")
-                table1 <- table1 %>% 
-                filter_(paste0(prefix, "strand == '", strand, "'"))
-            if (i == 1L)
-                tmp <- table1
-            else 
-                tmp <- union_all(tmp, table1)
-        }
-        table <- tmp
-    }
+    ## FIXME: filter by granges -- too expensive to iterate over
+    ## GRanges and use SQL queries on each
     table
 }
 
@@ -92,8 +61,12 @@
     gr
 }
 
-.toGRanges <- function(x, table) {
+.toGRanges <- function(x, table, filter) {
     gr <- table %>% collect(n=Inf) %>% as("GRanges")
+    if ("granges" %in% names(filter)) {
+        stopifnot(is(filter$granges, "GRanges"))
+        gr <- subsetByOverlaps(gr, filter$granges)
+    }
     .updateSeqinfo(x, gr)
 }
 
@@ -134,7 +107,7 @@ transcripts_tbl <- function(x, filter = NULL) {
 #' @export
 
 setMethod("transcripts", "src_organism", function(x, filter = NULL) {
-    .toGRanges(x, transcripts_tbl(x, filter))
+    .toGRanges(x, transcripts_tbl(x, filter), filter)
 })
 
 .exons <- function(x, filter = NULL) {
@@ -165,7 +138,7 @@ exons_tbl <- function(x, filter = NULL) {
 #' @export
 
 setMethod("exons", "src_organism", function(x, filter = NULL) {
-    .toGRanges(x, exons_tbl(x, filter))
+    .toGRanges(x, exons_tbl(x, filter), filter)
 })
 
 
@@ -195,7 +168,7 @@ cds_tbl <- function(x, filter = NULL) {
 #' @export
 
 setMethod("cds", "src_organism", function(x, filter = NULL) {
-    .toGRanges(x, cds_tbl(x, filter))
+    .toGRanges(x, cds_tbl(x, filter), filter)
 })
 
 
@@ -225,7 +198,7 @@ genes_tbl <- function(x, filter = NULL) {
 #' @export
 
 setMethod("genes", "src_organism", function(x, filter = NULL) {
-    .toGRanges(x, genes_tbl(x, filter))
+    .toGRanges(x, genes_tbl(x, filter), filter)
 })
 
 
@@ -283,7 +256,7 @@ promoters_tbl <- function(x, upstream, downstream, filter = NULL) {
 
 setMethod("promoters", "src_organism",
 function(x, upstream, downstream, filter = NULL) {
-    .toGRanges(x, promoters_tbl(x, upstream, downstream, filter))
+    .toGRanges(x, promoters_tbl(x, upstream, downstream, filter), filter)
 })
 
 
@@ -296,9 +269,9 @@ function(x, upstream, downstream, filter = NULL) {
     # table <- fun(x, by, filter) %>% collect(n=Inf) %>% as("GRanges")
     
     if (type %in% c("transcripts", "exons", "cds"))
-        table <- .toGRanges(x, fun(x, by, filter))
+        table <- .toGRanges(x, fun(x, by, filter), filter)
     else 
-        table <- .toGRanges(x, fun(x, filter))
+        table <- .toGRanges(x, fun(x, filter), filter)
     
     f <- switch(by, gene=x$schema, exon="exon_id", cds="cds_id", tx="tx_id")
     split(table, mcols(table)[[f]])
