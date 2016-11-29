@@ -1,20 +1,13 @@
-#' Create a dplyr view into an org package
+#' Create a sqlite database from an org package and a txdb package
 #'
-#' The view provides a convenient way to map between gene, transcript,
+#' The database provides a convenient way to map between gene, transcript,
 #' and protein identifiers.
-#'
-#' This function provides a way to map between identifiers. It does
-#' not include details of GO evidence and ontology (see
-#' \code{\link{tbl_go}}), and does not provide genomic coordinates
-#' (see \code{\link{tbl_txdb}}.
 #'
 #' This function is meant to be a building block for
 #' \code{\link{src_organism}}, which provides an integrated
 #' presentation of identifiers and genomic coordinates.
 #'
-#'
-#'
-#' Create a dplyr view integrating org.* and TxDb.* information
+#' Create a dplyr database integrating org.* and TxDb.* information
 #'     
 #' @param txdb character(1) naming a \code{TxDb.*} package (e.g.,
 #'     \code{TxDb.Hsapiens.UCSC.hg38.knownGene}) or \code{TxDb}
@@ -23,31 +16,27 @@
 #' @param dbpath path and file name where SQLite file will be accessed
 #'      or created if not already exists.
 #' 
-#' @return A dplyr \code{tbl_sql} instance representing the data
-#'     table.
-#'     
+#' @return A dplyr \code{src_sqlite} instance representing the data
+#'     tables.
+#' 
+#' @rdname src_organism
+#' 
 #' @importFrom RSQLite dbGetQuery dbConnect dbDisconnect SQLite dbWriteTable
 #' @importFrom DBI dbListTables
 #' @importFrom AnnotationDbi dbconn dbfile 
 #' @importFrom S4Vectors metadata
-#' @importFrom methods is
+#' @importFrom methods is as
 #' @importFrom tools file_ext 
 #' @importFrom dplyr tbl 
 #' @importFrom data.table setDT
 #' @importFrom GenomeInfoDb as.data.frame
 #' 
 #' @examples
-#' # human
-#' library(TxDb.Hsapiens.UCSC.hg38.knownGene)
-#' organism <- src_organism(TxDb.Hsapiens.UCSC.hg38.knownGene)
+#' # create human sqlite database with TxDb.Hsapiens.UCSC.hg38.knownGene and 
+#' # corresponding org.Hs.eg.db
+#' organism <- src_organism("TxDb.Hsapiens.UCSC.hg38.knownGene")
 #' src_tbls(organism)
-#' id <- tbl(organism, "id")
-#' id
-#' id %>% dplyr::select(ensembl, symbol) %>% filter(symbol == "PTEN")
-#' inner_join(id, tbl(organism, "ranges_tx")) %>% 
-#'      filter(symbol == "PTEN") %>%
-#'      dplyr::select(entrez, symbol, tx_id, tx_start, tx_end)
-#' 
+#' tbl(organism, "id")
 #' 
 #' @export
 src_organism <- function(txdb=NULL, dbpath=NULL) {
@@ -63,7 +52,11 @@ src_organism <- function(txdb=NULL, dbpath=NULL) {
         
         txdb_name <- basename(dbfile(txdb))
         org <- strsplit(txdb_name, "[.]")[[1]][2]
-        org <- sprintf("org.%s.eg.db", substr(org, 1, 2))
+        org <-
+            if (org != "Mmulatta") {
+                sprintf("org.%s.eg.db", substr(org, 1, 2))
+            } else "org.Mmu.eg.db"
+        # org <- sprintf("org.%s.eg.db", substr(org, 1, 2))
         org <- loadNamespace(org)[[org]]
         
         org_meta <- metadata(org)
@@ -148,7 +141,7 @@ src_organism <- function(txdb=NULL, dbpath=NULL) {
                       " SET ensembl = SUBSTR(ensembl, 1, ", length, ")"))
 }
 
-.alter_ensembl_ids <- fuction(con) {
+.alter_ensembl_ids <- function(con) {
     ## e.g., FBgn from org.Dm* has FBgn000xx, whereas
     ## TxDb.Dmelanogaster has FBgn000xx.1. Create a new column for
     ## original, upadate ensembl column to be like org.*
@@ -198,7 +191,11 @@ src_organism <- function(txdb=NULL, dbpath=NULL) {
 #' 
 #' @param id choose from "knownGene", "ensGene" and "refGene"
 #' 
+#' @param verbose logical. Should R report extra information on progress? 
+#' Default is TRUE.
+#' 
 #' @examples 
+#' # create human sqlite database using hg38 genome
 #' human <- src_ucsc("human")
 #' 
 #' @rdname src_organism
@@ -287,6 +284,12 @@ src_ucsc <- function(organism, genome = NULL, id = NULL,
 }
 
 
+#' @param .data A tbl.
+#' 
+#' @param ... Comma separated list of unquoted expressions. You can treat 
+#' variable names like they are positions. Use positive values to select 
+#' variables; use negative values to drop variables.
+#' 
 #' @importFrom dplyr src_sql "%>%" tbl select_
 #' 
 #' @rdname src_organism
@@ -296,15 +299,28 @@ select_.tbl_organism <- function(.data, ...) {
     dplyr::distinct_(.data, ...) 
 }
 
+#' @param src A src_organism object
+#' 
+#' @examples 
+#' # Look at all available tables
+#' src_tbls(organism)
+#' 
 #' @importFrom dplyr src_tbls
 #' @importFrom RSQLite dbGetQuery
+#' @rdname src_organism
 #' @export
 src_tbls.src_organism <- function(x) {
-    sql <- "SELECT name FROM sqlite_master WHERE type IN ('view', 'table')"
+    sql <- "SELECT name FROM sqlite_master WHERE type IN ('view', 'table') 
+            AND (SUBSTR(name,1,2) = 'id' OR SUBSTR(name,1,6) = 'ranges')"
     dbGetQuery(x$con, sql)$name
 }
 
+#' @examples 
+#' # Look at data in table "id"
+#' tbl(organism, "id")
+#' 
 #' @importFrom dplyr tbl
+#' @rdname src_organism
 #' @export
 tbl.src_organism <- function(src, ...) {
     tbl <- NextMethod(src, ...)

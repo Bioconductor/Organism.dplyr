@@ -1,12 +1,10 @@
-#' @importFrom GenomicRanges start end strand seqnames
-#' @importFrom dplyr union_all
-
 .tbl_filter <- function(keep1, table, filter) {
     values <- paste0("'", filter[[keep1]], "'", collapse=", ")
     op <- if (length(filter[[keep1]]) == 1) "==" else "%in%"
     sprintf("%s %s c(%s)", keep1, op, values)
 }
 
+#' @importFrom dplyr filter_
 .tbl_join <- function(x, table, tbls, filter) {
     if (is.null(filter))
         return(table)
@@ -34,8 +32,6 @@
         fields <- setdiff(fields, keep)
     }
     
-    ## FIXME: filter by granges -- too expensive to iterate over
-    ## GRanges and use SQL queries on each
     table
 }
 
@@ -48,8 +44,16 @@
     setdiff(names(filter), "granges")
 }
 
+# .return_tbl <- function(table, filter) {
+#     if ("granges" %in% names(filter))
+#         message("filter by 'granges' only supported by methods return GRanges  
+#                 or GRangesList")
+#     return(table)
+# }
+
+#' @importFrom dplyr tbl collect
 .updateSeqinfo <- function(x, gr) {
-    seqinfo <- transform(tbl(x, "seqinfo") %>% collect(), 
+    seqinfo <- transform(tbl(x, "seqinfo") %>% collect(n=Inf), 
                          seqnames = as.character(seqnames), 
                          seqlengths = as.integer(seqlengths),
                          isCircular = as.logical(isCircular),
@@ -61,6 +65,7 @@
     gr
 }
 
+#' @importFrom IRanges subsetByOverlaps
 .toGRanges <- function(x, table, filter) {
     gr <- table %>% collect(n=Inf) %>% as("GRanges")
     if ("granges" %in% names(filter)) {
@@ -70,13 +75,20 @@
     .updateSeqinfo(x, gr)
 }
 
-
 .transcripts <- function(x, filter = NULL) {
     table <- tbl(x, "ranges_tx")
     tbls <- setdiff(src_tbls(x), "ranges_tx")
     table <- .tbl_join(x, table, tbls, filter)
 }
 
+
+#' @param x A src_organism object
+#' 
+#' @param filter Either NULL or a named list of vectors to be used to
+#'     restrict the output.
+#' 
+#' @importFrom dplyr select_ arrange
+#' 
 #' @rdname src_organism
 #' @export
 transcripts_tbl <- function(x, filter = NULL) {
@@ -84,15 +96,11 @@ transcripts_tbl <- function(x, filter = NULL) {
     fields <- unique(
         c("tx_chrom", "tx_start", "tx_end", "tx_strand",
           x$schema, "tx_id", "tx_name", .filter_names(filter)))
-    do.call(select_, c(list(table), as.list(fields))) %>% arrange(tx_id)
+    do.call(select_, c(list(table), as.list(fields))) %>% 
+        arrange(tx_id)
 }
 
 #' Generic functions to extract genomic features from an object.
-#'
-#' @param x A src_organism object
-#'
-#' @param filter Either NULL or a named list of vectors to be used to
-#'     restrict the output.
 #'
 #' @examples
 #' organism <- src_ucsc("human")
@@ -160,7 +168,6 @@ cds_tbl <- function(x, filter = NULL) {
     
     table <- .cds(x, filter)
     do.call(select_, c(list(table), as.list(keep))) %>% arrange(cds_id)
-    
 }
 
 #' @rdname src_organism
@@ -189,8 +196,7 @@ genes_tbl <- function(x, filter = NULL) {
     fields <- unique(
         c("gene_chrom", "gene_start", "gene_end", "gene_strand",
           x$schema, .filter_names(filter)))
-    do.call(select_, c(list(table), as.list(fields))) %>% 
-        arrange_(x$schema)
+    do.call(select_, c(list(table), as.list(fields))) %>% arrange_(x$schema)
 }
 
 #' @rdname src_organism
@@ -207,7 +213,9 @@ setMethod("genes", "src_organism", function(x, filter = NULL) {
 #'
 #' @param downstream For \code{promoters()}: An integer(1) value indicating
 #' the number of bases downstream from the transcription start site.
-#'
+#' 
+#' @importFrom dplyr mutate rename arrange
+#' 
 #' @rdname src_organism
 #' @export
 
@@ -235,8 +243,8 @@ promoters_tbl <- function(x, upstream, downstream, filter = NULL) {
                             tx_end + upstream,
                             tx_start + downstream - 1)) %>% collect(n=Inf)
 
-    table <- dplyr::rename(table, chrom = tx_chrom)
-    table <- dplyr::rename(table, strand = tx_strand)
+    table <- rename(table, chrom = tx_chrom)
+    table <- rename(table, strand = tx_strand)
 
     fields <- unique(
         c("chrom", "start", "end", "strand", "tx_id", "tx_name",
@@ -266,7 +274,6 @@ function(x, upstream, downstream, filter = NULL) {
                    cds = cdsBy_tbl,
                    fiveUTRs = fiveUTRsByTranscript_tbl, 
                    threeUTRs = threeUTRsByTranscript_tbl)
-    # table <- fun(x, by, filter) %>% collect(n=Inf) %>% as("GRanges")
     
     if (type %in% c("transcripts", "exons", "cds"))
         table <- .toGRanges(x, fun(x, by, filter), filter)
@@ -358,7 +365,8 @@ function(x, by = c("tx", "gene"), filter = NULL) {
             c("exon_chrom", "exon_start", "exon_end", "exon_strand",
               "tx_id", "exon_id", "exon_name", "exon_rank", 
               .filter_names(filter)))
-        do.call(select_, c(list(table), as.list(fields))) %>% arrange(tx_id)
+        do.call(select_, c(list(table), as.list(fields))) %>% 
+            arrange(tx_id)
     }
     else if (by == "gene") {
         table <- inner_join(exons, tbl(x, "ranges_gene"))
@@ -402,7 +410,8 @@ function(x, by = c("tx", "gene"), filter = NULL) {
             c("cds_chrom", "cds_start", "cds_end", "cds_strand",
               "tx_id", "cds_id", "cds_name", "exon_rank", 
               .filter_names(filter)))
-        do.call(select_, c(list(table), as.list(fields))) %>% arrange(tx_id)
+        do.call(select_, c(list(table), as.list(fields))) %>% 
+            arrange(tx_id)
     }
     else if (by == "gene") {
         table <- inner_join(cds, tbl(x, "ranges_gene"))
@@ -427,6 +436,17 @@ function(x, by = c("tx", "gene"), filter = NULL) {
     .toGRangesList(x, "cds", by, filter)
 })
 
+#' @rdname src_organism
+#' @export
+
+intronsByTranscript_tbl <-
+function(x, filter = NULL) {
+    ans <- unlist(intronsByTranscript(x, filter))
+    mcols(ans)[, "tx_id"] <- names(ans)
+    unname(unlist(ans)) %>% as.data.frame %>% tbl_df %>%
+        dplyr::select(tx_id, intron_chrom=seqnames, intron_start=start,
+                      intron_end=end, intron_strand=strand)
+}
 
 #' @examples
 #' intronsByTranscript(organism, filter = list(symbol="PTEN"))
@@ -440,10 +460,6 @@ setMethod("intronsByTranscript", "src_organism",
 function(x, filter=NULL) {
     tx <- .transcripts(x, filter=filter)
     exn <- exonsBy_tbl(x, filter=filter)
-
-    # tx_gr <- tx %>%
-    #     dplyr::select(tx_id, tx_chrom, tx_start, tx_end, tx_strand) %>%
-    #     collect(n=Inf) %>% as("GRanges")
     
     table <- tx %>% collect(n=Inf)
 
@@ -454,11 +470,6 @@ function(x, filter=NULL) {
         as("GRanges")
     
     tx_gr <- .updateSeqinfo(x, tx_gr)
-    
-    # exn_grl <- exn %>% collect(n=Inf) %>%
-    #     dplyr::select(tx_id, exon_id, exon_chrom, exon_start, exon_end,
-    #            exon_strand) %>%
-    #     as("GRanges") %>% split(.$tx_id)
     
     table <- exn %>% collect(n=Inf)
 
@@ -472,18 +483,6 @@ function(x, filter=NULL) {
     ans <- psetdiff(tx_gr, exn_grl)
     ans
 })
-
-#' @rdname src_organism
-#' @export
-
-intronsByTranscript_tbl <-
-function(x, filter = NULL) {
-    ans <- unlist(intronsByTranscript(x, filter))
-    mcols(ans)[, "tx_id"] <- names(ans)
-    unname(unlist(ans)) %>% as.data.frame %>% tbl_df %>%
-        dplyr::select(tx_id, intron_chrom=seqnames, intron_start=start,
-               intron_end=end, intron_strand=strand)
-}
 
 
 .getSplicings <- function(x, filter=NULL) {

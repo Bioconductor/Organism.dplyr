@@ -1,0 +1,106 @@
+---
+title: "Organism.dplyr"
+output: 
+  BiocStyle::html_document:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{Organism.dplyr}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Introduction
+
+The `r Biocpkg("Organism.dplyr")` creates an on disk sqlite database to hold 
+data of an organism combined from an 'org' package (e.g., org.Hs.eg.db) and the
+genome coordinate functionality of the 'TxDb' package (e.g., 
+TxDb.Hsapiens.UCSC.hg19.knownGene). It aims to provide an integrated 
+presentation of identifiers and genomic coordinates. And a _src_organism_ 
+object is created to point to the database. 
+
+# Constructing a _src_organism_
+
+## Make sqlite datebase from 'TxDb' package
+
+The `src_organism()` constructor creates an on disk sqlite database with data 
+from given 'TxDb' package and corresponding 'org' package. When dbpath is
+given, file is created at the given path, otherwise temporary file is created.
+
+```{r, echo=FALSE}
+suppressPackageStartupMessages(library(Organism.dplyr))
+```
+
+Running `src_organism()` without a given path will save the sqlite file to a
+tempdir():
+
+```{r}
+src <- src_organism("TxDb.Hsapiens.UCSC.hg38.knownGene")
+src
+```
+
+Alternatively you can provide explicit path to where the sqlite file should
+be saved.
+
+```{r, eval=FALSE}
+src <- src_organism("TxDb.Hsapiens.UCSC.hg38.knownGene", "path/to/save/sqlite")
+```
+
+## Make sqlite datebase from organism name
+
+Organism name, genome and id could be specified to create sqlite database. 
+Organism name (either Organism or common name) must be provided to create the 
+database, if genome and id are not given, most recent 'TxDb' package is used.
+
+```{r}
+src <- src_ucsc("human")
+```
+
+## Access existing sqlite file 
+
+Existing on disk sqlite file can be accessed without recreating the database. 
+
+```{r, eval=FALSE}
+src <- src_organism(dbpath = "path/to/save/sqlite")
+```
+
+# Common operations
+
+## basic methods
+
+All methods from package [dplyr][] can be used for a _src_organism_ object. 
+
+Look at all available tables. 
+```{r}
+src_tbls(src)
+```
+
+Look at data from one specific table. 
+```{r}
+tbl(src, "id")
+```
+
+## Genomic coordinates extractors
+
+Eleven genomic coordinates extractor methods are available in this package: 
+`transcripts()`, `exons()`, `cds()`, `genes()`, `promoters()`, 
+`transcriptsBy()`, `exonsBy()`, `cdsBy()`, `intronsByTranscript()`, 
+`fiveUTRsByTranscript()`, `threeUTRsByTranscript()`. Two versions of results 
+are provided: _tibble_ (`transcripts_tbl()`) and _GRanges_ or _GRangesList_ 
+(`transcripts()`). 
+
+Filter can be applied to all extractor functions. A named list of vectors can 
+be used to restrict the output, valid names come from any field name from 
+tables displayed by `src_tbls()`. Besides, 'granges' could also be used as 
+filter for the methods with result displaying as _GRanges_ or _GRangesList_. 
+
+```{r}
+filters <- list(symbol=c("PTEN", "BRCA1"),
+                entrez="5728",
+                granges=as("chr10:87869000-87876000", "GRanges"))
+transcripts_tbl(src, filter=filters)
+transcripts(src, filter=filters)
+```
+
+
+
+[dplyr]: https://CRAN.R-project.org/package=dplyr

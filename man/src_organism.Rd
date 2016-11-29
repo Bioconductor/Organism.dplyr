@@ -20,14 +20,16 @@
 \alias{promoters_tbl}
 \alias{select_.tbl_organism}
 \alias{src_organism}
+\alias{src_tbls.src_organism}
 \alias{src_ucsc}
+\alias{tbl.src_organism}
 \alias{threeUTRsByTranscript,src_organism-method}
 \alias{threeUTRsByTranscript_tbl}
 \alias{transcripts,src_organism-method}
 \alias{transcriptsBy,src_organism-method}
 \alias{transcriptsBy_tbl}
 \alias{transcripts_tbl}
-\title{Create a dplyr view into an org package}
+\title{Create a sqlite database from an org package and a txdb package}
 \usage{
 src_organism(txdb = NULL, dbpath = NULL)
 
@@ -35,6 +37,10 @@ src_ucsc(organism, genome = NULL, id = NULL, dbpath = NULL,
   verbose = TRUE)
 
 \method{select_}{tbl_organism}(.data, ...)
+
+\method{src_tbls}{src_organism}(x)
+
+\method{tbl}{src_organism}(src, ...)
 
 transcripts_tbl(x, filter = NULL)
 
@@ -69,9 +75,9 @@ cdsBy_tbl(x, by = c("tx", "gene"), filter = NULL)
 
 \S4method{cdsBy}{src_organism}(x, by = c("tx", "gene"), filter = NULL)
 
-\S4method{intronsByTranscript}{src_organism}(x, filter = NULL)
-
 intronsByTranscript_tbl(x, filter = NULL)
+
+\S4method{intronsByTranscript}{src_organism}(x, filter = NULL)
 
 fiveUTRsByTranscript_tbl(x, filter = NULL)
 
@@ -95,7 +101,18 @@ or created if not already exists.}
 
 \item{id}{choose from "knownGene", "ensGene" and "refGene"}
 
+\item{verbose}{logical. Should R report extra information on progress? 
+Default is TRUE.}
+
+\item{.data}{A tbl.}
+
+\item{...}{Comma separated list of unquoted expressions. You can treat 
+variable names like they are positions. Use positive values to select 
+variables; use negative values to drop variables.}
+
 \item{x}{A src_organism object}
+
+\item{src}{A src_organism object}
 
 \item{filter}{Either NULL or a named list of vectors to be used to
 restrict the output.}
@@ -109,43 +126,37 @@ the number of bases downstream from the transcription start site.}
 \item{by}{One of "gene", "exon", "cds" or "tx". Determines the grouping.}
 }
 \value{
-A dplyr \code{tbl_sql} instance representing the data
-    table.
+A dplyr \code{src_sqlite} instance representing the data
+    tables.
 }
 \description{
-The view provides a convenient way to map between gene, transcript,
+The database provides a convenient way to map between gene, transcript,
 and protein identifiers.
 
 Generic functions to extract genomic features from an object.
 }
 \details{
-This function provides a way to map between identifiers. It does
-not include details of GO evidence and ontology (see
-\code{\link{tbl_go}}), and does not provide genomic coordinates
-(see \code{\link{tbl_txdb}}.
-
 This function is meant to be a building block for
 \code{\link{src_organism}}, which provides an integrated
 presentation of identifiers and genomic coordinates.
 
-
-
-Create a dplyr view integrating org.* and TxDb.* information
+Create a dplyr database integrating org.* and TxDb.* information
 }
 \examples{
-# human
-library(TxDb.Hsapiens.UCSC.hg38.knownGene)
-organism <- src_organism(TxDb.Hsapiens.UCSC.hg38.knownGene)
+# create human sqlite database with TxDb.Hsapiens.UCSC.hg38.knownGene and 
+# corresponding org.Hs.eg.db
+organism <- src_organism("TxDb.Hsapiens.UCSC.hg38.knownGene")
 src_tbls(organism)
-id <- tbl(organism, "id")
-id
-id \%>\% dplyr::select(ensembl, symbol) \%>\% filter(symbol == "PTEN")
-inner_join(id, tbl(organism, "ranges_tx")) \%>\% 
-     filter(symbol == "PTEN") \%>\%
-     dplyr::select(entrez, symbol, tx_id, tx_start, tx_end)
+tbl(organism, "id")
 
-
+# create human sqlite database using hg38 genome
 human <- src_ucsc("human")
+
+# Look at all available tables
+src_tbls(organism)
+
+# Look at data in table "id"
+tbl(organism, "id")
 
 organism <- src_ucsc("human")
 filters <- list(symbol=c("PTEN", "BRCA1"),
