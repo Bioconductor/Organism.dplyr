@@ -22,6 +22,7 @@
 \alias{src_organism}
 \alias{src_tbls.src_organism}
 \alias{src_ucsc}
+\alias{supportedOrganism}
 \alias{tbl.src_organism}
 \alias{threeUTRsByTranscript,src_organism-method}
 \alias{threeUTRsByTranscript_tbl}
@@ -35,6 +36,8 @@ src_organism(txdb = NULL, dbpath = NULL)
 
 src_ucsc(organism, genome = NULL, id = NULL, dbpath = NULL,
   verbose = TRUE)
+
+supportedOrganism()
 
 \method{select_}{tbl_organism}(.data, ...)
 

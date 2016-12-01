@@ -22,8 +22,8 @@ object is created to point to the database.
 
 ## Make sqlite datebase from 'TxDb' package
 
-The `src_organism()` constructor creates an on disk sqlite database with data 
-from given 'TxDb' package and corresponding 'org' package. When dbpath is
+The `src_organism()` constructor creates an on disk sqlite database file with  
+data from given 'TxDb' package and corresponding 'org' package. When dbpath is
 given, file is created at the given path, otherwise temporary file is created.
 
 ```{r, echo=FALSE}
@@ -78,6 +78,15 @@ Look at data from one specific table.
 ```{r}
 tbl(src, "id")
 ```
+
+Query tables using dplyr. 
+
+```{r}
+inner_join(tbl(src, "id"), tbl(src, "id_go")) %>% 
+    filter(symbol == "PTEN") %>% 
+    select(entrez, ensembl, symbol, go, evidence, ontology)
+```
+
 
 ## Genomic coordinates extractors
 

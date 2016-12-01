@@ -34,9 +34,12 @@
 #' @examples
 #' # create human sqlite database with TxDb.Hsapiens.UCSC.hg38.knownGene and 
 #' # corresponding org.Hs.eg.db
-#' organism <- src_organism("TxDb.Hsapiens.UCSC.hg38.knownGene")
-#' src_tbls(organism)
-#' tbl(organism, "id")
+#' src <- src_organism("TxDb.Hsapiens.UCSC.hg38.knownGene")
+#' 
+#' # query using dplyr
+#' inner_join(tbl(src, "id"), tbl(src, "id_go")) %>% 
+#'      filter(symbol == "PTEN") %>% 
+#'      select(entrez, ensembl, symbol, go, evidence, ontology)
 #' 
 #' @export
 src_organism <- function(txdb=NULL, dbpath=NULL) {
@@ -283,6 +286,14 @@ src_ucsc <- function(organism, genome = NULL, id = NULL,
     txdb
 }
 
+#' @rdname src_organism
+#' @export
+supportedOrganism <- function() {
+    filename <- system.file(
+        package = "Organism.dplyr", "extdata", 
+        "supportedOrganism.csv")
+    read.csv(filename, header = TRUE, stringsAsFactors = FALSE)
+}
 
 #' @param .data A tbl.
 #' 
@@ -303,7 +314,7 @@ select_.tbl_organism <- function(.data, ...) {
 #' 
 #' @examples 
 #' # Look at all available tables
-#' src_tbls(organism)
+#' src_tbls(src)
 #' 
 #' @importFrom dplyr src_tbls
 #' @importFrom RSQLite dbGetQuery
@@ -317,7 +328,7 @@ src_tbls.src_organism <- function(x) {
 
 #' @examples 
 #' # Look at data in table "id"
-#' tbl(organism, "id")
+#' tbl(src, "id")
 #' 
 #' @importFrom dplyr tbl
 #' @rdname src_organism
