@@ -29,6 +29,7 @@
 #' @importFrom methods is as
 #' @importFrom tools file_ext
 #' @importFrom dplyr tbl
+#' @importFrom AnnotationDbi dbfile
 #' @importFrom GenomeInfoDb as.data.frame
 #'
 #' @examples
@@ -285,15 +286,16 @@ src_ucsc <- function(organism, genome = NULL, id = NULL,
 }
 
 #' @examples 
-#' supportedOrganism()
+#' supportedOrganisms()
 #' 
 #' @rdname src_organism
 #' @export
-supportedOrganism <- function() {
+supportedOrganisms <- function() {
     filename <- system.file(
         package = "Organism.dplyr", "extdata", 
         "supportedOrganism.csv")
-    read.csv(filename, header = TRUE, stringsAsFactors = FALSE)
+    csv <- read.csv(filename, header = TRUE, stringsAsFactors = FALSE)
+    tbl_df(csv)
 }
 
 #' @param .data A tbl.
@@ -327,19 +329,12 @@ src_tbls.src_organism <- function(x) {
     dbGetQuery(x$con, sql)$name
 }
 
-<<<<<<< HEAD
-#' @examples
-#' # Look at data in table "id"
-#' tbl(organism, "id")
-#'
-=======
 #' @param src A src_organism object
 #' 
 #' @examples 
 #' # Look at data in table "id"
 #' tbl(src, "id")
 #' 
->>>>>>> 1a14f149426df203482a18367e2402ff5a3b144a
 #' @importFrom dplyr tbl
 #' @rdname src_organism
 #' @export

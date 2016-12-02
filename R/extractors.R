@@ -445,8 +445,8 @@ function(x, by = c("tx", "gene"), filter = NULL) {
 })
 
 #' @rdname transcripts
+#' importFrom dplyr tbl_df
 #' @export
-
 intronsByTranscript_tbl <-
 function(x, filter = NULL) {
     ans <- unlist(intronsByTranscript(x, filter))

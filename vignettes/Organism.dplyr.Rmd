@@ -32,7 +32,9 @@ is given, file is created at the given path, otherwise temporary file is
 created.
 
 ```{r, echo=FALSE}
-suppressPackageStartupMessages(library(Organism.dplyr))
+suppressPackageStartupMessages({
+    library(Organism.dplyr)
+})
 ```
 
 Running `src_organism()` without a given path will save the sqlite file to a
@@ -54,9 +56,8 @@ src <- src_organism("TxDb.Hsapiens.UCSC.hg38.knownGene", "path/to/save/sqlite")
 'TxDb' packages being supported.
 
 ```{r}
-supportedOrganism()
+supportedOrganisms()
 ```
-
 
 ## Make sqlite datebase from organism name
 
@@ -92,6 +93,7 @@ src_tbls(src)
 Look at data from one specific table. 
 ```{r}
 tbl(src, "id")
+tbl(src, "id") %>% filter(...)"
 ```
 
 Query tables using dplyr. 
@@ -102,6 +104,10 @@ inner_join(tbl(src, "id"), tbl(src, "id_go")) %>%
     select(entrez, ensembl, symbol, go, evidence, ontology)
 ```
 
+```{r}
+inner_join(tbl(src, "id"), tbl(src, "ranges_gene")) %>% 
+     as.data.frame() %>% GenomicRanges::GRanges()
+```
 
 ## Genomic coordinates extractors
 
