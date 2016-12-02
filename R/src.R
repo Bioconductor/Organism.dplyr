@@ -3,22 +3,24 @@
 #' The database provides a convenient way to map between gene, transcript,
 #' and protein identifiers.
 #'
-#' This function is meant to be a building block for
-#' \code{\link{src_organism}}, which provides an integrated
+#' \code{src_organism()} and \code{src_ucsc()} are meant to be a building block 
+#' for \code{\link{src_organism}}, which provides an integrated
 #' presentation of identifiers and genomic coordinates.
-#'
-#' Create a dplyr database integrating org.* and TxDb.* information
-#'
+#' 
+#' \code{src_organism()} creates a dplyr database integrating org.* and TxDb.* 
+#' information by given TxDb. And \code{src_ucsc()} creates the database by 
+#' given organism name, genome and/or id.
+#'     
 #' @param txdb character(1) naming a \code{TxDb.*} package (e.g.,
 #'     \code{TxDb.Hsapiens.UCSC.hg38.knownGene}) or \code{TxDb}
 #'     object instantiating the content of a \code{TxDb.*} pacakge.
 #'
 #' @param dbpath path and file name where SQLite file will be accessed
 #'      or created if not already exists.
-#'
-#' @return A dplyr \code{src_sqlite} instance representing the data
-#'     tables.
-#'
+#' 
+#' @return \code{src_organism()} and \code{src_ucsc()} returns a dplyr 
+#'     \code{src_sqlite} instance representing the data tables.
+#' 
 #' @rdname src_organism
 #'
 #' @importFrom RSQLite dbGetQuery dbConnect dbDisconnect SQLite
@@ -32,10 +34,13 @@
 #' @examples
 #' # create human sqlite database with TxDb.Hsapiens.UCSC.hg38.knownGene and
 #' # corresponding org.Hs.eg.db
-#' organism <- src_organism("TxDb.Hsapiens.UCSC.hg38.knownGene")
-#' src_tbls(organism)
-#' tbl(organism, "id")
-#'
+#' src <- src_organism("TxDb.Hsapiens.UCSC.hg38.knownGene")
+#' 
+#' # query using dplyr
+#' inner_join(tbl(src, "id"), tbl(src, "id_go")) %>% 
+#'      filter(symbol == "PTEN") %>% 
+#'      select(entrez, ensembl, symbol, go, evidence, ontology)
+#' 
 #' @export
 src_organism <- function(txdb=NULL, dbpath=NULL) {
     if (is.null(txdb)) {
@@ -44,8 +49,10 @@ src_organism <- function(txdb=NULL, dbpath=NULL) {
             stop("input valid sqlite file path or specify 'txdb'")
     } else {
         ## check org, txdb
-        if (is.character(txdb))
+        if (is.character(txdb) && length(txdb) == 1L)
             txdb <- loadNamespace(txdb)[[txdb]]
+        else 
+            stop("input one valid 'txdb'")
         stopifnot(is(txdb, "TxDb"))
 
         txdb_name <- basename(dbfile(txdb))
@@ -277,6 +284,17 @@ src_ucsc <- function(organism, genome = NULL, id = NULL,
     txdb
 }
 
+#' @examples 
+#' supportedOrganism()
+#' 
+#' @rdname src_organism
+#' @export
+supportedOrganism <- function() {
+    filename <- system.file(
+        package = "Organism.dplyr", "extdata", 
+        "supportedOrganism.csv")
+    read.csv(filename, header = TRUE, stringsAsFactors = FALSE)
+}
 
 #' @param .data A tbl.
 #'
@@ -293,12 +311,12 @@ select_.tbl_organism <- function(.data, ...) {
     dplyr::distinct_(.data, ...)
 }
 
-#' @param src A src_organism object
-#'
-#' @examples
+#' @param x A src_organism object
+#' 
+#' @examples 
 #' # Look at all available tables
-#' src_tbls(organism)
-#'
+#' src_tbls(src)
+#' 
 #' @importFrom dplyr src_tbls
 #' @importFrom RSQLite dbGetQuery
 #' @rdname src_organism
@@ -309,10 +327,19 @@ src_tbls.src_organism <- function(x) {
     dbGetQuery(x$con, sql)$name
 }
 
+<<<<<<< HEAD
 #' @examples
 #' # Look at data in table "id"
 #' tbl(organism, "id")
 #'
+=======
+#' @param src A src_organism object
+#' 
+#' @examples 
+#' # Look at data in table "id"
+#' tbl(src, "id")
+#' 
+>>>>>>> 1a14f149426df203482a18367e2402ff5a3b144a
 #' @importFrom dplyr tbl
 #' @rdname src_organism
 #' @export
