@@ -3,11 +3,13 @@
 #' The database provides a convenient way to map between gene, transcript,
 #' and protein identifiers.
 #'
-#' This function is meant to be a building block for
-#' \code{\link{src_organism}}, which provides an integrated
+#' \code{src_organism()} and \code{src_ucsc()} are meant to be a building block 
+#' for \code{\link{src_organism}}, which provides an integrated
 #' presentation of identifiers and genomic coordinates.
-#'
-#' Create a dplyr database integrating org.* and TxDb.* information
+#' 
+#' \code{src_organism()} creates a dplyr database integrating org.* and TxDb.* 
+#' information by given TxDb. And \code{src_ucsc()} creates the database by 
+#' given organism name, genome and/or id.
 #'     
 #' @param txdb character(1) naming a \code{TxDb.*} package (e.g.,
 #'     \code{TxDb.Hsapiens.UCSC.hg38.knownGene}) or \code{TxDb}
@@ -16,8 +18,8 @@
 #' @param dbpath path and file name where SQLite file will be accessed
 #'      or created if not already exists.
 #' 
-#' @return A dplyr \code{src_sqlite} instance representing the data
-#'     tables.
+#' @return \code{src_organism()} and \code{src_ucsc()} returns a dplyr 
+#'     \code{src_sqlite} instance representing the data tables.
 #' 
 #' @rdname src_organism
 #' 
@@ -49,8 +51,10 @@ src_organism <- function(txdb=NULL, dbpath=NULL) {
             stop("input valid sqlite file path or specify 'txdb'")
     } else {
         ## check org, txdb
-        if (is.character(txdb))
+        if (is.character(txdb) && length(txdb) == 1L)
             txdb <- loadNamespace(txdb)[[txdb]]
+        else 
+            stop("input one valid 'txdb'")
         stopifnot(is(txdb, "TxDb"))
         
         txdb_name <- basename(dbfile(txdb))
@@ -286,6 +290,9 @@ src_ucsc <- function(organism, genome = NULL, id = NULL,
     txdb
 }
 
+#' @examples 
+#' supportedOrganism()
+#' 
 #' @rdname src_organism
 #' @export
 supportedOrganism <- function() {
@@ -310,7 +317,7 @@ select_.tbl_organism <- function(.data, ...) {
     dplyr::distinct_(.data, ...) 
 }
 
-#' @param src A src_organism object
+#' @param x A src_organism object
 #' 
 #' @examples 
 #' # Look at all available tables
@@ -326,6 +333,8 @@ src_tbls.src_organism <- function(x) {
     dbGetQuery(x$con, sql)$name
 }
 
+#' @param src A src_organism object
+#' 
 #' @examples 
 #' # Look at data in table "id"
 #' tbl(src, "id")
