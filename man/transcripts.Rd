@@ -2,28 +2,28 @@
 % Please edit documentation in R/extractors.R
 \docType{methods}
 \name{transcripts_tbl}
-\alias{cds,src_organism-method}
-\alias{cdsBy,src_organism-method}
-\alias{cdsBy_tbl}
-\alias{cds_tbl}
-\alias{exons,src_organism-method}
-\alias{exonsBy,src_organism-method}
-\alias{exonsBy_tbl}
-\alias{exons_tbl}
-\alias{fiveUTRsByTranscript,src_organism-method}
-\alias{fiveUTRsByTranscript_tbl}
-\alias{genes,src_organism-method}
-\alias{genes_tbl}
-\alias{intronsByTranscript,src_organism-method}
-\alias{intronsByTranscript_tbl}
-\alias{promoters,src_organism-method}
-\alias{promoters_tbl}
-\alias{threeUTRsByTranscript,src_organism-method}
-\alias{threeUTRsByTranscript_tbl}
-\alias{transcripts,src_organism-method}
-\alias{transcriptsBy,src_organism-method}
-\alias{transcriptsBy_tbl}
 \alias{transcripts_tbl}
+\alias{transcripts,src_organism-method}
+\alias{exons_tbl}
+\alias{exons,src_organism-method}
+\alias{cds_tbl}
+\alias{cds,src_organism-method}
+\alias{genes_tbl}
+\alias{genes,src_organism-method}
+\alias{promoters_tbl}
+\alias{promoters,src_organism-method}
+\alias{transcriptsBy_tbl}
+\alias{transcriptsBy,src_organism-method}
+\alias{exonsBy_tbl}
+\alias{exonsBy,src_organism-method}
+\alias{cdsBy_tbl}
+\alias{cdsBy,src_organism-method}
+\alias{intronsByTranscript_tbl}
+\alias{intronsByTranscript,src_organism-method}
+\alias{fiveUTRsByTranscript_tbl}
+\alias{fiveUTRsByTranscript,src_organism-method}
+\alias{threeUTRsByTranscript_tbl}
+\alias{threeUTRsByTranscript,src_organism-method}
 \title{Extract genomic features from an object}
 \usage{
 transcripts_tbl(x, filter = NULL)
@@ -88,8 +88,6 @@ the number of bases downstream from the transcription start site.}
 \description{
 Generic functions to extract genomic features from an object. This page 
 documents the methods for \code{\link{src_organism}} objects only.
-
-Generic functions to extract genomic features from an object.
 }
 \details{
 These are the main functions for extracting transcript information from a 
