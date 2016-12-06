@@ -21,14 +21,20 @@
 #' @return \code{src_organism()} and \code{src_ucsc()} returns a dplyr 
 #'     \code{src_sqlite} instance representing the data tables.
 #' 
+#' @seealso \code{\link{dplyr}} for details about using \code{dplyr} to 
+#'     manipulate data. 
+#'     
+#'     \code{\link[Organism.dplyr]{transcripts_tbl}} for generic functions to 
+#'     extract genomic features from a \code{src_organism} object.
+#' 
 #' @rdname src_organism
-#'
+#' 
+#' @import dplyr
 #' @importFrom RSQLite dbGetQuery dbConnect dbDisconnect SQLite
 #'     dbWriteTable dbListTables
 #' @importFrom S4Vectors metadata
 #' @importFrom methods is as
 #' @importFrom tools file_ext
-#' @importFrom dplyr tbl
 #' @importFrom AnnotationDbi dbfile
 #' @importFrom GenomeInfoDb as.data.frame
 #'
@@ -56,8 +62,8 @@ src_organism <- function(txdb=NULL, dbpath=NULL) {
             stop("input one valid 'txdb'")
         stopifnot(is(txdb, "TxDb"))
 
-        txdb_name <- basename(dbfile(txdb))
-        org <- strsplit(txdb_name, ".", fixed=TRUE)[[1]][2]
+        txdb_name <- paste0("dplyr.", basename(dbfile(txdb)))
+        org <- strsplit(txdb_name, ".", fixed=TRUE)[[1]][3]
         org <-
             sprintf("org.%s.eg.db", substr(org, 1, 2 + (org == "Mmulatta")))
         org <- loadNamespace(org)[[org]]
@@ -304,8 +310,6 @@ supportedOrganisms <- function() {
 #' variable names like they are positions. Use positive values to select
 #' variables; use negative values to drop variables.
 #'
-#' @importFrom dplyr src_sql "%>%" tbl select_
-#'
 #' @rdname src_organism
 #' @export
 select_.tbl_organism <- function(.data, ...) {
@@ -319,7 +323,6 @@ select_.tbl_organism <- function(.data, ...) {
 #' # Look at all available tables
 #' src_tbls(src)
 #' 
-#' @importFrom dplyr src_tbls
 #' @importFrom RSQLite dbGetQuery
 #' @rdname src_organism
 #' @export
@@ -335,7 +338,9 @@ src_tbls.src_organism <- function(x) {
 #' # Look at data in table "id"
 #' tbl(src, "id")
 #' 
-#' @importFrom dplyr tbl
+#' # Look at fields of one table 
+#' colnames(tbl(src, "id"))
+#' 
 #' @rdname src_organism
 #' @export
 tbl.src_organism <- function(src, ...) {

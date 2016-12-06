@@ -52,8 +52,8 @@ be saved.
 src <- src_organism("TxDb.Hsapiens.UCSC.hg38.knownGene", "path/to/save/sqlite")
 ```
 
-`supportedOrganism()` provides a list of organisms with corresponding 'org' and
-'TxDb' packages being supported.
+`supportedOrganisms()` provides a list of organisms with corresponding 'org' 
+and 'TxDb' packages being supported.
 
 ```{r}
 supportedOrganisms()
@@ -93,7 +93,13 @@ src_tbls(src)
 Look at data from one specific table. 
 ```{r}
 tbl(src, "id")
-tbl(src, "id") %>% filter(...)"
+colnames(tbl(src, "id"))
+tbl(src, "ranges_tx") %>% 
+    group_by(entrez) %>% 
+    summarise(count = count(entrez)) %>% 
+    filter(count < 300) %>% 
+    select(entrez, symbol, count) %>% 
+    arrange(desc(count))
 ```
 
 Query tables using dplyr. 
@@ -105,9 +111,23 @@ inner_join(tbl(src, "id"), tbl(src, "id_go")) %>%
 ```
 
 ```{r}
-inner_join(tbl(src, "id"), tbl(src, "ranges_gene")) %>% 
-     as.data.frame() %>% GenomicRanges::GRanges()
+inner_join(tbl(src, "id"), tbl(src, "ranges_tx")) %>% 
+    dplyr::select(entrez, symbol, tx_id) %>% 
+    group_by(entrez, symbol) %>% 
+    summarise(count = count(entrez)) %>% 
+    filter(count < 300) %>% 
+    select(entrez, symbol, count) %>% 
+    arrange(desc(count))
 ```
+
+
+```{r}
+inner_join(tbl(src, "id"), tbl(src, "ranges_gene")) %>% 
+    filter(symbol == "PTEN") %>% 
+    collect() %>% GenomicRanges::GRanges() 
+```
+
+ggplot group by, arrange, summerize
 
 ## Genomic coordinates extractors
 

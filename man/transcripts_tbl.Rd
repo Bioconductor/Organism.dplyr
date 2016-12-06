@@ -24,7 +24,7 @@
 \alias{transcriptsBy,src_organism-method}
 \alias{transcriptsBy_tbl}
 \alias{transcripts_tbl}
-\title{Extract genomic features from an object}
+\title{Extract genomic features from src_organism object}
 \usage{
 transcripts_tbl(x, filter = NULL)
 
@@ -75,7 +75,8 @@ threeUTRsByTranscript_tbl(x, filter = NULL)
 \item{x}{A src_organism object}
 
 \item{filter}{Either NULL or a named list of vectors to be used to
-restrict the output.}
+restrict the output. Filter can also be a \code{\link{GRanges}} object 
+using "granges = " (see examples).}
 
 \item{upstream}{For \code{promoters()}: An integer(1) value indicating
 the number of bases upstream from the transcription start site.}
@@ -85,42 +86,49 @@ the number of bases downstream from the transcription start site.}
 
 \item{by}{One of "gene", "exon", "cds" or "tx". Determines the grouping.}
 }
+\value{
+functions with \code{_tbl} return a \code{\link[tibble]{tibble}} 
+    object, other methods return a \code{\link{GRanges}} or 
+    \code{\link{GRangesList}} (\code{transcripts()}) object.
+}
 \description{
 Generic functions to extract genomic features from an object. This page 
 documents the methods for \code{\link{src_organism}} objects only.
-
-Generic functions to extract genomic features from an object.
 }
 \details{
 These are the main functions for extracting transcript information from a 
 \code{\link{src_organism}} object, inherited from 
-\code{\link{transcripts}} in \code{GenomicFeatures} package. Two versions of 
-results are provided: \code{\link{tibble}} (\code{transcripts_tbl()}) and 
-\code{\link{GRanges}} or \code{\link{GRangesList}} (\code{transcripts()}).
+\code{\link[GenomicFeatures]{transcripts}} in \code{GenomicFeatures} package. 
+Two versions of results are provided: \code{\link[tibble]{tibble}}
+(\code{transcripts_tbl()}) and \code{\link{GRanges}} or 
+\code{\link{GRangesList}} (\code{transcripts()}).
 }
 \examples{
 organism <- src_ucsc("human")
 filters <- list(symbol=c("PTEN", "BRCA1"),
-               entrez="5728",
                go=c("GO:0000079", "GO:0001933"))
-transcripts(organism, filters)
+transcripts_tbl(organism, filters)
 
-exons(organism, filter=list(symbol="PTEN"))
+organism <- src_ucsc("human")
+filters <- list(symbol=c("PTEN", "BRCA1"), 
+                entrez="5728", 
+                granges=as("chr10:87869000-87876000", "GRanges"))
+transcripts(organism, filters)
 
 promoters(organism, upstream=100, downstream=50,
           filter = list(symbol="BRCA1"))
 
-transcriptsBy(organism, by = "gene", filter = list(symbol="PTEN"))
+transcriptsBy(organism, by = "exon", filter = list(symbol="PTEN"))
 
-exonsBy(organism, by = "gene", filter = list(symbol="PTEN"))
-
-cdsBy(organism, by = "gene", filter = list(symbol="PTEN"))
+exonsBy(organism, filter = list(symbol="PTEN"))
 
 intronsByTranscript(organism, filter = list(symbol="PTEN"))
 
 fiveUTRsByTranscript(organism, filter = list(symbol="PTEN"))
 
-threeUTRsByTranscript(organism, filter = list(symbol="PTEN"))
-
+}
+\seealso{
+\code{\link{src_organism}} for creating a \code{src_organism} 
+    object.
 }
 

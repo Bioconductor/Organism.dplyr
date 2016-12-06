@@ -4,7 +4,6 @@
     sprintf("%s %s c(%s)", keep1, op, values)
 }
 
-#' @importFrom dplyr filter_
 .tbl_join <- function(x, table, tbls, filter) {
     if (is.null(filter))
         return(table)
@@ -51,7 +50,6 @@
 #     return(table)
 # }
 
-#' @importFrom dplyr tbl collect
 .updateSeqinfo <- function(x, gr) {
     seqinfo <- transform(tbl(x, "seqinfo") %>% collect(n=Inf), 
                          seqnames = as.character(seqnames), 
@@ -81,25 +79,38 @@
     table <- .tbl_join(x, table, tbls, filter)
 }
 
-#' Extract genomic features from an object
+
+#' Extract genomic features from src_organism object
 #' 
 #' Generic functions to extract genomic features from an object. This page 
 #' documents the methods for \code{\link{src_organism}} objects only.
 #' 
 #' These are the main functions for extracting transcript information from a 
 #' \code{\link{src_organism}} object, inherited from 
-#' \code{\link{transcripts}} in \code{GenomicFeatures} package. Two versions of 
-#' results are provided: \code{\link{tibble}} (\code{transcripts_tbl()}) and 
-#' \code{\link{GRanges}} or \code{\link{GRangesList}} (\code{transcripts()}).
+#' \code{\link[GenomicFeatures]{transcripts}} in \code{GenomicFeatures} package. 
+#' Two versions of results are provided: \code{\link[tibble]{tibble}}
+#' (\code{transcripts_tbl()}) and \code{\link{GRanges}} or 
+#' \code{\link{GRangesList}} (\code{transcripts()}).
 #' 
 #' @param x A src_organism object
 #' 
 #' @param filter Either NULL or a named list of vectors to be used to
-#'     restrict the output.
+#'     restrict the output. Filter can also be a \code{\link{GRanges}} object 
+#'     using "granges = " (see examples).
 #' 
-#' @importFrom dplyr select_ arrange
+#' @return functions with \code{_tbl} return a \code{\link[tibble]{tibble}} 
+#'     object, other methods return a \code{\link{GRanges}} or 
+#'     \code{\link{GRangesList}} (\code{transcripts()}) object. 
 #' 
-#' @rdname transcripts
+#' @seealso \code{\link{src_organism}} for creating a \code{src_organism} 
+#'     object.
+#' 
+#' @examples
+#' organism <- src_ucsc("human")
+#' filters <- list(symbol=c("PTEN", "BRCA1"),
+#'                go=c("GO:0000079", "GO:0001933"))
+#' transcripts_tbl(organism, filters)
+#' 
 #' @export
 transcripts_tbl <- function(x, filter = NULL) {
     table <- .transcripts(x, filter)
@@ -109,22 +120,24 @@ transcripts_tbl <- function(x, filter = NULL) {
     do.call(select_, c(list(table), as.list(fields))) %>% 
         arrange(tx_id)
 }
-
+ 
+ 
 #' @examples
 #' organism <- src_ucsc("human")
-#' filters <- list(symbol=c("PTEN", "BRCA1"),
-#'                entrez="5728",
-#'                go=c("GO:0000079", "GO:0001933"))
+#' filters <- list(symbol=c("PTEN", "BRCA1"), 
+#'                 entrez="5728", 
+#'                 granges=as("chr10:87869000-87876000", "GRanges"))
 #' transcripts(organism, filters)
 #'
-#' @rdname transcripts
 #' @importFrom GenomicFeatures transcripts
 #' @importFrom GenomeInfoDb Seqinfo seqinfo<- seqlevels seqlevels<-
+#' @rdname transcripts_tbl
 #' @export
 
 setMethod("transcripts", "src_organism", function(x, filter = NULL) {
     .toGRanges(x, transcripts_tbl(x, filter), filter)
 })
+
 
 .exons <- function(x, filter = NULL) {
     table <- tbl(x, "ranges_exon")
@@ -132,7 +145,7 @@ setMethod("transcripts", "src_organism", function(x, filter = NULL) {
     table <- .tbl_join(x, table, tbls, filter)
 }
 
-#' @rdname transcripts
+#' @rdname transcripts_tbl
 #' @export
 exons_tbl <- function(x, filter = NULL) {
     fields_remove <- c("entrez", "tx_id", "exon_name", "exon_rank")
@@ -146,10 +159,8 @@ exons_tbl <- function(x, filter = NULL) {
     do.call(select_, c(list(table), as.list(keep))) %>% arrange(exon_id)
 }
 
-#' @examples
-#' exons(organism, filter=list(symbol="PTEN"))
-#'
-#' @rdname transcripts
+
+#' @rdname transcripts_tbl
 #' @importFrom GenomicFeatures exons
 #' @export
 
@@ -164,7 +175,7 @@ setMethod("exons", "src_organism", function(x, filter = NULL) {
     table <- .tbl_join(x, table, tbls, filter)
 }
 
-#' @rdname transcripts
+#' @rdname transcripts_tbl
 #' @export
 cds_tbl <- function(x, filter = NULL) {
     fields_remove <- c("entrez", "tx_id", "cds_name", "exon_rank")
@@ -178,7 +189,7 @@ cds_tbl <- function(x, filter = NULL) {
     do.call(select_, c(list(table), as.list(keep))) %>% arrange(cds_id)
 }
 
-#' @rdname transcripts
+#' @rdname transcripts_tbl
 #' @importFrom GenomicFeatures cds
 #' @export
 
@@ -187,11 +198,12 @@ setMethod("cds", "src_organism", function(x, filter = NULL) {
 })
 
 
-#' @rdname transcripts
+#' @rdname transcripts_tbl
 #' @export
 
 genes_tbl <- function(x, filter = NULL) {
     table <- tbl(x, "ranges_gene")
+    # genes() from GenomicFeatures
     # table <- dbGetQuery(
     #     x$con,
     #     "SELECT * FROM ranges_gene
@@ -207,7 +219,7 @@ genes_tbl <- function(x, filter = NULL) {
     do.call(select_, c(list(table), as.list(fields))) %>% arrange_(x$schema)
 }
 
-#' @rdname transcripts
+#' @rdname transcripts_tbl
 #' @importFrom GenomicFeatures genes
 #' @export
 
@@ -222,9 +234,7 @@ setMethod("genes", "src_organism", function(x, filter = NULL) {
 #' @param downstream For \code{promoters()}: An integer(1) value indicating
 #' the number of bases downstream from the transcription start site.
 #' 
-#' @importFrom dplyr mutate rename arrange
-#' 
-#' @rdname transcripts
+#' @rdname transcripts_tbl
 #' @export
 
 promoters_tbl <- function(x, upstream, downstream, filter = NULL) {
@@ -264,9 +274,8 @@ promoters_tbl <- function(x, upstream, downstream, filter = NULL) {
 #' promoters(organism, upstream=100, downstream=50,
 #'           filter = list(symbol="BRCA1"))
 #'
-#' @rdname transcripts
+#' @rdname transcripts_tbl
 #' @importFrom GenomicFeatures promoters
-#' @importFrom dplyr mutate
 #' @importFrom S4Vectors isSingleNumber
 #' @export
 
@@ -293,7 +302,7 @@ function(x, upstream, downstream, filter = NULL) {
 }
 
 
-#' @rdname transcripts
+#' @rdname transcripts_tbl
 #' @export
 
 transcriptsBy_tbl <-
@@ -341,11 +350,10 @@ transcriptsBy_tbl <-
 #' @param by One of "gene", "exon", "cds" or "tx". Determines the grouping.
 #'
 #' @examples
-#' transcriptsBy(organism, by = "gene", filter = list(symbol="PTEN"))
+#' transcriptsBy(organism, by = "exon", filter = list(symbol="PTEN"))
 #'
-#' @rdname transcripts
+#' @rdname transcripts_tbl
 #' @importFrom GenomicFeatures transcriptsBy
-#' @importFrom dplyr inner_join
 #' @export
 
 setMethod("transcriptsBy", "src_organism",
@@ -355,7 +363,7 @@ function(x, by = c("gene", "exon", "cds"), filter = NULL) {
 })
 
 
-#' @rdname transcripts
+#' @rdname transcripts_tbl
 #' @export
 
 exonsBy_tbl <-
@@ -387,9 +395,9 @@ function(x, by = c("tx", "gene"), filter = NULL) {
 }
 
 #' @examples
-#' exonsBy(organism, by = "gene", filter = list(symbol="PTEN"))
+#' exonsBy(organism, filter = list(symbol="PTEN"))
 #'
-#' @rdname transcripts
+#' @rdname transcripts_tbl
 #' @importFrom GenomicFeatures exonsBy
 #' @export
 
@@ -400,7 +408,7 @@ function(x, by = c("tx", "gene"), filter = NULL) {
 })
 
 
-#' @rdname transcripts
+#' @rdname transcripts_tbl
 #' @export
 
 cdsBy_tbl <-
@@ -431,10 +439,8 @@ function(x, by = c("tx", "gene"), filter = NULL) {
     }
 }
 
-#' @examples
-#' cdsBy(organism, by = "gene", filter = list(symbol="PTEN"))
-#'
-#' @rdname transcripts
+
+#' @rdname transcripts_tbl
 #' @importFrom GenomicFeatures cdsBy
 #' @export
 
@@ -444,8 +450,7 @@ function(x, by = c("tx", "gene"), filter = NULL) {
     .toGRangesList(x, "cds", by, filter)
 })
 
-#' @rdname transcripts
-#' importFrom dplyr tbl_df
+#' @rdname transcripts_tbl
 #' @export
 intronsByTranscript_tbl <-
 function(x, filter = NULL) {
@@ -459,7 +464,7 @@ function(x, filter = NULL) {
 #' @examples
 #' intronsByTranscript(organism, filter = list(symbol="PTEN"))
 #'
-#' @rdname transcripts
+#' @rdname transcripts_tbl
 #' @importFrom GenomicFeatures intronsByTranscript
 #' @importFrom GenomicRanges split mcols mcols<-
 #' @importFrom IRanges psetdiff
@@ -552,7 +557,7 @@ function(x, filter=NULL) {
 }
 
 
-#' @rdname transcripts
+#' @rdname transcripts_tbl
 #' @export
 
 fiveUTRsByTranscript_tbl <-
@@ -563,7 +568,7 @@ function(x, filter = NULL) {
 #' @examples
 #' fiveUTRsByTranscript(organism, filter = list(symbol="PTEN"))
 #'
-#' @rdname transcripts
+#' @rdname transcripts_tbl
 #' @importFrom GenomicFeatures fiveUTRsByTranscript
 #' @export
 setMethod("fiveUTRsByTranscript", "src_organism",function(x, filter=NULL) {
@@ -571,7 +576,7 @@ setMethod("fiveUTRsByTranscript", "src_organism",function(x, filter=NULL) {
 })
 
 
-#' @rdname transcripts
+#' @rdname transcripts_tbl
 #' @export
 
 threeUTRsByTranscript_tbl <-
@@ -579,10 +584,8 @@ function(x, filter = NULL) {
     .UTRsByTranscript(x, filter, "+", "-")
 }
 
-#' @examples
-#' threeUTRsByTranscript(organism, filter = list(symbol="PTEN"))
-#'
-#' @rdname transcripts
+
+#' @rdname transcripts_tbl
 #' @importFrom GenomicFeatures threeUTRsByTranscript
 #' @export
 setMethod("threeUTRsByTranscript", "src_organism",function(x, filter=NULL) {
