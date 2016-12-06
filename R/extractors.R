@@ -450,6 +450,7 @@ function(x, by = c("tx", "gene"), filter = NULL) {
     .toGRangesList(x, "cds", by, filter)
 })
 
+
 #' @rdname transcripts_tbl
 #' @export
 intronsByTranscript_tbl <-
