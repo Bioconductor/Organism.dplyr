@@ -31,7 +31,8 @@ Suggests:
     TxDb.Mmusculus.UCSC.mm10.ensGene,
     testthat,
     knitr,
-    rmarkdown
+    rmarkdown,
+    ggplot2
 License: Artistic-2.0
 Encoding: UTF-8
 LazyData: true

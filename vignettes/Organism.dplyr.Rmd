@@ -34,6 +34,7 @@ created.
 ```{r, echo=FALSE}
 suppressPackageStartupMessages({
     library(Organism.dplyr)
+    library(ggplot2)
 })
 ```
 
@@ -42,7 +43,6 @@ tempdir():
 
 ```{r}
 src <- src_organism("TxDb.Hsapiens.UCSC.hg38.knownGene")
-src
 ```
 
 Alternatively you can provide explicit path to where the sqlite file should
@@ -68,20 +68,21 @@ used.
 
 ```{r}
 src <- src_ucsc("human")
-src
 ```
 
 ## Access existing sqlite file 
 
 Existing on disk sqlite file can be accessed without recreating the database. 
 
-```{r, eval=FALSE}
-src <- src_organism(dbpath = "path/to/save/sqlite")
+```{r}
+path <- system.file("extdata", package = "Organism.dplyr")
+src1 <- src_organism(dbpath = paste0(path, "/example.sqlite"))
+src1
 ```
 
 # Common operations
 
-## basic methods
+## Basic operations
 
 All methods from package [dplyr][] can be used for a _src_organism_ object. 
 
@@ -93,16 +94,25 @@ src_tbls(src)
 Look at data from one specific table. 
 ```{r}
 tbl(src, "id")
-colnames(tbl(src, "id"))
-tbl(src, "ranges_tx") %>% 
-    group_by(entrez) %>% 
-    summarise(count = count(entrez)) %>% 
-    filter(count < 300) %>% 
-    select(entrez, symbol, count) %>% 
-    arrange(desc(count))
 ```
 
-Query tables using dplyr. 
+Look at fields of one table. 
+```{r}
+colnames(tbl(src, "id"))
+```
+
+Below are some examples of querying tables using dplyr. 
+
+1. Gene symbol start with "BRCA"
+
+```{r}
+tbl(src, "id") %>% 
+    filter(symbol %like% "BRCA%") %>% 
+    select(entrez, map, ensembl, symbol) %>% 
+    distinct() %>% arrange(symbol) %>% collect()
+```
+
+2. Go info for gene symbol "PTEN"
 
 ```{r}
 inner_join(tbl(src, "id"), tbl(src, "id_go")) %>% 
@@ -110,24 +120,38 @@ inner_join(tbl(src, "id"), tbl(src, "id_go")) %>%
     select(entrez, ensembl, symbol, go, evidence, ontology)
 ```
 
+3. Genes with more than 100 transcripts
+
 ```{r}
-inner_join(tbl(src, "id"), tbl(src, "ranges_tx")) %>% 
-    dplyr::select(entrez, symbol, tx_id) %>% 
-    group_by(entrez, symbol) %>% 
-    summarise(count = count(entrez)) %>% 
-    filter(count < 300) %>% 
-    select(entrez, symbol, count) %>% 
-    arrange(desc(count))
+txcount <- inner_join(tbl(src, "id"), tbl(src, "ranges_tx")) %>% 
+    dplyr::select(symbol, tx_id) %>% 
+    group_by(symbol) %>% 
+    summarise(count = count(symbol)) %>% 
+    filter(count > 100) %>% 
+    dplyr::select(symbol, count) %>% 
+    arrange(desc(count)) %>% 
+    collect(n=Inf)
+
+txcount
 ```
 
+```{r, echo=FALSE}
+ggplot(txcount, aes(x = txcount$symbol[order(txcount$symbol)], 
+                    y = txcount$count)) +
+    geom_point() + 
+    ggtitle("Transcript count") + 
+    labs(x = "symbol") + 
+    labs(y = "count")
+```
+
+4. Gene coordinates of symbol "PTEN" and "BRCA1" as _GRanges_
 
 ```{r}
 inner_join(tbl(src, "id"), tbl(src, "ranges_gene")) %>% 
-    filter(symbol == "PTEN") %>% 
+    filter(symbol %in% c("PTEN", "BRCA1")) %>% 
+    select(gene_chrom, gene_start, gene_end, gene_strand, symbol, map) %>% 
     collect() %>% GenomicRanges::GRanges() 
 ```
-
-ggplot group by, arrange, summerize
 
 ## Genomic coordinates extractors
 
@@ -149,6 +173,21 @@ filters <- list(symbol=c("PTEN", "BRCA1"),
                 granges=as("chr10:87869000-87876000", "GRanges"))
 transcripts_tbl(src, filter=filters)
 transcripts(src, filter=filters)
+```
+
+Transcript coordinates of all gene symbols start with "BRCA"
+
+```{r}
+symbols <- tbl(src, "id") %>% 
+    filter(symbol %like% "BRCA%") %>% 
+    select(symbol) %>% collect()
+
+transcripts(src, filter = list(symbol = symbols[["symbol"]]))
+```
+
+
+```{r}
+sessionInfo()
 ```
 
 

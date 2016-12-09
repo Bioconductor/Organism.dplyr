@@ -10,6 +10,9 @@
 #' \code{src_organism()} creates a dplyr database integrating org.* and TxDb.* 
 #' information by given TxDb. And \code{src_ucsc()} creates the database by 
 #' given organism name, genome and/or id.
+#' 
+#' supportedOrganisms() provides all supported organisms in this package with 
+#' corresponding OrgDb and TxDb.
 #'     
 #' @param txdb character(1) naming a \code{TxDb.*} package (e.g.,
 #'     \code{TxDb.Hsapiens.UCSC.hg38.knownGene}) or \code{TxDb}
@@ -39,11 +42,11 @@
 #' @importFrom GenomeInfoDb as.data.frame
 #'
 #' @examples
-#' # create human sqlite database with TxDb.Hsapiens.UCSC.hg38.knownGene and
-#' # corresponding org.Hs.eg.db
+#' ## create human sqlite database with TxDb.Hsapiens.UCSC.hg38.knownGene and
+#' ## corresponding org.Hs.eg.db
 #' src <- src_organism("TxDb.Hsapiens.UCSC.hg38.knownGene")
 #' 
-#' # query using dplyr
+#' ## query using dplyr
 #' inner_join(tbl(src, "id"), tbl(src, "id_go")) %>% 
 #'      filter(symbol == "PTEN") %>% 
 #'      select(entrez, ensembl, symbol, go, evidence, ontology)
@@ -203,7 +206,7 @@ src_organism <- function(txdb=NULL, dbpath=NULL) {
 #' Default is TRUE.
 #'
 #' @examples
-#' # create human sqlite database using hg38 genome
+#' ## create human sqlite database using hg38 genome
 #' human <- src_ucsc("human")
 #'
 #' @rdname src_organism
@@ -291,7 +294,9 @@ src_ucsc <- function(organism, genome = NULL, id = NULL,
     txdb
 }
 
+
 #' @examples 
+#' ## all supported organisms with corresponding OrgDb and TxDb
 #' supportedOrganisms()
 #' 
 #' @rdname src_organism
@@ -299,7 +304,7 @@ src_ucsc <- function(organism, genome = NULL, id = NULL,
 supportedOrganisms <- function() {
     filename <- system.file(
         package = "Organism.dplyr", "extdata", 
-        "supportedOrganism.csv")
+        "supportedOrganisms.csv")
     csv <- read.csv(filename, header = TRUE, stringsAsFactors = FALSE)
     tbl_df(csv)
 }
@@ -320,7 +325,7 @@ select_.tbl_organism <- function(.data, ...) {
 #' @param x A src_organism object
 #' 
 #' @examples 
-#' # Look at all available tables
+#' ## Look at all available tables
 #' src_tbls(src)
 #' 
 #' @importFrom RSQLite dbGetQuery
@@ -335,10 +340,10 @@ src_tbls.src_organism <- function(x) {
 #' @param src A src_organism object
 #' 
 #' @examples 
-#' # Look at data in table "id"
+#' ## Look at data in table "id"
 #' tbl(src, "id")
 #' 
-#' # Look at fields of one table 
+#' ## Look at fields of one table 
 #' colnames(tbl(src, "id"))
 #' 
 #' @rdname src_organism
@@ -348,5 +353,27 @@ tbl.src_organism <- function(src, ...) {
     class(tbl) <- c("tbl_organism", class(tbl))
     tbl
 }
+
+.getSeqinfo <- function(x, gr) {
+    seqinfo <- transform(tbl(x, "seqinfo") %>% collect(n=Inf), 
+                         seqnames = as.character(seqnames), 
+                         seqlengths = as.integer(seqlengths),
+                         isCircular = as.logical(isCircular),
+                         genome = as.character(genome))
+    Seqinfo(seqnames=seqinfo[[1]], seqlengths=seqinfo[[2]], 
+            isCircular=seqinfo[[3]], genome=seqinfo[[4]])
+}
+
+#' @examples
+#' ## seqinfo of src_organism object
+#' seqinfo(src)
+#'
+#' @importFrom GenomeInfoDb Seqinfo seqinfo
+#' @rdname src_organism
+#' @export
+
+setMethod("seqinfo", "src_organism", function(x) {
+    .getSeqinfo(x)
+})
 
 setOldClass("src_organism")

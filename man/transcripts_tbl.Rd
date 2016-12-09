@@ -105,25 +105,32 @@ Two versions of results are provided: \code{\link[tibble]{tibble}}
 }
 \examples{
 organism <- src_ucsc("human")
+
+## transcript coordinates with filter in tibble format
 filters <- list(symbol=c("PTEN", "BRCA1"),
                go=c("GO:0000079", "GO:0001933"))
 transcripts_tbl(organism, filters)
 
-organism <- src_ucsc("human")
+## transcript coordinates with filter in granges format
 filters <- list(symbol=c("PTEN", "BRCA1"), 
                 entrez="5728", 
                 granges=as("chr10:87869000-87876000", "GRanges"))
 transcripts(organism, filters)
 
+## promoters
 promoters(organism, upstream=100, downstream=50,
           filter = list(symbol="BRCA1"))
 
+## transcriptsBy
 transcriptsBy(organism, by = "exon", filter = list(symbol="PTEN"))
 
+## exonsBy
 exonsBy(organism, filter = list(symbol="PTEN"))
 
+## intronsByTranscript
 intronsByTranscript(organism, filter = list(symbol="PTEN"))
 
+## fiveUTRsByTranscript
 fiveUTRsByTranscript(organism, filter = list(symbol="PTEN"))
 
 }
