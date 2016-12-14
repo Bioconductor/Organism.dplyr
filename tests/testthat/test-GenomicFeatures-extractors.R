@@ -12,8 +12,8 @@ test_that("transcripts-extractor", {
     expect_true(identical(mcols(tx_src), mcols(tx_txdb)))
 
     ## filters
-    tx_src <- transcripts(src, filter=list(entrez="5728"))
-    tx_txdb <- transcripts(txdb, filter=list(gene_id="5728"))
+    tx_src <- transcripts(src, filter=list(entrez=c("5728", "672")))
+    tx_txdb <- transcripts(txdb, filter=list(gene_id=c("5728", "672")))
     expect_equal(length(tx_src), length(tx_txdb))
     expect_true(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)))
     expect_equal(tx_src$tx_id, tx_txdb$tx_id)
@@ -27,8 +27,8 @@ test_that("exons-extractor", {
     expect_true(identical(mcols(tx_src), mcols(tx_txdb)))
     
     ## filters
-    tx_src <- exons(src, filter=list(entrez="5728"))
-    tx_txdb <- exons(txdb, filter=list(gene_id="5728"))
+    tx_src <- exons(src, filter=list(entrez=c("5728", "672")))
+    tx_txdb <- exons(txdb, filter=list(gene_id=c("5728", "672")))
     expect_equal(length(tx_src), length(tx_txdb))
     expect_true(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)))
     expect_equal(tx_src$exon_id, tx_txdb$exon_id)
@@ -42,8 +42,8 @@ test_that("cds-extractor", {
     expect_true(identical(mcols(tx_src), mcols(tx_txdb)))
     
     ## filters
-    tx_src <- cds(src, filter=list(entrez="5728"))
-    tx_txdb <- cds(txdb, filter=list(gene_id="5728"))
+    tx_src <- cds(src, filter=list(entrez=c("5728", "672")))
+    tx_txdb <- cds(txdb, filter=list(gene_id=c("5728", "672")))
     expect_equal(length(tx_src), length(tx_txdb))
     expect_true(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)))
     expect_equal(tx_src$cds_id, tx_txdb$cds_id)

@@ -1,6 +1,6 @@
-.tbl_filter <- function(keep1, table, filter) {
-    values <- paste0("'", filter[[keep1]], "'", collapse=", ")
-    op <- if (length(filter[[keep1]]) == 1) "==" else "%in%"
+.tbl_filter <- function(keep1, value) {
+    values <- paste0("'", value, "'", collapse=", ")
+    op <- if (length(value) == 1) "==" else "%in%"
     sprintf("%s %s c(%s)", keep1, op, values)
 }
 
@@ -13,7 +13,7 @@
     ## filter by fields from main table
     fields1 <- fields[fields %in% colnames(table)]
     if (length(fields1) != 0) {
-        filters <- sapply(fields1, .tbl_filter, table, filter)
+        filters <- sapply(fields1, .tbl_filter, filter[[fields1]])
         filters <- paste0(filters, collapse=" & ")
         table <- table %>% filter_(filters)
         filter <- filter[setdiff(fields, fields1)]
@@ -25,7 +25,7 @@
         keep <- fields[fields %in% colnames(tbl(x, i))]
         if (is.null(keep) || length(keep) == 0)
             next
-        filters <- sapply(keep, .tbl_filter, table, filter)
+        filters <- sapply(keep, .tbl_filter, filter[[keep]])
         filters <- paste0(filters, collapse=" & ")
         table <- inner_join(table, tbl(x, i)) %>% filter_(filters)
         fields <- setdiff(fields, keep)

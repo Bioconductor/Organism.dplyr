@@ -81,7 +81,7 @@ src <- src_organism("TxDb.Hsapiens.UCSC.hg38.knownGene")
 ## query using dplyr
 inner_join(tbl(src, "id"), tbl(src, "id_go")) \%>\% 
      filter(symbol == "PTEN") \%>\% 
-     select(entrez, ensembl, symbol, go, evidence, ontology)
+     dplyr::select(entrez, ensembl, symbol, go, evidence, ontology)
 
 ## create human sqlite database using hg38 genome
 human <- src_ucsc("human")

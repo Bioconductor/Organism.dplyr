@@ -98,8 +98,8 @@ documents the methods for \code{\link{src_organism}} objects only.
 \details{
 These are the main functions for extracting transcript information from a 
 \code{\link{src_organism}} object, inherited from 
-\code{\link[GenomicFeatures]{transcripts}} in \code{GenomicFeatures} package. 
-Two versions of results are provided: \code{\link[tibble]{tibble}}
+\code{\link[GenomicFeatures]{transcripts}} in \code{GenomicFeatures} 
+package. Two versions of results are provided: \code{\link[tibble]{tibble}}
 (\code{transcripts_tbl()}) and \code{\link{GRanges}} or 
 \code{\link{GRangesList}} (\code{transcripts()}).
 }

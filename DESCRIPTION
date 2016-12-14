@@ -40,3 +40,4 @@ RoxygenNote: 5.0.1
 Collate:
     src.R
     extractors.R
+    select.R

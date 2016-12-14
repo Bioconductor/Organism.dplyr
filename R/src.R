@@ -49,7 +49,7 @@
 #' ## query using dplyr
 #' inner_join(tbl(src, "id"), tbl(src, "id_go")) %>% 
 #'      filter(symbol == "PTEN") %>% 
-#'      select(entrez, ensembl, symbol, go, evidence, ontology)
+#'      dplyr::select(entrez, ensembl, symbol, go, evidence, ontology)
 #' 
 #' @export
 src_organism <- function(txdb=NULL, dbpath=NULL) {
