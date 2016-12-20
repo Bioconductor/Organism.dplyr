@@ -5,6 +5,7 @@
 \alias{columns,src_organism-method}
 \alias{keys,src_organism-method}
 \alias{keytypes,src_organism-method}
+\alias{mapIds,src_organism-method}
 \alias{select,src_organism-method}
 \title{Using the "select" interface on src_organism objects}
 \usage{
@@ -15,13 +16,23 @@
 \S4method{keys}{src_organism}(x, keytype, ...)
 
 \S4method{select}{src_organism}(x, keys, columns, keytype)
+
+\S4method{mapIds}{src_organism}(x, keys, column, keytype, ..., multiVals)
 }
 \arguments{
-\item{x}{a src_organism object}
+\item{x}{a \code{src_organism} object}
 
 \item{keytype}{specifies the kind of keys that will be returned. By default 
-keys will return the keys for schema of the \code{\link{src_organism}} 
-object.}
+keys will return the keys for schema of the \code{src_organism} object.}
+
+\item{...}{other arguments. These include: 
+
+    pattern: the pattern to match.
+    
+    column: the column to search on.
+    
+    fuzzy: TRUE or FALSE value. Use fuzzy matching? (this is used with 
+           pattern)}
 
 \item{keys}{the keys to select records for from the database. All possible 
 keys are returned by using the \code{keys} method.}
@@ -29,17 +40,83 @@ keys are returned by using the \code{keys} method.}
 \item{columns}{the columns or kinds of things that can be retrieved from
 the database. As with keys, all possible columns are returned by using  
 the \code{columns} method.}
+
+\item{column}{character(1) the column to search on, can only have a single 
+element for the value}
+
+\item{multiVals}{What should \code{mapIds} do when there are multiple 
+values that could be returned. Options include:
+
+first: when there are multiple matches only the 1st thing that comes
+       back will be returned. This is the default behavior.
+       
+list: return a list object to the end user
+
+filter: remove all elements that contain multiple matches and will 
+        therefore return a shorter vector than what came in whenever 
+        some of the keys match more than one value
+
+asNA: return an NA value whenever there are multiple matches
+
+CharacterList: returns a SimpleCharacterList object
+
+FUN: can also supply a function to the multiVals argument for custom 
+     behaviors. The function must take a single argument and return a 
+     single value. This function will be applied to all the elements 
+     and will serve a 'rule' that for which thing to keep when there 
+     is more than one element. So for example this example function 
+     will always grab the last element in each result: 
+     \code{last <- function(x){x[[length(x)]]}}}
+}
+\value{
+\code{keys}, \code{columns} and \code{keytypes} each returns a 
+    character vector of possible values. \code{select} returns a 
+    \code{tibble}.
 }
 \description{
-select, columns and keys can be used together to extract data for a 
-\code{\link{src_organism}} object.
+\code{select}, \code{columns} and \code{keys} can be used together to 
+extract data from a \code{\link{src_organism}} object.
+}
+\details{
+\code{keytypes()}: discover which keytypes can be passed to keytype 
+    argument of methods \code{select} or \code{keys}.
+
+\code{keys()}: returns keys for the \code{src_organism} object. By default 
+    it returns the primary keys for the database, and returns the keys from 
+    that keytype when the keytype argument is used.
+
+\code{columns()}: discover which kinds of data can be returned for the 
+    \code{src_organism} object.
+
+\code{select()}: retrieves the data as a \code{tibble} based on parameters 
+    for selected keys columns and keytype arguments. If requested columns 
+    that have multiple matches for the keys, `select()` will return a 
+    \code{tibble} with one row for each possible match.
+
+\code{mapIds()}: gets the mapped ids (column) for a set of keys that are of 
+    a particular keytype. Usually returned as a named character vector.
 }
 \examples{
 src <- src_organism("TxDb.Hsapiens.UCSC.hg38.knownGene")
+
+## keytypes
+keytypes(src)
+
+## columns
+columns(src)
+
+## keys
+keys(src, "entrez")
+
 keytype <- "symbol"
 keys <- c("PTEN", "BRCA1")
 columns <- c("entrez", "tx_id", "tx_name","exon_id")
+
+## select
 select(src, keys, columns, keytype)
+
+## mapIds
+mapIds(src, keys, column = "tx_name", keytype)
 
 }
 \seealso{

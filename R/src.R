@@ -32,7 +32,11 @@
 #' 
 #' @rdname src_organism
 #' 
-#' @import dplyr
+#' @importFrom  dplyr %>% arrange arrange_ as.tbl build_sql collect compute 
+#'     desc distinct distinct_ filter filter_ full_join group_by group_by_ 
+#'     is.tbl left_join mutate mutate_ order_by rename rename_ right_join 
+#'     select_ src src_sql src_sqlite src_tbls summarise summarise_ summarize 
+#'     summarize_ tbl tbl_df tbl_sql union union_all 
 #' @importFrom RSQLite dbGetQuery dbConnect dbDisconnect SQLite
 #'     dbWriteTable dbListTables
 #' @importFrom S4Vectors metadata
@@ -354,6 +358,8 @@ tbl.src_organism <- function(src, ...) {
     tbl
 }
 
+setOldClass("src_organism")
+
 .getSeqinfo <- function(x, gr) {
     seqinfo <- transform(tbl(x, "seqinfo") %>% collect(n=Inf), 
                          seqnames = as.character(seqnames), 
@@ -376,4 +382,3 @@ setMethod("seqinfo", "src_organism", function(x) {
     .getSeqinfo(x)
 })
 
-setOldClass("src_organism")

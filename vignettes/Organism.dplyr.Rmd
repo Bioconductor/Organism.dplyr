@@ -14,13 +14,14 @@ vignette: >
 The `r Biocpkg("Organism.dplyr")` creates an on disk sqlite database to hold 
 data of an organism combined from an 'org' package (e.g., org.Hs.eg.db) and a
 genome coordinate functionality of the 'TxDb' package (e.g., 
-TxDb.Hsapiens.UCSC.hg19.knownGene). It aims to provide an integrated 
-presentation of identifiers and genomic coordinates. And a _src_organism_ 
-object is created to point to the database. 
+`r Biocpkg("TxDb.Hsapiens.UCSC.hg38.knownGene")`). It aims to provide an 
+integrated presentation of identifiers and genomic coordinates. And a 
+_src_organism_ object is created to point to the database. 
 
 The _src_organism_ object is created as an extension of _src_sql_ and 
 _src_sqlite_ from [dplyr][], which inherited all [dplyr][] methods. It also 
-implements genomic coordinates extractors from `r Biocpkg("GenomicFeatures")`.
+implements the `select()` interface from `r Biocpkg("AnnotationDbi")` and 
+genomic coordinates extractors from `r Biocpkg("GenomicFeatures")`.
 
 # Constructing a _src_organism_
 
@@ -108,7 +109,7 @@ Below are some examples of querying tables using dplyr.
 ```{r}
 tbl(src, "id") %>% 
     filter(symbol %like% "BRCA%") %>% 
-    select(entrez, map, ensembl, symbol) %>% 
+    dplyr::select(entrez, map, ensembl, symbol) %>% 
     distinct() %>% arrange(symbol) %>% collect()
 ```
 
@@ -117,7 +118,7 @@ tbl(src, "id") %>%
 ```{r}
 inner_join(tbl(src, "id"), tbl(src, "id_go")) %>% 
     filter(symbol == "PTEN") %>% 
-    select(entrez, ensembl, symbol, go, evidence, ontology)
+    dplyr::select(entrez, ensembl, symbol, go, evidence, ontology)
 ```
 
 3. Genes with more than 100 transcripts
@@ -149,8 +150,72 @@ ggplot(txcount, aes(x = txcount$symbol[order(txcount$symbol)],
 ```{r}
 inner_join(tbl(src, "id"), tbl(src, "ranges_gene")) %>% 
     filter(symbol %in% c("PTEN", "BRCA1")) %>% 
-    select(gene_chrom, gene_start, gene_end, gene_strand, symbol, map) %>% 
+    dplyr::select(gene_chrom, gene_start, gene_end, gene_strand, 
+                  symbol, map) %>% 
     collect() %>% GenomicRanges::GRanges() 
+```
+
+## "select" interface 
+Methods `select()`, `keytypes()`, `keys()`, `columns()` and `mapIds` from 
+`r Biocpkg("AnnotationDbi")` are implemented for _src_organism_ objects.
+
+### `keytypes()`
+
+Use `keytypes()` to discover which keytypes can be passed to keytype argument 
+of methods `select()` or `keys()`.
+
+```{r}
+keytypes(src)
+```
+
+### `columns()`
+
+Use `columns()` to discover which kinds of data can be returned for the 
+_src_organism_ object.
+
+```{r}
+columns(src)
+```
+
+### `keys()`
+
+`keys()` returns keys for the _src_organism_ object. By default it returns the 
+primary keys for the database, and returns the keys from that keytype when the 
+keytype argument is used.
+
+Keys of entrez
+
+```{r}
+head(keys(src))
+```
+
+Keys of symbol
+
+```{r}
+head(keys(src, "symbol"))
+```
+
+### `select()`
+
+`select()` retrieves the data as a _tibble_ based on parameters for selected 
+keys columns and keytype arguments. If requested columns that have multiple 
+matches for the keys, `select()` will return a _tibble_ with one row for each 
+possible match. 
+
+```{r}
+keytype <- "symbol"
+keys <- c("PTEN", "BRCA1")
+columns <- c("entrez", "tx_id", "tx_name","exon_id")
+select(src, keys, columns, keytype)
+```
+
+### `mapIds()`
+
+`mapIds()` gets the mapped ids (column) for a set of keys that are of a 
+particular keytype. Usually returned as a named character vector.
+
+```{r}
+mapIds(src, keys, column = "tx_name", keytype)
 ```
 
 ## Genomic coordinates extractors
@@ -180,7 +245,7 @@ Transcript coordinates of all gene symbols start with "BRCA"
 ```{r}
 symbols <- tbl(src, "id") %>% 
     filter(symbol %like% "BRCA%") %>% 
-    select(symbol) %>% collect()
+    dplyr::select(symbol) %>% collect()
 
 transcripts(src, filter = list(symbol = symbols[["symbol"]]))
 ```

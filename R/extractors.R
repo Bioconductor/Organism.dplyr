@@ -589,7 +589,7 @@ function(x, filter=NULL) {
 #' @export
 
 fiveUTRsByTranscript_tbl <- function(x, filter = NULL) {
-    .return_tbl(.fiveUTRsByTranscript_tbl(x, by, filter), filter)
+    .return_tbl(.fiveUTRsByTranscript_tbl(x, filter), filter)
 }
 
 #' @examples
@@ -611,7 +611,7 @@ setMethod("fiveUTRsByTranscript", "src_organism",function(x, filter=NULL) {
 #' @export
 
 threeUTRsByTranscript_tbl <- function(x, filter = NULL) {
-    .return_tbl(.threeUTRsByTranscript_tbl(x, by, filter), filter)
+    .return_tbl(.threeUTRsByTranscript_tbl(x, filter), filter)
 }
 
 #' @rdname transcripts_tbl
