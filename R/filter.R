@@ -1,3 +1,7 @@
+## transcripts_tbl(src, filter=symbolFilter("PTEN"))
+## transcripts_tbl(src, filter=symbolFilter("BRCA", "startsWith"))
+
+
 # setClass("symbolFilter",
 #          slots=c(condition="character",
 #                  value="character",
