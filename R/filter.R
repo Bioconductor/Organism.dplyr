@@ -1,55 +1,78 @@
-## transcripts_tbl(src, filter=symbolFilter("PTEN"))
-## transcripts_tbl(src, filter=symbolFilter("BRCA", "startsWith"))
-
-
-# setClass("symbolFilter",
-#          slots=c(condition="character",
-#                  value="character",
-#                  .valueIsCharacter="logical"))
+## transcripts_tbl(src, filter=SymbolFilter("PTEN"))
+## transcripts_tbl(src, filter=SymbolFilter("BRCA", "startsWith"))
+## transcripts_tbl(src, filter=list(
+##     SymbolFilter("BRCA", "startsWith"),
+##     EntrezFilter(123)))
 
 #' @export
 setClass("BasicFilter",
          representation(
              "VIRTUAL",
+             field="character",
              condition="character",
              value="character",
              .valueIsCharacter="logical"
          ),
          prototype=list(
-             condition="=",
-             value="",
+             condition= "==",
+             value=character(),
              .valueIsCharacter=TRUE
          )
 )
 
-#' @export
-setClass("symbolFilter", contains="BasicFilter",
-         prototype=list(
-             condition="=",
-             value="",
-             .valueIsCharacter=TRUE
-         )
-)
+.condition <- function(x) x@condition
+.value <- function(x) x@value
 
-#' @export
-symbolFilter <- function(value, condition = "="){
-    return(new("symbolFilter", 
-               condition=condition, value=as.character(value), 
-               .valueIsCharacter=TRUE))
-    # filter <- new("symbolFilter", condition=condition, value=as.character(value))
-    # .convertFilter(filter)
+setValidity("BasicFilter", function(object) {
+    txt <- character()
+    if (length(.condition(object)) != 1L)
+        txt <- c(txt, "'condition' must be length 1")
+    if (!.condition(object) %in% .OPS)
+        txt <- c(txt,
+                 sprintf("'condition' must be one of %s",
+                         paste("'", .OPS, "'", collapse=", ")))
+    if (length(txt)) txt else TRUE
+})
+
+## FIXME: show,BasicFilter-method
+
+.filterFactory <- function(field, isCharacter) {
+    class <- paste0(sub("([a-z])", "\\U\\1", field, perl=TRUE), "Filter")
+    .valueIsCharacter <- isCharacter
+    function(value, condition="==") {
+        new(class,
+            field=field,
+            condition=condition,
+            value=as.character(value),
+            .valueIsCharacter=.valueIsCharacter)
+    }
+}
+
+.OPS <- c("==", "!=", "startsWith")
+.CHAR_FIELDS <- c("symbol", "entrez", "ensembl")
+.INT_FIELDS <- character()
+
+#' @export SymbolFilter EntrezFilter EnsemblFilter
+.onLoad <- function(libname, pkgname) {
+    for (field in .CHAR_FIELDS) {
+        class <- paste0(sub("([a-z])", "\\U\\1", field, perl=TRUE), "Filter")
+        setClass(class, contains="BasicFilter")
+        assign(class, .filterFactory(field, TRUE),
+               envir=topenv(parent.frame()))
+    }
 }
 
 .convertFilter <- function(filter) {
     field <- class(filter)[1]
     field <- substr(field, 1, nchar(field) - 6)
-    value <- filter@value
-    condition <- filter@condition
+    value <- .value(filter)
+    condition <- .condition(filter)
     
-    op <- switch (condition,
-                  "=" = if (length(value) == 1) "==" else "%in%", 
-                  "!=" = if (length(value) == 1) "!=" else "%in%",
-                  "startsWith" = "%like%"
+    op <- switch(
+        condition,
+        "==" = if (length(value) == 1) "==" else "%in%", 
+        "!=" = if (length(value) == 1) "!=" else "%in%",
+        "startsWith" = "%like%"
     )
     
     if (condition != "startsWith") 

@@ -1,6 +1,8 @@
-.getFields <- function(src) {
+.getFields <-
+    function(src)
+{
     fields <- lapply(src_tbls(src), function(table) colnames(tbl(src, table)))
-    unique(unlist(fields))
+    unique(unlist(fields, use.names=FALSE))
 }
 
 #' Using the "select" interface on src_organism objects
@@ -31,22 +33,24 @@
 #' @param keys the keys to select records for from the database. All possible 
 #'     keys are returned by using the \code{keys} method.
 #' 
-#' @param columns the columns or kinds of things that can be retrieved from  
-#'     the database. As with keys, all possible columns are returned by using  
-#'     the \code{columns} method.
+#' @param columns the columns or kinds of things that can be retrieved
+#'     from the database. As with keys, all possible columns are
+#'     returned by using the \code{columns} method.
 #'     
-#' @return \code{keys}, \code{columns} and \code{keytypes} each returns a 
-#'     character vector of possible values. \code{select} returns a 
-#'     \code{tibble}.
+#' @return \code{keys}, \code{columns} and \code{keytypes} each
+#'     returns a character vector of possible values. \code{select}
+#'     returns a \code{tibble}.
 #' 
-#' @seealso \code{\link{AnnotationDb-class}} for more descriptsion of methods 
-#'     \code{select}, \code{keytypes}, \code{keys} and \code{columns}.
+#' @seealso \code{\link{AnnotationDb-class}} for more descriptsion of
+#'     methods \code{select}, \code{keytypes}, \code{keys} and
+#'     \code{columns}.
 #'     
-#'     \code{\link{src_organism}} for creating a \code{src_organism} 
+#'     \code{\link{src_organism}} for creating a \code{src_organism}
 #'     object.
 #'     
-#'     \code{\link[Organism.dplyr]{transcripts_tbl}} for generic functions to 
-#'     extract genomic features from a \code{src_organism} object.
+#'     \code{\link[Organism.dplyr]{transcripts_tbl}} for generic
+#'     functions to extract genomic features from a
+#'     \code{src_organism} object.
 #'     
 #' @importFrom AnnotationDbi keytypes
 #' @rdname select-src_organism-method
@@ -58,10 +62,7 @@
 #' keytypes(src)
 #' 
 #' @export
-setMethod("keytypes", "src_organism", function(x) {
-    .getFields(x)
-})
-
+setMethod("keytypes", "src_organism", .getFields)
 
 #' @importFrom AnnotationDbi columns
 #' @rdname select-src_organism-method
@@ -71,9 +72,7 @@ setMethod("keytypes", "src_organism", function(x) {
 #' columns(src)
 #' 
 #' @export
-setMethod("columns", "src_organism", function(x) {
-    .getFields(x)
-})
+setMethod("columns", "src_organism", .getFields)
 
 .findTable <- function(x, field) {
     if (field == x$schema) {
@@ -98,16 +97,15 @@ setMethod("columns", "src_organism", function(x) {
     table <- tbl(x, .findTable(x, keytype))
     res <- table %>% select_(keytype) %>% collect(n=Inf)
     
-    if (length(res) == 0) {
-        stop(paste(keytype, "is not a supported keytype.",  
-            " Please use the keytypes method to identify viable keytypes"))
-    }
+    if (length(res) == 0L)
+        stop("'", keytype, "' is not a supported keytype; see 'keytypes()'")
     
     as.character(res[[keytype]])
 }
 
-#' @param keytype specifies the kind of keys that will be returned. By default 
-#'     keys will return the keys for schema of the \code{src_organism} object.
+#' @param keytype specifies the kind of keys that will be returned. By
+#'     default keys will return the keys for schema of the
+#'     \code{src_organism} object.
 #'     
 #' @param ... other arguments. These include: 
 #' 
@@ -115,8 +113,8 @@ setMethod("columns", "src_organism", function(x) {
 #'     
 #'     column: the column to search on.
 #'     
-#'     fuzzy: TRUE or FALSE value. Use fuzzy matching? (this is used with 
-#'            pattern)
+#'     fuzzy: TRUE or FALSE value. Use fuzzy matching? (this is used
+#'            with pattern)
 #' 
 #' @importFrom AnnotationDbi keys testForValidKeytype
 #' 
@@ -129,10 +127,8 @@ setMethod("columns", "src_organism", function(x) {
 setMethod("keys", "src_organism", function(x, keytype, ...) {
     if (missing(keytype)) 
         keytype <- x$schema
-    AnnotationDbi:::smartKeys(x = x, keytype = keytype, ..., 
-                              FUN = .keys)
+    AnnotationDbi:::smartKeys(x = x, keytype = keytype, ..., FUN = .keys)
 })
-
 
 .filterByKeys <- function(x, keys, keytype) {
     table <- tbl(x, .findTable(x, keytype))
@@ -187,8 +183,7 @@ setMethod("keys", "src_organism", function(x, keytype, ...) {
                    skipValidKeysTest = FALSE)
     if (is.na(keys(x, keytype)[1]) & length(keys(x, keytype)) == 
         1) {
-        stop(paste("There do not appear to be any keys", 
-                   "for the keytype you have specified."))
+        stop("no keys found for the keytype you specified.")
     }
     cnames <- unique(c(keytype, columns))
     table <- .filterByKeys(x, keys, keytype)
@@ -207,19 +202,14 @@ setMethod("keys", "src_organism", function(x, keytype, ...) {
 #' select(src, keys, columns, keytype)
 #' 
 #' @export
-setMethod("select", "src_organism", function (x, keys, columns, keytype) 
-{
-    .select(x, keys, columns, keytype)
-})
+setMethod("select", "src_organism", .select)
 
 .mapIds_base <- 
-function (x, keys, column, keytype, 
-          multiVals = c("filter", "asNA", "first", "list", "CharacterList")) 
+    function(x, keys, column, keytype, 
+        multiVals = c("filter", "asNA", "first", "list", "CharacterList")) 
 {
-    if (missing(multiVals)) 
-        multiVals <- "first"
     if (!is.function(multiVals)) 
-        match.arg(multiVals)
+        multiVals <- match.arg(multiVals)
     if (length(keys) < 1) 
         stop(wmsg("mapIds must have at least one key to match against."))
     if (length(column) > 1) 
@@ -253,20 +243,21 @@ function (x, keys, column, keytype,
     }
 }
 
-#' @param column character(1) the column to search on, can only have a single 
-#'     element for the value
+#' @param column character(1) the column to search on, can only have a
+#'     single element for the value
 #' 
-#' @param multiVals What should \code{mapIds} do when there are multiple 
-#'     values that could be returned. Options include:
+#' @param multiVals What should \code{mapIds} do when there are
+#'     multiple values that could be returned. Options include:
 #'     
-#'     first: when there are multiple matches only the 1st thing that comes
-#'            back will be returned. This is the default behavior.
+#'     first: when there are multiple matches only the 1st thing that
+#'            comes back will be returned. This is the default
+#'            behavior.
 #'            
 #'     list: return a list object to the end user
 #'     
-#'     filter: remove all elements that contain multiple matches and will 
-#'             therefore return a shorter vector than what came in whenever 
-#'             some of the keys match more than one value
+#'     filter: remove all elements that contain multiple matches and
+#'             will therefore return a shorter vector than what came
+#'             in whenever some of the keys match more than one value
 #'     
 #'     asNA: return an NA value whenever there are multiple matches
 #'     
