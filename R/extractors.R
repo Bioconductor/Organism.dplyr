@@ -1,47 +1,47 @@
-.tbl_filter <- function(keep1, value) {
-    values <- paste0("'", value, "'", collapse=", ")
-    op <- if (length(value) == 1) "==" else "%in%"
-    sprintf("%s %s c(%s)", keep1, op, values)
-}
-
-.tbl_join <- function(x, table, tbls, filter) {
-    if (is.null(filter))
-        return(table)
-
-    fields <- names(filter)
-    
-    ## filter by fields from main table
-    fields1 <- fields[fields %in% colnames(table)]
-    if (length(fields1) != 0) {
-        filters <- sapply(fields1, .tbl_filter, filter[[fields1]])
-        filters <- paste0(filters, collapse=" & ")
-        table <- table %>% filter_(filters)
-        filter <- filter[setdiff(fields, fields1)]
-    }
-    
-    ## filter by fields from other tables
-    fields <- .filter_names(filter)
-    for (i in tbls) {
-        keep <- fields[fields %in% colnames(tbl(x, i))]
-        if (is.null(keep) || length(keep) == 0)
-            next
-        filters <- sapply(keep, .tbl_filter, filter[[keep]])
-        filters <- paste0(filters, collapse=" & ")
-        table <- inner_join(table, tbl(x, i)) %>% filter_(filters)
-        fields <- setdiff(fields, keep)
-    }
-    
-    table
-}
+# .tbl_filter <- function(keep1, value) {
+#     values <- paste0("'", value, "'", collapse=", ")
+#     op <- if (length(value) == 1) "==" else "%in%"
+#     sprintf("%s %s c(%s)", keep1, op, values)
+# }
+# 
+# .tbl_join <- function(x, table, tbls, filter) {
+#     if (is.null(filter))
+#         return(table)
+# 
+#     fields <- names(filter)
+#     
+#     ## filter by fields from main table
+#     fields1 <- fields[fields %in% colnames(table)]
+#     if (length(fields1) != 0) {
+#         filters <- sapply(fields1, .tbl_filter, filter[[fields1]])
+#         filters <- paste0(filters, collapse=" & ")
+#         table <- table %>% filter_(filters)
+#         filter <- filter[setdiff(fields, fields1)]
+#     }
+#     
+#     ## filter by fields from other tables
+#     fields <- .filter_names(filter)
+#     for (i in tbls) {
+#         keep <- fields[fields %in% colnames(tbl(x, i))]
+#         if (is.null(keep) || length(keep) == 0)
+#             next
+#         filters <- sapply(keep, .tbl_filter, filter[[keep]])
+#         filters <- paste0(filters, collapse=" & ")
+#         table <- inner_join(table, tbl(x, i)) %>% filter_(filters)
+#         fields <- setdiff(fields, keep)
+#     }
+#     
+#     table
+# }
 
 .keep <- function(filter, fields, fields_remove) {
     drop <- setdiff(fields_remove, .filter_names(filter))
     keep <- fields[!(fields %in% drop)]
 }
 
-.filter_names <- function(filter) {
-    setdiff(names(filter), "granges")
-}
+# .filter_names <- function(filter) {
+#     setdiff(names(filter), "granges")
+# }
 
 .return_tbl <- function(table, filter) {
     if ("granges" %in% names(filter))
@@ -73,11 +73,26 @@
     table <- .tbl_join(x, table, tbls, filter)
 }
 
+# .transcripts_tbl <- function(x, filter = NULL) {
+#     table <- .transcripts(x, filter)
+#     fields <- unique(
+#         c("tx_chrom", "tx_start", "tx_end", "tx_strand",
+#           "tx_id", "tx_name", .filter_names(filter)))
+#     do.call(select_, c(list(table), as.list(fields))) %>% 
+#         arrange(tx_id)
+# }
+
 .transcripts_tbl <- function(x, filter = NULL) {
     table <- .transcripts(x, filter)
+    if (is(filter, "BasicFilter")) {
+        field <- class(filter)[1]
+        field <- substr(field, 1, nchar(field) - 6)
+    } else {
+        field <- .filter_names(filter)
+    }
     fields <- unique(
         c("tx_chrom", "tx_start", "tx_end", "tx_strand",
-          "tx_id", "tx_name", .filter_names(filter)))
+          "tx_id", "tx_name", field))
     do.call(select_, c(list(table), as.list(fields))) %>% 
         arrange(tx_id)
 }
