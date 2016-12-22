@@ -130,13 +130,13 @@ setMethod("keys", "src_organism", function(x, keytype, ...) {
     AnnotationDbi:::smartKeys(x = x, keytype = keytype, ..., FUN = .keys)
 })
 
-.filterByKeys <- function(x, keys, keytype) {
+.filterByKeys <- function(x, keys, keytype, cnames) {
     table <- tbl(x, .findTable(x, keytype))
     filter <- .tbl_filter(keytype, keys)
     
     fields <- colnames(table) 
-    fields <- fields[fields %in% c(x$schema, "tx_id", "exon_rank")]
-    fields <- unique(c(fields, keytype))
+    keyfields <- fields[fields %in% c(x$schema, "tx_id", "exon_rank")]
+    fields <- unique(c(keyfields, cnames[cnames %in% fields]))
     
     table <- table %>% filter_(filter) 
     do.call(select_, c(list(table), as.list(fields)))
@@ -186,7 +186,7 @@ setMethod("keys", "src_organism", function(x, keytype, ...) {
         stop("no keys found for the keytype you specified.")
     }
     cnames <- unique(c(keytype, columns))
-    table <- .filterByKeys(x, keys, keytype)
+    table <- .filterByKeys(x, keys, keytype, cnames)
     .selectColumns(x, table, keytype, cnames)
 }
 
@@ -206,10 +206,12 @@ setMethod("select", "src_organism", .select)
 
 .mapIds_base <- 
     function(x, keys, column, keytype, 
-        multiVals = c("filter", "asNA", "first", "list", "CharacterList")) 
+        multiVals = c("first", "filter", "asNA", "list", "CharacterList")) 
 {
+    if (missing(multiVals)) 
+        multiVals <- "first"
     if (!is.function(multiVals)) 
-        multiVals <- match.arg(multiVals)
+        match.arg(multiVals)
     if (length(keys) < 1) 
         stop(wmsg("mapIds must have at least one key to match against."))
     if (length(column) > 1) 
