@@ -136,33 +136,33 @@ setValidity("BasicFilter", function(object) {
 .INT_FIELDS <- c("cds_start", "cds_end", "exon_start", "exon_end", 
                  "gene_start", "gene_end", "tx_start", "tx_end")
 
-# .filterFactory <- function(field, isCharacter) {
-#     class <- paste0(sub("([a-z])", "\\U\\1", field, perl=TRUE), "Filter")
-#     .valueIsCharacter <- isCharacter
-#     function(value, condition="==") {
-#         new(class,
-#             field=field,
-#             condition=condition,
-#             value=as.character(value),
-#             .valueIsCharacter=.valueIsCharacter)
-#     }
-# }
-# 
-# 
-# .onLoad <- function(libname, pkgname) {
-#     for (field in .CHAR_FIELDS) {
-#         class <- paste0(sub("([a-z])", "\\U\\1", field, perl=TRUE), "Filter")
-#         setClass(class, contains="BasicFilter")
-#         assign(class, .filterFactory(field, TRUE),
-#                envir=topenv(parent.frame()))
-#     }
-#     for (field in .INT_FIELDS) {
-#         class <- paste0(sub("([a-z])", "\\U\\1", field, perl=TRUE), "Filter")
-#         setClass(class, contains="BasicFilter")
-#         assign(class, .filterFactory(field, FALSE),
-#                envir=topenv(parent.frame()))
-#     }
-# }
+.filterFactory <- function(field, isCharacter) {
+    class <- paste0(sub("([a-z])", "\\U\\1", field, perl=TRUE), "Filter")
+    .valueIsCharacter <- isCharacter
+    function(value, condition="==") {
+        new(class,
+            field=field,
+            condition=condition,
+            value=as.character(value),
+            .valueIsCharacter=.valueIsCharacter)
+    }
+}
+
+
+.onLoad <- function(libname, pkgname) {
+    for (field in .CHAR_FIELDS) {
+        class <- paste0(sub("([a-z])", "\\U\\1", field, perl=TRUE), "Filter")
+        setClass(class, contains="BasicFilter")
+        assign(class, .filterFactory(field, TRUE),
+               envir=topenv(parent.frame()))
+    }
+    for (field in .INT_FIELDS) {
+        class <- paste0(sub("([a-z])", "\\U\\1", field, perl=TRUE), "Filter")
+        setClass(class, contains="BasicFilter")
+        assign(class, .filterFactory(field, FALSE),
+               envir=topenv(parent.frame()))
+    }
+}
 
 
 .field <- function(x) x@field
