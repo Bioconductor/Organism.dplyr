@@ -233,9 +233,9 @@ tables displayed by `src_tbls()`. Besides, 'granges' could also be used as
 filter for the methods with result displaying as _GRanges_ or _GRangesList_. 
 
 ```{r}
-filters <- list(symbol=c("PTEN", "BRCA1"),
-                entrez="5728",
-                granges=as("chr10:87869000-87876000", "GRanges"))
+filters <- list(SymbolFilter(c("PTEN", "BRCA1")),
+                EntrezFilter(5728), 
+                GRangesFilter(as("chr10:87869000-87876000", "GRanges")))
 transcripts_tbl(src, filter=filters)
 transcripts(src, filter=filters)
 ```
@@ -243,11 +243,7 @@ transcripts(src, filter=filters)
 Transcript coordinates of all gene symbols start with "BRCA"
 
 ```{r}
-symbols <- tbl(src, "id") %>% 
-    filter(symbol %like% "BRCA%") %>% 
-    dplyr::select(symbol) %>% collect()
-
-transcripts(src, filter = list(symbol = symbols[["symbol"]]))
+transcripts(src, filter = list(SymbolFilter("BRCA", "startsWith")))
 ```
 
 

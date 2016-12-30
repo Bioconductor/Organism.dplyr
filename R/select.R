@@ -1,7 +1,7 @@
 .getFields <-
-    function(src)
+    function(x)
 {
-    fields <- lapply(src_tbls(src), function(table) colnames(tbl(src, table)))
+    fields <- lapply(src_tbls(x), function(table) colnames(tbl(x, table)))
     unique(unlist(fields, use.names=FALSE))
 }
 
@@ -132,7 +132,9 @@ setMethod("keys", "src_organism", function(x, keytype, ...) {
 
 .filterByKeys <- function(x, keys, keytype, cnames) {
     table <- tbl(x, .findTable(x, keytype))
-    filter <- .tbl_filter(keytype, keys)
+    values <- paste0("'", keys, "'", collapse=", ")
+    op <- if (length(keys) == 1) "==" else "%in%"
+    filter <- sprintf("%s %s c(%s)", keytype, op, values)
     
     fields <- colnames(table) 
     keyfields <- fields[fields %in% c(x$schema, "tx_id", "exon_rank")]
@@ -152,10 +154,9 @@ setMethod("keys", "src_organism", function(x, keytype, ...) {
         keep <- fields[fields %in% colnames(tbl(x, i))]
         if (is.null(keep) || length(keep) == 0)
             next
-        if ("tx_id" %in% colnames(table) && 
-            "exon_rank" %in% colnames(table) &&
-            "tx_id" %in% colnames(tbl(x, i)) && 
-            "exon_rank" %in% colnames(tbl(x, i))) {
+
+        if (all(c("tx_id", "exon_rank") %in% colnames(table)) && 
+            all(c("tx_id", "exon_rank") %in% colnames(tbl(x, i)))) {
             table <- left_join(table, tbl(x, i), by = c("tx_id", "exon_rank"))
         } else if ("tx_id" %in% colnames(table) && 
                    "tx_id" %in% colnames(tbl(x, i))) {
@@ -237,11 +238,13 @@ setMethod("select", "src_organism", .select)
         sapply(res, FUN = multiVals)
     }
     else {
-        switch(multiVals, list = res, filter = .filter(res), 
-               asNA = .asNA(res), CharacterList = as(res, "CharacterList"), 
-               first = sapply(res, FUN = function(x) {
-                   x[[1]]
-               }))
+        switch(multiVals, 
+               list = res, 
+               filter = .filter(res), 
+               asNA = .asNA(res), 
+               CharacterList = as(res, "CharacterList"), 
+               first = sapply(res, function(x) x[[1]])
+               )
     }
 }
 
