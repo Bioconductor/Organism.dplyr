@@ -132,13 +132,18 @@
 #'     object.
 #' 
 #' @examples
-#' organism <- src_ucsc("human")
+#' src <- src_ucsc("human")
 #' 
 #' ## transcript coordinates with filter in tibble format
 #' filters <- list(SymbolFilter(c("PTEN", "BRCA1")),
 #'                 SymbolFilter("BRCA", "startsWith"), 
 #'                 GoFilter(c("GO:0000729", "GO:0000731")))
-#' transcripts_tbl(organism, filters)
+#' transcripts_tbl(src, filters)
+#' 
+#' transcripts_tbl(src, filter=list(
+#'      SymbolFilter(c("PTEN", "BRCA1")), 
+#'      Tx_startFilter(87863438,">"), 
+#'      Tx_endFilter(87933487, "<")))
 #' 
 #' @export
 transcripts_tbl <- function(x, filter = NULL) {
@@ -151,7 +156,7 @@ transcripts_tbl <- function(x, filter = NULL) {
 #' filters <- list(SymbolFilter(c("PTEN", "BRCA1")), 
 #'                 EntrezFilter(5728), 
 #'                 GRangesFilter(as("chr10:87869000-87876000", "GRanges")))
-#' transcripts(organism, filters)
+#' transcripts(src, filters)
 #'
 #' @importFrom GenomicFeatures transcripts
 #' @importFrom GenomeInfoDb seqinfo<- seqlevels seqlevels<-
@@ -310,7 +315,7 @@ promoters_tbl <- function(x, upstream, downstream, filter = NULL) {
 
 #' @examples
 #' ## promoters
-#' promoters(organism, upstream=100, downstream=50,
+#' promoters(src, upstream=100, downstream=50,
 #'           filter = list(SymbolFilter("BRCA1")))
 #'
 #' @rdname transcripts_tbl
@@ -386,7 +391,7 @@ transcriptsBy_tbl <- function(x, by = c("gene", "exon", "cds"), filter = NULL)
 #'
 #' @examples
 #' ## transcriptsBy
-#' transcriptsBy(organism, by = "exon", filter = list(SymbolFilter("PTEN")))
+#' transcriptsBy(src, by = "exon", filter = list(SymbolFilter("PTEN")))
 #'
 #' @rdname transcripts_tbl
 #' @importFrom GenomicFeatures transcriptsBy
@@ -430,7 +435,7 @@ exonsBy_tbl <- function(x, by = c("tx", "gene"), filter = NULL) {
 
 #' @examples
 #' ## exonsBy
-#' exonsBy(organism, filter = list(SymbolFilter("PTEN")))
+#' exonsBy(src, filter = list(SymbolFilter("PTEN")))
 #'
 #' @rdname transcripts_tbl
 #' @importFrom GenomicFeatures exonsBy
@@ -497,7 +502,7 @@ function(x, filter = NULL) {
 
 #' @examples
 #' ## intronsByTranscript
-#' intronsByTranscript(organism, filter = list(SymbolFilter("PTEN")))
+#' intronsByTranscript(src, filter = list(SymbolFilter("PTEN")))
 #'
 #' @rdname transcripts_tbl
 #' @importFrom GenomicFeatures intronsByTranscript
@@ -604,7 +609,7 @@ fiveUTRsByTranscript_tbl <- function(x, filter = NULL) {
 
 #' @examples
 #' ## fiveUTRsByTranscript
-#' fiveUTRsByTranscript(organism, filter = list(SymbolFilter("PTEN")))
+#' fiveUTRsByTranscript(src, filter = list(SymbolFilter("PTEN")))
 #'
 #' @rdname transcripts_tbl
 #' @importFrom GenomicFeatures fiveUTRsByTranscript

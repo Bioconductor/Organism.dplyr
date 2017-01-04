@@ -95,7 +95,8 @@ setMethod("columns", "src_organism", .getFields)
     testForValidKeytype(x, keytype)
     
     table <- tbl(x, .findTable(x, keytype))
-    res <- table %>% select_(keytype) %>% collect(n=Inf)
+    res <- table %>% select_(keytype) %>% filter(!is.na(keytype)) %>% 
+        collect(n=Inf)
     
     if (length(res) == 0L)
         stop("'", keytype, "' is not a supported keytype; see 'keytypes()'")

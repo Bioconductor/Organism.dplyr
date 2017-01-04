@@ -29,6 +29,9 @@
 #'     
 #'     \code{\link[Organism.dplyr]{transcripts_tbl}} for generic functions to 
 #'     extract genomic features from a \code{src_organism} object.
+#'     
+#'     \code{\link[Organism.dplyr]{select,src_organism-method}} for "select" 
+#'     interface on \code{src_organism} objects. 
 #' 
 #' @rdname src_organism
 #' 

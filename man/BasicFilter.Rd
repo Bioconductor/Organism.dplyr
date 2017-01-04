@@ -6,12 +6,55 @@
 \alias{AliasFilter}
 \alias{BasicFilter-class}
 \alias{Cds_chromFilter}
+\alias{Cds_endFilter}
 \alias{Cds_idFilter}
 \alias{Cds_nameFilter}
+\alias{Cds_startFilter}
 \alias{Cds_strandFilter}
 \alias{EnsemblFilter}
+\alias{EnsemblprotFilter}
+\alias{EnsembltransFilter}
+\alias{EntrezFilter}
+\alias{EnzymeFilter}
+\alias{EvidenceFilter}
+\alias{EvidenceallFilter}
+\alias{Exon_chromFilter}
+\alias{Exon_endFilter}
+\alias{Exon_idFilter}
+\alias{Exon_nameFilter}
+\alias{Exon_rankFilter}
+\alias{Exon_startFilter}
+\alias{Exon_strandFilter}
 \alias{GRangesFilter}
 \alias{GRangesFilter-class}
+\alias{Gene_chromFilter}
+\alias{Gene_endFilter}
+\alias{Gene_startFilter}
+\alias{Gene_strandFilter}
+\alias{GenenameFilter}
+\alias{GoFilter}
+\alias{GoallFilter}
+\alias{IpiFilter}
+\alias{MapFilter}
+\alias{OmimFilter}
+\alias{OntologyFilter}
+\alias{OntologyallFilter}
+\alias{PfamFilter}
+\alias{PmidFilter}
+\alias{PrositeFilter}
+\alias{RefseqFilter}
+\alias{SymbolFilter}
+\alias{Tx_chromFilter}
+\alias{Tx_endFilter}
+\alias{Tx_idFilter}
+\alias{Tx_nameFilter}
+\alias{Tx_startFilter}
+\alias{Tx_strandFilter}
+\alias{Tx_typeFilter}
+\alias{UnigeneFilter}
+\alias{UniprotFilter}
+\alias{possibleFilters}
+\alias{show,BasicFilter-method}
 \title{Functions for filter objects}
 \usage{
 AccnumFilter(value, condition = "==")
@@ -21,19 +64,83 @@ Cds_idFilter(value, condition = "==")
 Cds_nameFilter(value, condition = "==")
 Cds_strandFilter(value, condition = "==")
 EnsemblFilter(value, condition = "==")
+EnsemblprotFilter(value, condition = "==")
+EnsembltransFilter(value, condition = "==")
+EntrezFilter(value, condition = "==")
+EnzymeFilter(value, condition = "==")
+EvidenceFilter(value, condition = "==")
+EvidenceallFilter(value, condition = "==")
+Exon_chromFilter(value, condition = "==")
+Exon_idFilter(value, condition = "==")
+Exon_nameFilter(value, condition = "==")
+Exon_rankFilter(value, condition = "==")
+Exon_strandFilter(value, condition = "==")
+Gene_chromFilter(value, condition = "==")
+Gene_strandFilter(value, condition = "==")
+GenenameFilter(value, condition = "==")
+GoFilter(value, condition = "==")
+GoallFilter(value, condition = "==")
+IpiFilter(value, condition = "==")
+MapFilter(value, condition = "==")
+OmimFilter(value, condition = "==")
+OntologyFilter(value, condition = "==")
+OntologyallFilter(value, condition = "==")
+PfamFilter(value, condition = "==")
+PmidFilter(value, condition = "==")
+PrositeFilter(value, condition = "==")
+RefseqFilter(value, condition = "==")
+SymbolFilter(value, condition = "==")
+Tx_chromFilter(value, condition = "==")
+Tx_idFilter(value, condition = "==")
+Tx_nameFilter(value, condition = "==")
+Tx_strandFilter(value, condition = "==")
+Tx_typeFilter(value, condition = "==")
+UnigeneFilter(value, condition = "==")
+UniprotFilter(value, condition = "==")
+Cds_startFilter(value, condition = "==")
+Cds_endFilter(value, condition = "==")
+Exon_startFilter(value, condition = "==")
+Exon_endFilter(value, condition = "==")
+Gene_startFilter(value, condition = "==")
+Gene_endFilter(value, condition = "==")
+Tx_startFilter(value, condition = "==")
+Tx_endFilter(value, condition = "==")
 
 GRangesFilter(value)
+
+\S4method{show}{BasicFilter}(object)
+
+possibleFilters()
 }
 \arguments{
-\item{value}{value of the filter}
+\item{value}{Value of the filter. For \code{GRangesFilter} vaule should be a 
+\code{GRanges} object.}
 
-\item{condition}{one of "==", "!=", "startsWith", ">", "<", ">=", "<="}
+\item{object}{A \code{src_organism} object}
+
+\item{condition}{The condition to be used in filter for genomic extractors, 
+one of "==", "!=", "startsWith", "endsWith", ">", "<", ">=", "<=".  For 
+character values "==", "!=", "startsWith" and "endsWith" are allowed, for
+numeric values (\code{Cds_startFilter}, \code{Cds_endFilter}, 
+\code{Exon_startFilter}, \code{Exon_endFilter}, \code{Gene_startFilter},
+\code{Gene_endFilter}, \code{Tx_startFilter} and \code{Tx_endFilte}), 
+"==", "!=", ">", ">=", "<" and "<=". Default condition is "==".}
 }
 \description{
-These functions are used to create filter objects for genomic extrators.
+These functions are used to create filters for genomic extrators.
 }
 \details{
-All these filters except \code{GRangesFilter} extend \code{BasicFilter}.
+All these filters except \code{GRangesFilter()} extend \code{BasicFilter} 
+class. Each filter takes value(s) from the corresponding column. For example,
+\code{AccnumFilter()} takes value of accession number(s), which come from 
+column \code{accnum}.
+
+\code{GRangesFilter()} takes a \code{GRanges} object as filter, and returns 
+genomic extractors (\code{genes}, \code{transcripts}, etc.) that are 
+partially overlapping with the region.
+
+\code{possibleFilters()} lists all available filters for \code{src_organism} 
+object.
 }
 \examples{
 ## filter by ensembl 
@@ -47,5 +154,16 @@ GRangesFilter(as("chr10:87869000-87876000", "GRanges"))
 
 ## filter by transcript start position
 Tx_startFilter(87863438,">")
+
+}
+\seealso{
+\code{\link{src_organism}} for creating a \code{src_organism} 
+    object.
+    
+    \code{\link[Organism.dplyr]{transcripts_tbl}} for generic functions
+     to extract genomic features from a \code{src_organism} object.
+     
+     \code{\link[Organism.dplyr]{select,src_organism-method}} for "select" 
+    interface on \code{src_organism} objects.
 }
 
