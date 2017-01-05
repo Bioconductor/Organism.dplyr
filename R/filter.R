@@ -192,16 +192,20 @@ setValidity("BasicFilter", function(object) {
 })
 
 .OPS <- c("==", "!=", "startsWith", "endsWith", ">", "<", ">=", "<=")
-.CHAR_FIELDS <- c("accnum", "alias", "cds_chrom", "cds_id", "cds_name", 
-                  "cds_strand", "ensembl", "ensemblprot", "ensembltrans", 
-                  "entrez", "enzyme", "evidence", "evidenceall", "exon_chrom", 
-                  "exon_id", "exon_name", "exon_rank", "exon_strand", 
-                  "gene_chrom", "gene_strand", "genename", "go", "goall", 
-                  "ipi", "map", "omim", "ontology", "ontologyall", "pfam", 
-                  "pmid", "prosite", "refseq", "symbol", "tx_chrom", "tx_id", 
-                  "tx_name", "tx_strand", "tx_type", "unigene", "uniprot")
-.INT_FIELDS <- c("cds_start", "cds_end", "exon_start", "exon_end", 
-                 "gene_start", "gene_end", "tx_start", "tx_end")
+
+.CHAR_FIELDS <- c(
+    "accnum", "alias", "cds_chrom", "cds_id", "cds_name", 
+    "cds_strand", "ensembl", "ensemblprot", "ensembltrans", 
+    "entrez", "enzyme", "evidence", "evidenceall", "exon_chrom", 
+    "exon_id", "exon_name", "exon_rank", "exon_strand", 
+    "gene_chrom", "gene_strand", "genename", "go", "goall", 
+    "ipi", "map", "omim", "ontology", "ontologyall", "pfam", 
+    "pmid", "prosite", "refseq", "symbol", "tx_chrom", "tx_id", 
+    "tx_name", "tx_strand", "tx_type", "unigene", "uniprot")
+
+.INT_FIELDS <- c(
+    "cds_start", "cds_end", "exon_start", "exon_end", 
+    "gene_start", "gene_end", "tx_start", "tx_end")
 
 .filterFactory <- function(field, isCharacter) {
     class <- paste0(sub("([a-z])", "\\U\\1", field, perl=TRUE), "Filter")
@@ -215,15 +219,28 @@ setValidity("BasicFilter", function(object) {
     }
 }
 
+local({
+    for (field in c(.CHAR_FIELDS, .INT_FIELDS))  {
+        class <- paste0(sub("([a-z])", "\\U\\1", field, perl=TRUE), "Filter")
+        setClass(class, contains="BasicFilter", where=topenv())
+        if (field %in% .CHAR_FIELDS)
+            assign(class, .filterFactory(field, TRUE), envir=topenv())
+        else
+            assign(class, .filterFactory(field, FALSE), envir=topenv())
+    }
+})
 
 .field <- function(x) x@field
+
 .condition <- function(x) x@condition
+
 .value <- function(x) {
     if (is(x, "BasicFilter") && !.isCharacter(x))
         as.integer(x@value)
     else
         x@value
 }
+
 .isCharacter <- function(x) x@.valueIsCharacter
 
 
