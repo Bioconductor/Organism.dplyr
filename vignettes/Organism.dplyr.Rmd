@@ -156,6 +156,7 @@ inner_join(tbl(src, "id"), tbl(src, "ranges_gene")) %>%
 ```
 
 ## "select" interface 
+
 Methods `select()`, `keytypes()`, `keys()`, `columns()` and `mapIds` from 
 `r Biocpkg("AnnotationDbi")` are implemented for _src_organism_ objects.
 
