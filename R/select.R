@@ -174,7 +174,7 @@ setMethod("keys", "src_organism", function(x, keytype, ...) {
     do.call(select_, c(list(table), as.list(cnames)))
 }
 
-.select <- function (x, keys, columns, keytype) {
+.select_tbl <- function (x, keys, columns, keytype) {
     if (missing(keys)) {
         stop("'keys' must be a character vector")
     }
@@ -192,6 +192,9 @@ setMethod("keys", "src_organism", function(x, keytype, ...) {
     .selectColumns(x, table, keytype, cnames)
 }
 
+.select <- function(...) {
+    .select_tbl(...) %>% collect(Inf) %>% as.data.frame
+}
  
 #' @importFrom AnnotationDbi select testSelectArgs
 #' 
@@ -205,49 +208,6 @@ setMethod("keys", "src_organism", function(x, keytype, ...) {
 #' 
 #' @export
 setMethod("select", "src_organism", .select)
-
-.mapIds_base <- 
-    function(x, keys, column, keytype, 
-        multiVals = c("first", "filter", "asNA", "list", "CharacterList")) 
-{
-    if (missing(multiVals)) 
-        multiVals <- "first"
-    if (!is.function(multiVals)) 
-        match.arg(multiVals)
-    if (length(keys) < 1) 
-        stop(wmsg("mapIds must have at least one key to match against."))
-    if (length(column) > 1) 
-        stop(wmsg("mapIds can only use one column."))
-    if (length(keytype) > 1) 
-        stop(wmsg("mapIds can only use one keytype."))
-    res <- select(x, 
-                  keys = unique(keys), 
-                  columns = column, 
-                  keytype = keytype) %>% 
-           collect(n=Inf) %>% as.data.frame()
-    res <- split(res[[column]], f = res[[keytype]])[keys]
-    .filter <- function(data) {
-        idx <- elementNROWS(data) == 1
-        unlist(data[idx])
-    }
-    .asNA <- function(data) {
-        idx <- elementNROWS(data) > 1
-        data[idx] <- NA
-        unlist(data)
-    }
-    if (is.function(multiVals)) {
-        sapply(res, FUN = multiVals)
-    }
-    else {
-        switch(multiVals, 
-               list = res, 
-               filter = .filter(res), 
-               asNA = .asNA(res), 
-               CharacterList = as(res, "CharacterList"), 
-               first = sapply(res, function(x) x[[1]])
-               )
-    }
-}
 
 #' @param column character(1) the column to search on, can only have a
 #'     single element for the value
@@ -277,7 +237,7 @@ setMethod("select", "src_organism", .select)
 #'          will always grab the last element in each result: 
 #'          \code{last <- function(x){x[[length(x)]]}}
 #' 
-#' @importFrom AnnotationDbi mapIds
+#' @importFrom AnnotationDbi mapIds mapIds_base
 #' @importFrom IRanges elementNROWS
 #' 
 #' @examples
@@ -288,5 +248,5 @@ setMethod("select", "src_organism", .select)
 #' @export
 setMethod("mapIds", "src_organism", 
 function(x, keys, column, keytype, ..., multiVals) {
-    .mapIds_base(x, keys, column, keytype, ..., multiVals = multiVals)
+    mapIds_base(x, keys, column, keytype, ..., multiVals = multiVals)
 })
