@@ -18,13 +18,14 @@
 #'     Cds_strandFilter EnsemblFilter EnsemblprotFilter EnsembltransFilter
 #'     EntrezFilter EnzymeFilter EvidenceFilter EvidenceallFilter
 #'     Exon_chromFilter Exon_idFilter Exon_nameFilter Exon_rankFilter
-#'     Exon_strandFilter Gene_chromFilter Gene_strandFilter GenenameFilter
-#'     GoFilter GoallFilter IpiFilter MapFilter OmimFilter OntologyFilter
-#'     OntologyallFilter PfamFilter PmidFilter PrositeFilter RefseqFilter
-#'     SymbolFilter Tx_chromFilter Tx_idFilter Tx_nameFilter Tx_strandFilter
-#'     Tx_typeFilter UnigeneFilter UniprotFilter Cds_startFilter Cds_endFilter
-#'     Exon_startFilter Exon_endFilter Gene_startFilter Gene_endFilter
-#'     Tx_startFilter Tx_endFilter
+#'     Exon_strandFilter FlybaseFilter Flybase_cgFilter Flybase_protFilter 
+#'     Gene_chromFilter Gene_strandFilter GenenameFilter GoFilter GoallFilter
+#'     IpiFilter MapFilter MgiFilter OmimFilter OntologyFilter OntologyallFilter
+#'     PfamFilter PmidFilter PrositeFilter RefseqFilter SymbolFilter
+#'     Tx_chromFilter Tx_idFilter Tx_nameFilter Tx_strandFilter Tx_typeFilter
+#'     UnigeneFilter UniprotFilter WormbaseFilter ZfinFilter Cds_startFilter
+#'     Cds_endFilter Exon_startFilter Exon_endFilter Gene_startFilter
+#'     Gene_endFilter Tx_startFilter Tx_endFilter
 #'
 #' @usage AccnumFilter(value, condition = "==")
 #' AliasFilter(value, condition = "==")
@@ -44,6 +45,9 @@
 #' Exon_nameFilter(value, condition = "==")
 #' Exon_rankFilter(value, condition = "==")
 #' Exon_strandFilter(value, condition = "==")
+#' FlybaseFilter(value, condition = "==")
+#' Flybase_cgFilter(value, condition = "==")
+#' Flybase_protFilter(value, condition = "==")
 #' Gene_chromFilter(value, condition = "==")
 #' Gene_strandFilter(value, condition = "==")
 #' GenenameFilter(value, condition = "==")
@@ -51,6 +55,7 @@
 #' GoallFilter(value, condition = "==")
 #' IpiFilter(value, condition = "==")
 #' MapFilter(value, condition = "==")
+#' MgiFilter(value, condition = "==")
 #' OmimFilter(value, condition = "==")
 #' OntologyFilter(value, condition = "==")
 #' OntologyallFilter(value, condition = "==")
@@ -66,6 +71,8 @@
 #' Tx_typeFilter(value, condition = "==")
 #' UnigeneFilter(value, condition = "==")
 #' UniprotFilter(value, condition = "==")
+#' WormbaseFilter(value, condition = "==")
+#' ZfinFilter(value, condition = "==")
 #' Cds_startFilter(value, condition = "==")
 #' Cds_endFilter(value, condition = "==")
 #' Exon_startFilter(value, condition = "==")
@@ -112,11 +119,12 @@
 #' @export Cds_strandFilter EnsemblFilter EnsemblprotFilter EnsembltransFilter
 #' @export EntrezFilter EnzymeFilter EvidenceFilter EvidenceallFilter
 #' @export Exon_chromFilter Exon_idFilter Exon_nameFilter Exon_rankFilter
-#' @export Exon_strandFilter Gene_chromFilter Gene_strandFilter GenenameFilter
-#' @export GoFilter GoallFilter IpiFilter MapFilter OmimFilter OntologyFilter
+#' @export Exon_strandFilter FlybaseFilter Flybase_cgFilter Flybase_protFilter
+#' @export Gene_chromFilter Gene_strandFilter GenenameFilter GoFilter
+#' @export GoallFilter IpiFilter MapFilter MgiFilter OmimFilter OntologyFilter
 #' @export OntologyallFilter PfamFilter PmidFilter PrositeFilter RefseqFilter
-#' @export SymbolFilter Tx_chromFilter Tx_idFilter Tx_nameFilter
-#' @export Tx_strandFilter Tx_typeFilter UnigeneFilter UniprotFilter
+#' @export SymbolFilter Tx_chromFilter Tx_idFilter Tx_nameFilter Tx_strandFilter
+#' @export Tx_typeFilter UnigeneFilter UniprotFilter WormbaseFilter ZfinFilter
 #' @export Cds_startFilter Cds_endFilter Exon_startFilter Exon_endFilter
 #' @export Gene_startFilter Gene_endFilter Tx_startFilter Tx_endFilter
 #' @rdname BasicFilter
@@ -183,6 +191,10 @@ setValidity("BasicFilter", function(object) {
         txt <- c(txt,
                  paste0("'value' must be length 1 when condition is '",
                         condition, "'"))
+    if (condition  %in% c("startsWith", "endsWith") && !isCharacter)
+        txt <- c(txt,
+                 paste0("'", condition,
+                        "' can only work with character value"))
     if (condition  %in% c(">", "<", ">=", "<=") && isCharacter)
         txt <- c(txt,
                  paste0("'", condition,
@@ -193,18 +205,18 @@ setValidity("BasicFilter", function(object) {
 .OPS <- c("==", "!=", "startsWith", "endsWith", ">", "<", ">=", "<=")
 
 .CHAR_FIELDS <- c(
-    "accnum", "alias", "cds_chrom", "cds_id", "cds_name",
-    "cds_strand", "ensembl", "ensemblprot", "ensembltrans",
-    "entrez", "enzyme", "evidence", "evidenceall", "exon_chrom",
-    "exon_id", "exon_name", "exon_rank", "exon_strand",
-    "gene_chrom", "gene_strand", "genename", "go", "goall",
-    "ipi", "map", "omim", "ontology", "ontologyall", "pfam",
-    "pmid", "prosite", "refseq", "symbol", "tx_chrom", "tx_id",
-    "tx_name", "tx_strand", "tx_type", "unigene", "uniprot")
+    "accnum", "alias", "cds_chrom", "cds_id", "cds_name", "cds_strand",
+    "ensembl", "ensemblprot", "ensembltrans", "entrez", "enzyme", "evidence",
+    "evidenceall", "exon_chrom", "exon_id", "exon_name", "exon_rank", 
+    "exon_strand", "flybase", "flybase_cg", "flybase_prot", "gene_chrom",
+    "gene_strand", "genename", "go", "goall", "ipi", "map", "mgi", "omim",
+    "ontology", "ontologyall", "pfam", "pmid", "prosite", "refseq", "symbol",
+    "tx_chrom", "tx_id", "tx_name", "tx_strand", "tx_type", "unigene",
+    "uniprot", "wormbase", "zfin")
 
 .INT_FIELDS <- c(
-    "cds_start", "cds_end", "exon_start", "exon_end",
-    "gene_start", "gene_end", "tx_start", "tx_end")
+    "cds_start", "cds_end", "exon_start", "exon_end", "gene_start", "gene_end",
+    "tx_start", "tx_end")
 
 .filterFactory <- function(field, isCharacter) {
     class <- paste0(sub("([a-z])", "\\U\\1", field, perl=TRUE), "Filter")
@@ -227,6 +239,7 @@ setValidity("BasicFilter", function(object) {
     }
 }
 
+## create filter functions
 local({
     for (field in c(.CHAR_FIELDS, .INT_FIELDS))  {
         class <- paste0(sub("([a-z])", "\\U\\1", field, perl=TRUE), "Filter")

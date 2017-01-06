@@ -53,7 +53,7 @@
 #'     \code{src_organism} object.
 #'     
 #' @importFrom AnnotationDbi keytypes
-#' @rdname select-src_organism-method
+#' @rdname select
 #' 
 #' @examples
 #' src <- src_organism("TxDb.Hsapiens.UCSC.hg38.knownGene")
@@ -65,7 +65,7 @@
 setMethod("keytypes", "src_organism", .getFields)
 
 #' @importFrom AnnotationDbi columns
-#' @rdname select-src_organism-method
+#' @rdname select
 #' 
 #' @examples 
 #' ## columns
@@ -123,7 +123,7 @@ setMethod("columns", "src_organism", .getFields)
 #' ## keys
 #' keys(src, "entrez")
 #' 
-#' @rdname select-src_organism-method
+#' @rdname select
 #' @export
 setMethod("keys", "src_organism", function(x, keytype, ...) {
     if (missing(keytype)) 
@@ -148,14 +148,19 @@ setMethod("keys", "src_organism", function(x, keytype, ...) {
 .selectColumns <- function(x, table, keytype, cnames) {
     maintbl <- .findTable(x, keytype)
     tbls <- setdiff(src_tbls(x), maintbl)
-    fields <- setdiff(cnames, keytype)
-    fields <- setdiff(fields, colnames(table))
+    fields <- setdiff(cnames, colnames(table))
+    
+    if ("tx_id" %in% fields) {
+        table <- left_join(table, tbl(x, "ranges_tx"))
+        tbls <- setdiff(tbls, "ranges_tx")
+        fields <- setdiff(fields, colnames(table))
+    }
     
     for (i in tbls) {
         keep <- fields[fields %in% colnames(tbl(x, i))]
         if (is.null(keep) || length(keep) == 0)
             next
-
+        
         if (all(c("tx_id", "exon_rank") %in% colnames(table)) && 
             all(c("tx_id", "exon_rank") %in% colnames(tbl(x, i)))) {
             table <- left_join(table, tbl(x, i), by = c("tx_id", "exon_rank"))
@@ -174,7 +179,9 @@ setMethod("keys", "src_organism", function(x, keytype, ...) {
     do.call(select_, c(list(table), as.list(cnames)))
 }
 
-.select_tbl <- function (x, keys, columns, keytype) {
+#' @rdname select
+#' @export
+select_tbl <- function (x, keys, columns, keytype) {
     if (missing(keys)) {
         stop("'keys' must be a character vector")
     }
@@ -192,8 +199,8 @@ setMethod("keys", "src_organism", function(x, keytype, ...) {
     .selectColumns(x, table, keytype, cnames)
 }
 
-.select <- function(...) {
-    .select_tbl(...) %>% collect(Inf) %>% as.data.frame
+.select <- function (x, keys, columns, keytype) {
+    select_tbl(x, keys, columns, keytype) %>% collect(Inf) %>% as.data.frame
 }
  
 #' @importFrom AnnotationDbi select testSelectArgs
@@ -204,8 +211,10 @@ setMethod("keys", "src_organism", function(x, keytype, ...) {
 #' columns <- c("entrez", "tx_id", "tx_name","exon_id")
 #' 
 #' ## select
+#' select_tbl(src, keys, columns, keytype)
 #' select(src, keys, columns, keytype)
 #' 
+#' @rdname select
 #' @export
 setMethod("select", "src_organism", .select)
 
@@ -244,7 +253,7 @@ setMethod("select", "src_organism", .select)
 #' ## mapIds
 #' mapIds(src, keys, column = "tx_name", keytype)
 #' 
-#' @rdname select-src_organism-method
+#' @rdname select
 #' @export
 setMethod("mapIds", "src_organism", 
 function(x, keys, column, keytype, ..., multiVals) {

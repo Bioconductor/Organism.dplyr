@@ -67,8 +67,8 @@ Organism name (either Organism or common name) must be provided to create the
 database, if genome and/or id are not provided, most recent 'TxDb' package is 
 used.
 
-```{r}
-src <- src_ucsc("human")
+```{r, eval=FALSE}
+src <- src_ucsc("human", "path/to/save/sqlite")
 ```
 
 ## Access existing sqlite file 
@@ -77,8 +77,8 @@ Existing on disk sqlite file can be accessed without recreating the database.
 
 ```{r}
 path <- system.file("extdata", package = "Organism.dplyr")
-src1 <- src_organism(dbpath = paste0(path, "/example.sqlite"))
-src1
+src <- src_organism(dbpath = paste0(path, "/example.sqlite"))
+src
 ```
 
 # Common operations
@@ -121,14 +121,13 @@ inner_join(tbl(src, "id"), tbl(src, "id_go")) %>%
     dplyr::select(entrez, ensembl, symbol, go, evidence, ontology)
 ```
 
-3. Genes with more than 100 transcripts
+3. Genes transcripts count
 
 ```{r}
 txcount <- inner_join(tbl(src, "id"), tbl(src, "ranges_tx")) %>% 
     dplyr::select(symbol, tx_id) %>% 
     group_by(symbol) %>% 
     summarise(count = count(symbol)) %>% 
-    filter(count > 100) %>% 
     dplyr::select(symbol, count) %>% 
     arrange(desc(count)) %>% 
     collect(n=Inf)
@@ -200,14 +199,15 @@ head(keys(src, "symbol"))
 
 `select()` retrieves the data as a _tibble_ based on parameters for selected 
 keys columns and keytype arguments. If requested columns that have multiple 
-matches for the keys, `select()` will return a _tibble_ with one row for each 
-possible match. 
+matches for the keys, `select_tbl()` will return a _tibble_ with one row for
+each possible match, and `select()` will return a data frame.
+ 
 
 ```{r}
 keytype <- "symbol"
 keys <- c("PTEN", "BRCA1")
 columns <- c("entrez", "tx_id", "tx_name","exon_id")
-select(src, keys, columns, keytype)
+select_tbl(src, keys, columns, keytype)
 ```
 
 ### `mapIds()`
@@ -229,9 +229,25 @@ are provided: _tibble_ (`transcripts_tbl()`) and _GRanges_ or _GRangesList_
 (`transcripts()`). 
 
 Filter can be applied to all extractor functions. A named list of vectors can 
-be used to restrict the output, valid names come from any field name from 
-tables displayed by `src_tbls()`. Besides, 'granges' could also be used as 
-filter for the methods with result displaying as _GRanges_ or _GRangesList_. 
+be used to restrict the output, valid filters can be retrieved by 
+`possibleFilters()`. 
+
+```{r}
+possibleFilters()
+```
+
+All filters take two parameters: value and condition, condition could be one of 
+"==", "!=", "startsWith", "endsWith", ">", "<", ">=" and "<=", default 
+condition is "==".
+
+```{r}
+EnsemblFilter("ENSG00000171862")
+SymbolFilter("BRCA", "startsWith")
+```
+
+
+Besides, `GRangesFilter()` could also be used as filter for the methods with 
+result displaying as _GRanges_ or _GRangesList_. 
 
 ```{r}
 filters <- list(SymbolFilter(c("PTEN", "BRCA1")),
@@ -241,10 +257,15 @@ transcripts_tbl(src, filter=filters)
 transcripts(src, filter=filters)
 ```
 
-Transcript coordinates of all gene symbols start with "BRCA"
+Transcript coordinates of gene symbol equal to "PTEN" or "BRCA1", and transcript
+start position between 87863438 and 87933487. 
 
 ```{r}
-transcripts(src, filter = list(SymbolFilter("BRCA", "startsWith")))
+transcripts_tbl(src, filter = list(
+    SymbolFilter(c("PTEN", "BRCA1")),
+    Tx_startFilter(87863438,">="),
+    Tx_startFilter(87933487, "<=")
+))
 ```
 
 

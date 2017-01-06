@@ -7,6 +7,7 @@
 \alias{keytypes,src_organism-method}
 \alias{mapIds,src_organism-method}
 \alias{select,src_organism-method}
+\alias{select_tbl}
 \title{Using the "select" interface on src_organism objects}
 \usage{
 \S4method{keytypes}{src_organism}(x)
@@ -14,6 +15,8 @@
 \S4method{columns}{src_organism}(x)
 
 \S4method{keys}{src_organism}(x, keytype, ...)
+
+select_tbl(x, keys, columns, keytype)
 
 \S4method{select}{src_organism}(x, keys, columns, keytype)
 
@@ -115,6 +118,7 @@ keys <- c("PTEN", "BRCA1")
 columns <- c("entrez", "tx_id", "tx_name","exon_id")
 
 ## select
+select_tbl(src, keys, columns, keytype)
 select(src, keys, columns, keytype)
 
 ## mapIds

@@ -40,6 +40,5 @@ RoxygenNote: 5.0.1
 Collate:
     src.R
     filter.R
-    zzz.R
     extractors.R
     select.R

@@ -75,7 +75,7 @@ threeUTRsByTranscript_tbl(x, filter = NULL)
 \item{x}{A \code{src_organism} object}
 
 \item{filter}{Either NULL or a named list of vectors to be used to
-restrict the output. Filter can also be a \code{\link{GRanges}} object 
+restrict the output. Filter can also be a \code{\link{GRanges}} object
 using "GRangesFilter" (see examples).}
 
 \item{upstream}{For \code{promoters()}: An integer(1) value indicating
@@ -87,20 +87,20 @@ the number of bases downstream from the transcription start site.}
 \item{by}{One of "gene", "exon", "cds" or "tx". Determines the grouping.}
 }
 \value{
-functions with \code{_tbl} return a \code{\link[tibble]{tibble}} 
-    object, other methods return a \code{\link{GRanges}} or 
+functions with \code{_tbl} return a \code{\link[tibble]{tibble}}
+    object, other methods return a \code{\link{GRanges}} or
     \code{\link{GRangesList}} object.
 }
 \description{
-Generic functions to extract genomic features from an object. This page 
+Generic functions to extract genomic features from an object. This page
 documents the methods for \code{\link{src_organism}} objects only.
 }
 \details{
-These are the main functions for extracting transcript information from a 
-\code{\link{src_organism}} object, inherited from 
-\code{\link[GenomicFeatures]{transcripts}} in \code{GenomicFeatures} 
+These are the main functions for extracting transcript information from a
+\code{\link{src_organism}} object, inherited from
+\code{\link[GenomicFeatures]{transcripts}} in \code{GenomicFeatures}
 package. Two versions of results are provided: \code{\link[tibble]{tibble}}
-(\code{transcripts_tbl()}) and \code{\link{GRanges}} or 
+(\code{transcripts_tbl()}) and \code{\link{GRanges}} or
 \code{\link{GRangesList}} (\code{transcripts()}).
 }
 \examples{
@@ -108,18 +108,18 @@ src <- src_ucsc("human")
 
 ## transcript coordinates with filter in tibble format
 filters <- list(SymbolFilter(c("PTEN", "BRCA1")),
-                SymbolFilter("BRCA", "startsWith"), 
+                SymbolFilter("BRCA", "startsWith"),
                 GoFilter(c("GO:0000729", "GO:0000731")))
 transcripts_tbl(src, filters)
 
 transcripts_tbl(src, filter=list(
-     SymbolFilter(c("PTEN", "BRCA1")), 
-     Tx_startFilter(87863438,">"), 
+     SymbolFilter(c("PTEN", "BRCA1")),
+     Tx_startFilter(87863438,">"),
      Tx_endFilter(87933487, "<")))
 
 ## transcript coordinates with filter in granges format
-filters <- list(SymbolFilter(c("PTEN", "BRCA1")), 
-                EntrezFilter(5728), 
+filters <- list(SymbolFilter(c("PTEN", "BRCA1")),
+                EntrezFilter(5728),
                 GRangesFilter(as("chr10:87869000-87876000", "GRanges")))
 transcripts(src, filters)
 
@@ -141,7 +141,7 @@ fiveUTRsByTranscript(src, filter = list(SymbolFilter("PTEN")))
 
 }
 \seealso{
-\code{\link{src_organism}} for creating a \code{src_organism} 
+\code{\link{src_organism}} for creating a \code{src_organism}
     object.
 }
 
