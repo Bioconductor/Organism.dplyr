@@ -59,8 +59,8 @@
 \alias{UniprotFilter}
 \alias{WormbaseFilter}
 \alias{ZfinFilter}
-\alias{possibleFilters}
 \alias{show,BasicFilter-method}
+\alias{supportedFilters}
 \title{Functions for filter objects}
 \usage{
 AccnumFilter(value, condition = "==")
@@ -122,7 +122,7 @@ GRangesFilter(value)
 
 \S4method{show}{BasicFilter}(object)
 
-possibleFilters()
+supportedFilters()
 }
 \arguments{
 \item{value}{Value of the filter. For \code{GRangesFilter} vaule should be a

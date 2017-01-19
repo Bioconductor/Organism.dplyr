@@ -307,7 +307,7 @@ setMethod("show", "BasicFilter", function(object){
 
 #' @rdname BasicFilter
 #' @export
-possibleFilters <- function() {
+supportedFilters <- function() {
     paste0(sub("([a-z])", "\\U\\1", c(.CHAR_FIELDS, .INT_FIELDS),
                perl=TRUE), "Filter")
 }
