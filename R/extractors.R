@@ -10,6 +10,10 @@
         stopifnot(is(i, "BasicFilter"))
 
     fields <- .fields(filter)
+    
+    if (!all(fields %in% columns(x))) 
+        stop(paste0("'", fields[!(fields %in% columns(x))], "'", 
+                    collapse = ","), " filter not available")
 
     ## filter by fields from main table
     keep <- unique(fields[fields %in% colnames(table)])
@@ -140,6 +144,8 @@ transcripts_tbl <- function(x, filter = NULL) {
 }
 
 
+#' @importFrom GenomicRanges GRanges
+#' 
 #' @examples
 #' ## transcript coordinates with filter in granges format
 #' filters <- list(SymbolFilter(c("PTEN", "BRCA1")),

@@ -260,7 +260,7 @@ local({
 .isCharacter <- function(x) x@.valueIsCharacter
 
 
-#' @param object A \code{src_organism} object
+#' @param object A \code{BasicFilter} object
 #'
 #' @rdname BasicFilter
 #' @export

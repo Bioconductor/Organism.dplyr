@@ -38,18 +38,6 @@ test_that("src_ucsc_constructor", {
 })
 
 test_that("mouse", {
-    ## test knownGene
-    library(TxDb.Mmusculus.UCSC.mm10.knownGene)
-    txdb <- TxDb.Mmusculus.UCSC.mm10.knownGene
-    src <- src_ucsc("mouse", id = "knownGene")
-    
-    tx_src <- transcriptsBy(src)
-    tx_txdb <- transcriptsBy(txdb)
-    
-    expect_equal(is(src, "src_organism"), TRUE)
-    expect_equal(length(tx_src), length(tx_txdb))
-    expect_equal(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)), TRUE)
-    
     ## test ensGene no filter
     library(TxDb.Mmusculus.UCSC.mm10.ensGene)
     txdb <- TxDb.Mmusculus.UCSC.mm10.ensGene

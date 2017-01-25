@@ -35,7 +35,13 @@ created.
 ```{r, echo=FALSE}
 suppressPackageStartupMessages({
     library(Organism.dplyr)
+    library(GenomicRanges)
     library(ggplot2)
+})
+```
+
+```{r, eval=FALSE}
+library(Organism.dplyr)
 })
 ```
 
@@ -236,7 +242,7 @@ be used to restrict the output, valid filters can be retrieved by
 supportedFilters()
 ```
 
-All filters take two parameters: value and condition, condition could be one of 
+All filters take two parameters: value and condition, condition could be one of
 "==", "!=", "startsWith", "endsWith", ">", "<", ">=" and "<=", default 
 condition is "==".
 
@@ -245,20 +251,19 @@ EnsemblFilter("ENSG00000171862")
 SymbolFilter("BRCA", "startsWith")
 ```
 
-
 Besides, `GRangesFilter()` could also be used as filter for the methods with 
 result displaying as _GRanges_ or _GRangesList_. 
 
 ```{r}
 filters <- list(SymbolFilter(c("PTEN", "BRCA1")),
                 EntrezFilter(5728), 
-                GRangesFilter(GRanges("chr10:87869000-87876000")))
+                GRangesFilter(as("chr10:87869000-87876000", "GRanges")))
 transcripts_tbl(src, filter=filters)
 transcripts(src, filter=filters)
 ```
 
-Transcript coordinates of gene symbol equal to "PTEN" or "BRCA1", and transcript
-start position between 87863438 and 87933487. 
+Transcript coordinates of gene symbol equal to "PTEN" or "BRCA1", and 
+transcript start position between 87863438 and 87933487. 
 
 ```{r}
 transcripts_tbl(src, filter = list(

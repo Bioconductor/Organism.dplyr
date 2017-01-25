@@ -128,7 +128,7 @@ supportedFilters()
 \item{value}{Value of the filter. For \code{GRangesFilter} vaule should be a
 \code{GRanges} object.}
 
-\item{object}{A \code{src_organism} object}
+\item{object}{A \code{BasicFilter} object}
 
 \item{condition}{The condition to be used in filter for genomic extractors,
 one of "==", "!=", "startsWith", "endsWith", ">", "<", ">=", "<=".  For
