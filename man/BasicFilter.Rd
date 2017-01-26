@@ -125,34 +125,38 @@ GRangesFilter(value)
 supportedFilters()
 }
 \arguments{
-\item{value}{Value of the filter. For \code{GRangesFilter} vaule should be a
+\item{value}{Value of the filter. For \code{GRangesFilter} value should be a
 \code{GRanges} object.}
 
 \item{object}{A \code{BasicFilter} object}
 
 \item{condition}{The condition to be used in filter for genomic extractors,
 one of "==", "!=", "startsWith", "endsWith", ">", "<", ">=", "<=".  For
-character values "==", "!=", "startsWith" and "endsWith" are allowed, for
-numeric values (\code{Cds_startFilter}, \code{Cds_endFilter},
-\code{Exon_startFilter}, \code{Exon_endFilter}, \code{Gene_startFilter},
-\code{Gene_endFilter}, \code{Tx_startFilter} and \code{Tx_endFilte}),
-"==", "!=", ">", ">=", "<" and "<=". Default condition is "==".}
+character values "==", "!=", "startsWith" and "endsWith" are allowed, 
+for numeric values (\code{Cds_startFilter}, \code{Cds_endFilter},
+\code{Exon_startFilter}, \code{Exon_endFilter}, 
+\code{Gene_startFilter}, \code{Gene_endFilter}, \code{Tx_startFilter} 
+and \code{Tx_endFilte}), "==", "!=", ">", ">=", "<" and "<=". Default 
+condition is "==".}
+}
+\value{
+an object showing class, value and condition of the filter
 }
 \description{
 These functions are used to create filters for genomic extrators.
 }
 \details{
 All these filters except \code{GRangesFilter()} extend \code{BasicFilter}
-class. Each filter takes value(s) from the corresponding column. For example,
-\code{AccnumFilter()} takes value of accession number(s), which come from
-column \code{accnum}.
+class. Each filter takes value(s) from the corresponding column. For 
+example, \code{AccnumFilter()} takes value of accession number(s), which 
+come from column \code{accnum}.
 
 \code{GRangesFilter()} takes a \code{GRanges} object as filter, and returns
 genomic extractors (\code{genes}, \code{transcripts}, etc.) that are
 partially overlapping with the region.
 
-\code{possibleFilters()} lists all available filters for \code{src_organism}
-object.
+\code{supportedFilters()} lists all available filters for 
+\code{src_organism} object.
 }
 \examples{
 ## filter by ensembl

@@ -93,7 +93,9 @@
 #'     \code{Gene_startFilter}, \code{Gene_endFilter}, \code{Tx_startFilter} 
 #'     and \code{Tx_endFilte}), "==", "!=", ">", ">=", "<" and "<=". Default 
 #'     condition is "==".
-#'
+#' 
+#' @return an object showing class, value and condition of the filter
+#' 
 #' @seealso \code{\link{src_organism}} for creating a \code{src_organism}
 #'     object.
 #'

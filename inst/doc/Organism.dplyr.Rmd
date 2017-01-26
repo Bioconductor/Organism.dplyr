@@ -12,11 +12,11 @@ vignette: >
 # Introduction
 
 The `r Biocpkg("Organism.dplyr")` creates an on disk sqlite database to hold 
-data of an organism combined from an 'org' package (e.g., org.Hs.eg.db) and a
-genome coordinate functionality of the 'TxDb' package (e.g., 
-`r Biocpkg("TxDb.Hsapiens.UCSC.hg38.knownGene")`). It aims to provide an 
-integrated presentation of identifiers and genomic coordinates. And a 
-_src_organism_ object is created to point to the database. 
+data of an organism combined from an 'org' package (e.g., 
+`r Biocpkg("org.Hs.eg.db")`) and a genome coordinate functionality of the 
+'TxDb' package (e.g., `r Biocpkg("TxDb.Hsapiens.UCSC.hg38.knownGene")`). It 
+aims to provide an integrated presentation of identifiers and genomic 
+coordinates. And a _src_organism_ object is created to point to the database. 
 
 The _src_organism_ object is created as an extension of _src_sql_ and 
 _src_sqlite_ from [dplyr][], which inherited all [dplyr][] methods. It also 
