@@ -528,8 +528,9 @@ function(x, filter=NULL) {
         c("exon_chrom", "exon_start", "exon_end", "exon_strand", "tx_id",
           "exon_id", .filter_names(filter)))
     exn_grl <- do.call(select_, c(list(table), as.list(fields))) %>%
-        as("GRanges") %>% split(.$tx_id)
-
+        as("GRanges")
+    exn_grl <- split(exn_grl, exn_grl$tx_id)
+    
     tx_gr<- tx_gr[match(names(exn_grl), mcols(tx_gr)[, "tx_id"])]
     ans <- psetdiff(tx_gr, exn_grl)
     ans
@@ -540,10 +541,10 @@ function(x, filter=NULL) {
     exon <- .exons(x, filter=filter)
     cds <- .cds(x, filter=filter)
 
-    exon_txid <- exon %>% dplyr::select_(~ tx_id) %>%
-        collect(n = Inf) %>% .[["tx_id"]]
-    cds_txid <- cds %>% dplyr::select_(~ tx_id) %>% collect(n = Inf) %>%
-        .[["tx_id"]]
+    exon_txid <- exon %>% dplyr::select_(~ tx_id) %>% collect(n = Inf)
+    exon_txid <- exon_txid[["tx_id"]]
+    cds_txid <- cds %>% dplyr::select_(~ tx_id) %>% collect(n = Inf)
+    cds_txid <- cds_txid[["tx_id"]]
     exclude <- setdiff(exon_txid, cds_txid)
 
     table <- left_join(exon, cds,
