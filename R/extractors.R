@@ -95,7 +95,7 @@
         c("tx_chrom", "tx_start", "tx_end", "tx_strand",
           "tx_id", "tx_name", .filter_names(filter)))
     do.call(select_, c(list(table), as.list(fields))) %>%
-        arrange(tx_id)
+        arrange_(~ tx_id)
 }
 
 
@@ -178,7 +178,7 @@ setMethod("transcripts", "src_organism", function(x, filter = NULL) {
     keep <- .keep(filter, fields, fields_remove)
 
     table <- .exons(x, filter)
-    do.call(select_, c(list(table), as.list(keep))) %>% arrange(exon_id)
+    do.call(select_, c(list(table), as.list(keep))) %>% arrange_(~ exon_id)
 }
 
 #' @rdname transcripts_tbl
@@ -212,7 +212,7 @@ setMethod("exons", "src_organism", function(x, filter = NULL) {
     keep <- .keep(filter, fields, fields_remove)
 
     table <- .cds(x, filter)
-    do.call(select_, c(list(table), as.list(keep))) %>% arrange(cds_id)
+    do.call(select_, c(list(table), as.list(keep))) %>% arrange_(~ cds_id)
 }
 
 #' @rdname transcripts_tbl
@@ -279,20 +279,20 @@ setMethod("genes", "src_organism", function(x, filter = NULL) {
         downstream = 2200
 
     table <- .transcripts_tbl(x, filter = filter) %>%
-        mutate(start = ifelse(tx_strand == "-",
+        mutate_(start = ~ ifelse(tx_strand == "-",
                               tx_end - downstream + 1,
                               tx_start - upstream),
-               end = ifelse(tx_strand == "-",
+               end = ~ ifelse(tx_strand == "-",
                             tx_end + upstream,
                             tx_start + downstream - 1)) %>% collect(n=Inf)
 
-    table <- rename(table, chrom = tx_chrom)
-    table <- rename(table, strand = tx_strand)
+    table <- rename_(table, chrom = ~ tx_chrom)
+    table <- rename_(table, strand = ~ tx_strand)
 
     fields <- unique(
         c("chrom", "start", "end", "strand", "tx_id", "tx_name",
           .filter_names(filter)))
-    do.call(select_, c(list(table), as.list(fields))) %>% arrange(tx_id)
+    do.call(select_, c(list(table), as.list(fields))) %>% arrange_(~ tx_id)
 }
 
 #' @param upstream For \code{promoters()}: An integer(1) value indicating
@@ -360,7 +360,7 @@ function(x, upstream, downstream, filter = NULL) {
               "exon_id", "tx_id", "tx_name", "exon_rank",
               .filter_names(filter)))
         do.call(select_, c(list(table), as.list(fields))) %>%
-            arrange(exon_id)
+            arrange_(~ exon_id)
     }
     else if (by == "cds") {
         table <- left_join(tx, tbl(x, "ranges_cds"))
@@ -369,7 +369,7 @@ function(x, upstream, downstream, filter = NULL) {
               "cds_id", "tx_id", "tx_name", "exon_rank",
               .filter_names(filter)))
         do.call(select_, c(list(table), as.list(fields))) %>%
-            arrange(cds_id)
+            arrange_(~ cds_id)
     }
 }
 
@@ -408,7 +408,7 @@ function(x, by = c("gene", "exon", "cds"), filter = NULL) {
               "tx_id", "exon_id", "exon_name", "exon_rank",
               .filter_names(filter)))
         do.call(select_, c(list(table), as.list(fields))) %>%
-            arrange(tx_id)
+            arrange_(~ tx_id)
     }
     else if (by == "gene") {
         table <- inner_join(exons, tbl(x, "ranges_gene"))
@@ -452,7 +452,7 @@ function(x, by = c("tx", "gene"), filter = NULL) {
               "tx_id", "cds_id", "cds_name", "exon_rank",
               .filter_names(filter)))
         do.call(select_, c(list(table), as.list(fields))) %>%
-            arrange(tx_id)
+            arrange_(~ tx_id)
     }
     else if (by == "gene") {
         table <- inner_join(cds, tbl(x, "ranges_gene"))
@@ -490,9 +490,12 @@ intronsByTranscript_tbl <-
 function(x, filter = NULL) {
     ans <- unlist(intronsByTranscript(x, filter))
     mcols(ans)[, "tx_id"] <- names(ans)
-    unname(unlist(ans)) %>% as.data.frame %>% tbl_df %>%
-        dplyr::select(tx_id, intron_chrom=seqnames, intron_start=start,
-                      intron_end=end, intron_strand=strand)
+    unname(unlist(ans)) %>% as.data.frame %>% tbl_df %>% 
+        dplyr::select_(.dots = c('tx_id', 
+                          intron_chrom = 'seqnames', 
+                          intron_start = 'start', 
+                          intron_end = 'end', 
+                          intron_strand = 'strand'))
 }
 
 #' @examples
@@ -537,9 +540,9 @@ function(x, filter=NULL) {
     exon <- .exons(x, filter=filter)
     cds <- .cds(x, filter=filter)
 
-    exon_txid <- exon %>% dplyr::select(tx_id) %>%
+    exon_txid <- exon %>% dplyr::select_(~ tx_id) %>%
         collect(n = Inf) %>% .[["tx_id"]]
-    cds_txid <- cds %>% dplyr::select(tx_id) %>% collect(n = Inf) %>%
+    cds_txid <- cds %>% dplyr::select_(~ tx_id) %>% collect(n = Inf) %>%
         .[["tx_id"]]
     exclude <- setdiff(exon_txid, cds_txid)
 
@@ -554,7 +557,7 @@ function(x, filter=NULL) {
         collect(n=Inf)
 
     if(length(exclude) != 0)
-        splicings <- splicings %>% filter(!tx_id %in% exclude)
+        splicings <- splicings %>% filter_(~ !tx_id %in% exclude)
     splicings
 }
 
@@ -571,24 +574,24 @@ function(x, filter=NULL) {
     splicings <- S4Vectors:::extract_data_frame_rows(splicings, idx)
 
     table <- splicings %>%
-        mutate(start =
+        mutate_(start = ~ 
                    ifelse(!is.na(cds_id) & exon_strand == strand1,
                           cds_end + 1L,
                           exon_start),
-               end =
+               end = ~ 
                    ifelse(!is.na(cds_id) & exon_strand == strand2,
                           cds_start - 1L,
                           exon_end)) %>%
-        filter(start <= end) %>% collect(n=Inf) %>% tbl_df
+        filter_(~ start <= end) %>% collect(n=Inf) %>% tbl_df
 
-    table <- dplyr::rename(table, chrom = exon_chrom)
-    table <- dplyr::rename(table, strand = exon_strand)
+    table <- rename_(table, chrom = ~ exon_chrom)
+    table <- rename_(table, strand = ~ exon_strand)
 
     fields <- unique(
         c("chrom", "start", "end", "strand", "tx_id", "exon_id", "exon_name",
           "exon_rank", .filter_names(filter)))
     do.call(select_, c(list(table), as.list(fields))) %>%
-        arrange(tx_id, exon_rank)
+        arrange_(~ tx_id, ~ exon_rank)
 }
 
 .fiveUTRsByTranscript_tbl <- function(x, filter = NULL) {

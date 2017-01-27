@@ -264,7 +264,8 @@ local({
 
 
 #' @param object A \code{BasicFilter} object
-#'
+#' 
+#' @importFrom methods show
 #' @rdname BasicFilter
 #' @export
 setMethod("show", "BasicFilter", function(object){

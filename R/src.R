@@ -37,9 +37,9 @@
 #' 
 #' @importFrom  dplyr %>% arrange arrange_ as.tbl build_sql collect compute 
 #'     desc distinct distinct_ filter filter_ full_join group_by group_by_ 
-#'     is.tbl left_join mutate mutate_ order_by rename rename_ right_join 
-#'     select_ src src_sql src_sqlite src_tbls summarise summarise_ summarize 
-#'     summarize_ tbl tbl_df tbl_sql union union_all 
+#'     inner_join is.tbl left_join mutate mutate_ order_by rename rename_ 
+#'     right_join select_ src src_sql src_sqlite src_tbls summarise summarise_ 
+#'     summarize summarize_ tbl tbl_df tbl_sql union union_all 
 #' @importFrom RSQLite dbGetQuery dbConnect dbDisconnect SQLite
 #'     dbWriteTable dbListTables
 #' @importFrom S4Vectors metadata
@@ -363,12 +363,12 @@ tbl.src_organism <- function(src, ...) {
 
 setOldClass("src_organism")
 
-.getSeqinfo <- function(x, gr) {
-    seqinfo <- transform(tbl(x, "seqinfo") %>% collect(n=Inf), 
-                         seqnames = as.character(seqnames), 
-                         seqlengths = as.integer(seqlengths),
-                         isCircular = as.logical(isCircular),
-                         genome = as.character(genome))
+.getSeqinfo <- function(x) {
+    seqinfo <- mutate_(tbl(x, "seqinfo") %>% collect(n=Inf), 
+                       seqnames = ~ as.character(seqnames), 
+                       seqlengths = ~ as.integer(seqlengths),
+                       isCircular = ~ as.logical(isCircular),
+                       genome = ~ as.character(genome))
     Seqinfo(seqnames=seqinfo[[1]], seqlengths=seqinfo[[2]], 
             isCircular=seqinfo[[3]], genome=seqinfo[[4]])
 }

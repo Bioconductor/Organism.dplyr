@@ -171,9 +171,9 @@ setMethod("keys", "src_organism", function(x, keytype, ...) {
             table <- left_join(table, tbl(x, i))
         }
         if ("entrez.x" %in% colnames(table))
-            table <- rename(table, entrez = entrez.x)
+            table <- rename_(table, entrez = ~ entrez.x)
         else if ("ensembl.x" %in% colnames(table))
-            table <- rename(table, ensembl = ensembl.x)
+            table <- rename_(table, ensembl = ~ ensembl.x)
         fields <- setdiff(fields, keep)
     }
     do.call(select_, c(list(table), as.list(cnames)))
