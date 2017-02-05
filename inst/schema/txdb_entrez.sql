@@ -9,7 +9,7 @@ FROM txdb_entrez.gene
 JOIN txdb_entrez.transcript ON transcript._tx_id = gene._tx_id
 GROUP BY entrez, tx_chrom, tx_strand;
 
-CREATE INDEX IF NOT EXISTS entrez_ranges_gene on ranges_gene (entrez); 
+CREATE INDEX IF NOT EXISTS entrez_ranges_gene ON ranges_gene (entrez); 
 
 CREATE TABLE IF NOT EXISTS ranges_tx AS
 SELECT DISTINCT
@@ -24,9 +24,9 @@ SELECT DISTINCT
 FROM txdb_entrez.transcript
 LEFT OUTER JOIN txdb_entrez.gene ON transcript._tx_id = gene._tx_id;
 
-CREATE INDEX IF NOT EXISTS entrez_ranges_tx on ranges_tx (entrez); 
+CREATE INDEX IF NOT EXISTS entrez_ranges_tx ON ranges_tx (entrez); 
 
-CREATE INDEX IF NOT EXISTS txid_ranges_tx on ranges_tx (tx_id);
+CREATE INDEX IF NOT EXISTS txid_ranges_tx ON ranges_tx (tx_id);
 
 CREATE TABLE IF NOT EXISTS ranges_exon AS
 SELECT DISTINCT
@@ -44,11 +44,11 @@ JOIN txdb_entrez.splicing ON exon._exon_id = splicing._exon_id
 JOIN txdb_entrez.transcript ON splicing._tx_id = transcript._tx_id
 LEFT OUTER JOIN txdb_entrez.gene ON transcript._tx_id = gene._tx_id;
 
-CREATE INDEX IF NOT EXISTS entrez_ranges_exon on ranges_exon (entrez); 
+CREATE INDEX IF NOT EXISTS entrez_ranges_exon ON ranges_exon (entrez); 
 
-CREATE INDEX IF NOT EXISTS txid_ranges_exon on ranges_exon (tx_id);
+CREATE INDEX IF NOT EXISTS txid_ranges_exon ON ranges_exon (tx_id);
 
-CREATE INDEX IF NOT EXISTS exonid_ranges_exon on ranges_exon (exon_id);
+CREATE INDEX IF NOT EXISTS exonid_ranges_exon ON ranges_exon (exon_id);
 
 CREATE TABLE IF NOT EXISTS ranges_cds AS
 SELECT DISTINCT
@@ -66,11 +66,11 @@ JOIN txdb_entrez.splicing ON cds._cds_id = splicing._cds_id
 JOIN txdb_entrez.transcript ON splicing._tx_id = transcript._tx_id
 LEFT OUTER JOIN txdb_entrez.gene ON transcript._tx_id = gene._tx_id;
 
-CREATE INDEX IF NOT EXISTS entrez_ranges_cds on ranges_cds (entrez); 
+CREATE INDEX IF NOT EXISTS entrez_ranges_cds ON ranges_cds (entrez); 
 
-CREATE INDEX IF NOT EXISTS txid_ranges_cds on ranges_cds (tx_id);
+CREATE INDEX IF NOT EXISTS txid_ranges_cds ON ranges_cds (tx_id);
 
-CREATE INDEX IF NOT EXISTS cdsid_ranges_cds on ranges_cds (cds_id);
+CREATE INDEX IF NOT EXISTS cdsid_ranges_cds ON ranges_cds (cds_id);
 
 CREATE TABLE IF NOT EXISTS metadata_txdb AS
 SELECT * FROM metadata;

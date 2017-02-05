@@ -10,9 +10,9 @@ JOIN accessions ON genes._id = accessions._id
 LEFT OUTER JOIN refseq ON genes._id = refseq._id
     AND refseq.accession = accessions.accession;
 
-CREATE INDEX IF NOT EXISTS entrez_accession on id_accession (entrez);
+CREATE INDEX IF NOT EXISTS entrez_accession ON id_accession (entrez);
 
-CREATE INDEX IF NOT EXISTS ensembl_accession on id_accession (ensembl);
+CREATE INDEX IF NOT EXISTS ensembl_accession ON id_accession (ensembl);
 
 CREATE TABLE IF NOT EXISTS id_transcript AS
 SELECT DISTINCT
@@ -25,9 +25,9 @@ LEFT OUTER JOIN ensembl ON genes._id = ensembl._id
 LEFT OUTER JOIN unigene ON genes._id = unigene._id
 LEFT OUTER JOIN ensembl_trans ON genes._id = ensembl_trans._id;
 
-CREATE INDEX IF NOT EXISTS entrez_transcript on id_transcript (entrez);
+CREATE INDEX IF NOT EXISTS entrez_transcript ON id_transcript (entrez);
 
-CREATE INDEX IF NOT EXISTS ensembl_transcript on id_transcript (ensembl);
+CREATE INDEX IF NOT EXISTS ensembl_transcript ON id_transcript (ensembl);
 
 CREATE TABLE IF NOT EXISTS id AS
 SELECT DISTINCT
@@ -43,13 +43,13 @@ LEFT OUTER JOIN ensembl ON genes._id = ensembl._id
 JOIN mgi ON genes._id = mgi._id
 JOIN alias ON genes._id = alias._id;
 
-CREATE INDEX IF NOT EXISTS entrez_id on id (entrez);
+CREATE INDEX IF NOT EXISTS entrez_id ON id (entrez);
 
-CREATE INDEX IF NOT EXISTS ensembl_id on id (ensembl);
+CREATE INDEX IF NOT EXISTS ensembl_id ON id (ensembl);
 
-CREATE INDEX IF NOT EXISTS mgi_id on id (mgi);
+CREATE INDEX IF NOT EXISTS mgi_id ON id (mgi);
 
-CREATE INDEX IF NOT EXISTS symbol_id on id (symbol);
+CREATE INDEX IF NOT EXISTS symbol_id ON id (symbol);
 
 CREATE TABLE IF NOT EXISTS id_pm AS
 SELECT DISTINCT
@@ -60,9 +60,9 @@ FROM genes
 JOIN pubmed ON genes._id = pubmed._id
 LEFT OUTER JOIN ensembl ON genes._id = ensembl._id;
 
-CREATE INDEX IF NOT EXISTS entrez_pm on id_pm (entrez);
+CREATE INDEX IF NOT EXISTS entrez_pm ON id_pm (entrez);
 
-CREATE INDEX IF NOT EXISTS ensembl_pm on id_pm (ensembl);
+CREATE INDEX IF NOT EXISTS ensembl_pm ON id_pm (ensembl);
 
 CREATE TABLE IF NOT EXISTS id_protein AS
 SELECT DISTINCT
@@ -83,9 +83,9 @@ LEFT OUTER JOIN pfam ON genes._id = pfam._id
 LEFT OUTER JOIN prosite ON genes._id = prosite._id
     AND pfam.ipi_id = prosite.ipi_id;
 
-CREATE INDEX IF NOT EXISTS entrez_protein on id_protein (entrez);
+CREATE INDEX IF NOT EXISTS entrez_protein ON id_protein (entrez);
 
-CREATE INDEX IF NOT EXISTS ensembl_protein on id_protein (ensembl);
+CREATE INDEX IF NOT EXISTS ensembl_protein ON id_protein (ensembl);
 
 CREATE TABLE IF NOT EXISTS id_go AS
 SELECT DISTINCT
@@ -98,9 +98,9 @@ FROM genes
 JOIN go ON genes._id = go._id
 LEFT OUTER JOIN ensembl ON genes._id = ensembl._id;
 
-CREATE INDEX IF NOT EXISTS entrez_go on id_go (entrez);
+CREATE INDEX IF NOT EXISTS entrez_go ON id_go (entrez);
 
-CREATE INDEX IF NOT EXISTS ensembl_go on id_go (ensembl);
+CREATE INDEX IF NOT EXISTS ensembl_go ON id_go (ensembl);
 
 CREATE TABLE IF NOT EXISTS id_go_all AS
 SELECT DISTINCT
@@ -113,9 +113,9 @@ FROM genes
 JOIN go_all ON genes._id = go_all._id
 LEFT OUTER JOIN ensembl ON genes._id = ensembl._id;
 
-CREATE INDEX IF NOT EXISTS entrez_go_all on id_go_all (entrez);
+CREATE INDEX IF NOT EXISTS entrez_go_all ON id_go_all (entrez);
 
-CREATE INDEX IF NOT EXISTS ensembl_go_all on id_go_all (ensembl);
+CREATE INDEX IF NOT EXISTS ensembl_go_all ON id_go_all (ensembl);
 
 CREATE TABLE IF NOT EXISTS metadata_org AS
 SELECT * FROM metadata;
