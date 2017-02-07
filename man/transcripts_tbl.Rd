@@ -2,28 +2,28 @@
 % Please edit documentation in R/extractors.R
 \docType{methods}
 \name{transcripts_tbl}
-\alias{cds,src_organism-method}
-\alias{cdsBy,src_organism-method}
-\alias{cdsBy_tbl}
-\alias{cds_tbl}
-\alias{exons,src_organism-method}
-\alias{exonsBy,src_organism-method}
-\alias{exonsBy_tbl}
-\alias{exons_tbl}
-\alias{fiveUTRsByTranscript,src_organism-method}
-\alias{fiveUTRsByTranscript_tbl}
-\alias{genes,src_organism-method}
-\alias{genes_tbl}
-\alias{intronsByTranscript,src_organism-method}
-\alias{intronsByTranscript_tbl}
-\alias{promoters,src_organism-method}
-\alias{promoters_tbl}
-\alias{threeUTRsByTranscript,src_organism-method}
-\alias{threeUTRsByTranscript_tbl}
-\alias{transcripts,src_organism-method}
-\alias{transcriptsBy,src_organism-method}
-\alias{transcriptsBy_tbl}
 \alias{transcripts_tbl}
+\alias{transcripts,src_organism-method}
+\alias{exons_tbl}
+\alias{exons,src_organism-method}
+\alias{cds_tbl}
+\alias{cds,src_organism-method}
+\alias{genes_tbl}
+\alias{genes,src_organism-method}
+\alias{promoters_tbl}
+\alias{promoters,src_organism-method}
+\alias{transcriptsBy_tbl}
+\alias{transcriptsBy,src_organism-method}
+\alias{exonsBy_tbl}
+\alias{exonsBy,src_organism-method}
+\alias{cdsBy_tbl}
+\alias{cdsBy,src_organism-method}
+\alias{intronsByTranscript_tbl}
+\alias{intronsByTranscript,src_organism-method}
+\alias{fiveUTRsByTranscript_tbl}
+\alias{fiveUTRsByTranscript,src_organism-method}
+\alias{threeUTRsByTranscript_tbl}
+\alias{threeUTRsByTranscript,src_organism-method}
 \title{Extract genomic features from src_organism object}
 \usage{
 transcripts_tbl(x, filter = NULL)
@@ -114,8 +114,8 @@ transcripts_tbl(src, filters)
 
 transcripts_tbl(src, filter=list(
      SymbolFilter(c("PTEN", "BRCA1")),
-     Tx_startFilter(87863438,">"),
-     Tx_endFilter(87933487, "<")))
+     TxStartFilter(87863438,">"),
+     TxEndFilter(87933487, "<")))
 
 ## transcript coordinates with filter in granges format
 filters <- list(SymbolFilter(c("PTEN", "BRCA1")),
@@ -144,4 +144,3 @@ fiveUTRsByTranscript(src, filter = list(SymbolFilter("PTEN")))
 \code{\link{src_organism}} for creating a \code{src_organism}
     object.
 }
-

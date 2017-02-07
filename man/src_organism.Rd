@@ -2,13 +2,13 @@
 % Please edit documentation in R/src.R
 \docType{methods}
 \name{src_organism}
-\alias{select_.tbl_organism}
-\alias{seqinfo,src_organism-method}
 \alias{src_organism}
-\alias{src_tbls.src_organism}
 \alias{src_ucsc}
 \alias{supportedOrganisms}
+\alias{select_.tbl_organism}
+\alias{src_tbls.src_organism}
 \alias{tbl.src_organism}
+\alias{seqinfo,src_organism-method}
 \title{Create a sqlite database from an org package and a txdb package}
 \usage{
 src_organism(txdb = NULL, dbpath = NULL)
@@ -112,4 +112,3 @@ seqinfo(src)
     \code{\link[Organism.dplyr]{select,src_organism-method}} for "select" 
     interface on \code{src_organism} objects.
 }
-

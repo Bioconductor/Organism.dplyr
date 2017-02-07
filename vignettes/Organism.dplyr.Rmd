@@ -268,8 +268,8 @@ transcript start position between 87863438 and 87933487.
 ```{r}
 transcripts_tbl(src, filter = list(
     SymbolFilter(c("PTEN", "BRCA1")),
-    Tx_startFilter(87863438,">="),
-    Tx_startFilter(87933487, "<=")
+    TxStartFilter(87863438,">="),
+    TxStartFilter(87933487, "<=")
 ))
 ```
 

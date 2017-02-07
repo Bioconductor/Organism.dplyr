@@ -87,7 +87,7 @@ test_that("exonsBy-extractor", {
     expect_true(identical(mcols(tx_src), mcols(tx_txdb)))
     
     ## filters
-    tx_src <- unlist(exonsBy(src, filter=list(Tx_idFilter("87017"))))
+    tx_src <- unlist(exonsBy(src, filter=list(TxIdFilter("87017"))))
     tx_txdb <- unlist(exonsBy(txdb)["87017"])
     expect_equal(length(unlist(tx_src)), length(unlist(tx_txdb)))
     expect_true(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)))
@@ -102,7 +102,7 @@ test_that("cdsBy-extractor", {
     expect_true(identical(mcols(tx_src), mcols(tx_txdb)))
     
     ## filters
-    tx_src <- unlist(cdsBy(src, filter=list(Tx_idFilter("87017"))))
+    tx_src <- unlist(cdsBy(src, filter=list(TxIdFilter("87017"))))
     tx_txdb <- unlist(cdsBy(txdb)["87017"])
     expect_equal(length(unlist(tx_src)), length(unlist(tx_txdb)))
     expect_true(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)))
@@ -119,7 +119,7 @@ test_that("intronsByTranscript-extractor", {
     
     ## filters
     tx_src <- unlist(intronsByTranscript(src, 
-                                         filter=list(Tx_idFilter("87017"))))
+                                         filter=list(TxIdFilter("87017"))))
     tx_txdb <- unlist(intronsByTranscript(txdb)["87017"])
     expect_equal(length(tx_src), length(tx_txdb))
     expect_true(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)))
@@ -134,7 +134,7 @@ test_that("fiveUTRsByTranscript-extractor", {
     
     ## filters
     tx_src <- unlist(fiveUTRsByTranscript(src, 
-                                          filter=list(Tx_idFilter("87011"))))
+                                          filter=list(TxIdFilter("87011"))))
     tx_txdb <- unlist(fiveUTRsByTranscript(txdb)["87011"])
     expect_equal(length(unlist(tx_src)), length(unlist(tx_txdb)))
     expect_true(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)))
@@ -150,7 +150,7 @@ test_that("threeUTRsByTranscript-extractor", {
     
     ## filters
     tx_src <- unlist(threeUTRsByTranscript(src, 
-                                           filter=list(Tx_idFilter("87017"))))
+                                           filter=list(TxIdFilter("87017"))))
     tx_txdb <- unlist(threeUTRsByTranscript(txdb)["87017"])
     expect_equal(length(unlist(tx_src)), length(unlist(tx_txdb)))
     expect_true(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)))

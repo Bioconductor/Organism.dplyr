@@ -2,12 +2,12 @@
 % Please edit documentation in R/select.R
 \docType{methods}
 \name{keytypes,src_organism-method}
+\alias{keytypes,src_organism-method}
 \alias{columns,src_organism-method}
 \alias{keys,src_organism-method}
-\alias{keytypes,src_organism-method}
-\alias{mapIds,src_organism-method}
-\alias{select,src_organism-method}
 \alias{select_tbl}
+\alias{select,src_organism-method}
+\alias{mapIds,src_organism-method}
 \title{Using the "select" interface on src_organism objects}
 \usage{
 \S4method{keytypes}{src_organism}(x)
@@ -137,4 +137,3 @@ mapIds(src, keys, column = "tx_name", keytype)
     functions to extract genomic features from a
     \code{src_organism} object.
 }
-

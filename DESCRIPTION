@@ -1,6 +1,6 @@
 Package: Organism.dplyr
 Title: dplry-based Access to Bioconductor Annotation Resources
-Version: 0.99.1
+Version: 0.99.3
 Authors@R: c(
     person("Martin", "Morgan", email = "martin.morgan@roswellpark.org",
         role = c("aut", "cre")),
@@ -37,7 +37,7 @@ Suggests:
 License: Artistic-2.0
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.0
 Collate:
     src.R
     filter.R

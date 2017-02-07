@@ -135,8 +135,8 @@
 #'
 #' transcripts_tbl(src, filter=list(
 #'      SymbolFilter(c("PTEN", "BRCA1")),
-#'      Tx_startFilter(87863438,">"),
-#'      Tx_endFilter(87933487, "<")))
+#'      TxStartFilter(87863438,">"),
+#'      TxEndFilter(87933487, "<")))
 #'
 #' @export
 transcripts_tbl <- function(x, filter = NULL) {

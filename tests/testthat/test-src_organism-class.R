@@ -50,7 +50,7 @@ test_that("mouse", {
     expect_equal(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)), TRUE)
     
     ## test ensGene with filter
-    tx_src <- unlist(exonsBy(src, filter=list(Tx_idFilter("3"))))
+    tx_src <- unlist(exonsBy(src, filter=list(TxIdFilter("3"))))
     tx_txdb <- unlist(exonsBy(txdb)["3"])
     expect_equal(length(unlist(tx_src)), length(unlist(tx_txdb)))
     expect_equal(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)), TRUE)

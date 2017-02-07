@@ -2,15 +2,13 @@
 % Please edit documentation in R/filter.R
 \docType{class}
 \name{BasicFilter-class}
+\alias{BasicFilter-class}
 \alias{AccnumFilter}
 \alias{AliasFilter}
-\alias{BasicFilter-class}
-\alias{Cds_chromFilter}
-\alias{Cds_endFilter}
-\alias{Cds_idFilter}
-\alias{Cds_nameFilter}
-\alias{Cds_startFilter}
-\alias{Cds_strandFilter}
+\alias{CdsChromFilter}
+\alias{CdsIdFilter}
+\alias{CdsNameFilter}
+\alias{CdsStrandFilter}
 \alias{EnsemblFilter}
 \alias{EnsemblprotFilter}
 \alias{EnsembltransFilter}
@@ -18,22 +16,16 @@
 \alias{EnzymeFilter}
 \alias{EvidenceFilter}
 \alias{EvidenceallFilter}
-\alias{Exon_chromFilter}
-\alias{Exon_endFilter}
-\alias{Exon_idFilter}
-\alias{Exon_nameFilter}
-\alias{Exon_rankFilter}
-\alias{Exon_startFilter}
-\alias{Exon_strandFilter}
+\alias{ExonChromFilter}
+\alias{ExonIdFilter}
+\alias{ExonNameFilter}
+\alias{ExonRankFilter}
+\alias{ExonStrandFilter}
 \alias{FlybaseFilter}
-\alias{Flybase_cgFilter}
-\alias{Flybase_protFilter}
-\alias{GRangesFilter}
-\alias{GRangesFilter-class}
-\alias{Gene_chromFilter}
-\alias{Gene_endFilter}
-\alias{Gene_startFilter}
-\alias{Gene_strandFilter}
+\alias{FlybaseCgFilter}
+\alias{FlybaseProtFilter}
+\alias{GeneChromFilter}
+\alias{GeneStrandFilter}
 \alias{GenenameFilter}
 \alias{GoFilter}
 \alias{GoallFilter}
@@ -48,27 +40,35 @@
 \alias{PrositeFilter}
 \alias{RefseqFilter}
 \alias{SymbolFilter}
-\alias{Tx_chromFilter}
-\alias{Tx_endFilter}
-\alias{Tx_idFilter}
-\alias{Tx_nameFilter}
-\alias{Tx_startFilter}
-\alias{Tx_strandFilter}
-\alias{Tx_typeFilter}
+\alias{TxChromFilter}
+\alias{TxIdFilter}
+\alias{TxNameFilter}
+\alias{TxStrandFilter}
+\alias{TxTypeFilter}
 \alias{UnigeneFilter}
 \alias{UniprotFilter}
 \alias{WormbaseFilter}
 \alias{ZfinFilter}
+\alias{CdsStartFilter}
+\alias{CdsEndFilter}
+\alias{ExonStartFilter}
+\alias{ExonEndFilter}
+\alias{GeneStartFilter}
+\alias{GeneEndFilter}
+\alias{TxStartFilter}
+\alias{TxEndFilter}
+\alias{GRangesFilter-class}
+\alias{GRangesFilter}
 \alias{show,BasicFilter-method}
 \alias{supportedFilters}
 \title{Functions for filter objects}
 \usage{
 AccnumFilter(value, condition = "==")
 AliasFilter(value, condition = "==")
-Cds_chromFilter(value, condition = "==")
-Cds_idFilter(value, condition = "==")
-Cds_nameFilter(value, condition = "==")
-Cds_strandFilter(value, condition = "==")
+CdsChromFilter(value, condition = "==")
+CdsIdFilter(value, condition = "==")
+CdsNameFilter(value, condition = "==")
+CdsStrandFilter(value, condition = "==")
 EnsemblFilter(value, condition = "==")
 EnsemblprotFilter(value, condition = "==")
 EnsembltransFilter(value, condition = "==")
@@ -76,16 +76,16 @@ EntrezFilter(value, condition = "==")
 EnzymeFilter(value, condition = "==")
 EvidenceFilter(value, condition = "==")
 EvidenceallFilter(value, condition = "==")
-Exon_chromFilter(value, condition = "==")
-Exon_idFilter(value, condition = "==")
-Exon_nameFilter(value, condition = "==")
-Exon_rankFilter(value, condition = "==")
-Exon_strandFilter(value, condition = "==")
+ExonChromFilter(value, condition = "==")
+ExonIdFilter(value, condition = "==")
+ExonNameFilter(value, condition = "==")
+ExonRankFilter(value, condition = "==")
+ExonStrandFilter(value, condition = "==")
 FlybaseFilter(value, condition = "==")
-Flybase_cgFilter(value, condition = "==")
-Flybase_protFilter(value, condition = "==")
-Gene_chromFilter(value, condition = "==")
-Gene_strandFilter(value, condition = "==")
+FlybaseCgFilter(value, condition = "==")
+FlybaseProtFilter(value, condition = "==")
+GeneChromFilter(value, condition = "==")
+GeneStrandFilter(value, condition = "==")
 GenenameFilter(value, condition = "==")
 GoFilter(value, condition = "==")
 GoallFilter(value, condition = "==")
@@ -100,23 +100,23 @@ PmidFilter(value, condition = "==")
 PrositeFilter(value, condition = "==")
 RefseqFilter(value, condition = "==")
 SymbolFilter(value, condition = "==")
-Tx_chromFilter(value, condition = "==")
-Tx_idFilter(value, condition = "==")
-Tx_nameFilter(value, condition = "==")
-Tx_strandFilter(value, condition = "==")
-Tx_typeFilter(value, condition = "==")
+TxChromFilter(value, condition = "==")
+TxIdFilter(value, condition = "==")
+TxNameFilter(value, condition = "==")
+TxStrandFilter(value, condition = "==")
+TxTypeFilter(value, condition = "==")
 UnigeneFilter(value, condition = "==")
 UniprotFilter(value, condition = "==")
 WormbaseFilter(value, condition = "==")
 ZfinFilter(value, condition = "==")
-Cds_startFilter(value, condition = "==")
-Cds_endFilter(value, condition = "==")
-Exon_startFilter(value, condition = "==")
-Exon_endFilter(value, condition = "==")
-Gene_startFilter(value, condition = "==")
-Gene_endFilter(value, condition = "==")
-Tx_startFilter(value, condition = "==")
-Tx_endFilter(value, condition = "==")
+CdsStartFilter(value, condition = "==")
+CdsEndFilter(value, condition = "==")
+ExonStartFilter(value, condition = "==")
+ExonEndFilter(value, condition = "==")
+GeneStartFilter(value, condition = "==")
+GeneEndFilter(value, condition = "==")
+TxStartFilter(value, condition = "==")
+TxEndFilter(value, condition = "==")
 
 GRangesFilter(value)
 
@@ -130,17 +130,18 @@ supportedFilters()
 
 \item{object}{A \code{BasicFilter} object}
 
-\item{condition}{The condition to be used in filter for genomic extractors,
-one of "==", "!=", "startsWith", "endsWith", ">", "<", ">=", "<=".  For
-character values "==", "!=", "startsWith" and "endsWith" are allowed, 
-for numeric values (\code{Cds_startFilter}, \code{Cds_endFilter},
-\code{Exon_startFilter}, \code{Exon_endFilter}, 
-\code{Gene_startFilter}, \code{Gene_endFilter}, \code{Tx_startFilter} 
-and \code{Tx_endFilte}), "==", "!=", ">", ">=", "<" and "<=". Default 
-condition is "==".}
+\item{condition}{The condition to be used in filter for genomic
+extractors, one of "==", "!=", "startsWith", "endsWith", ">",
+"<", ">=", "<=".  For character values "==", "!=", "startsWith"
+and "endsWith" are allowed, for numeric values
+(\code{CdsStartFilter}, \code{CdsEndFilter},
+\code{ExonStartFilter}, \code{ExonEndFilter},
+\code{GeneStartFilter}, \code{GeneEndFilter},
+\code{TxStartFilter} and \code{TxEndFilter}), "==", "!=", ">",
+">=", "<" and "<=". Default condition is "==".}
 }
 \value{
-an object showing class, value and condition of the filter
+A Filter object showing class, value and condition of the filter
 }
 \description{
 These functions are used to create filters for genomic extrators.
@@ -169,7 +170,7 @@ SymbolFilter("BRCA", "startsWith")
 GRangesFilter(as("chr10:87869000-87876000", "GRanges"))
 
 ## filter by transcript start position
-Tx_startFilter(87863438,">")
+TxStartFilter(87863438, ">")
 
 }
 \seealso{
@@ -182,4 +183,3 @@ Tx_startFilter(87863438,">")
      \code{\link[Organism.dplyr]{select,src_organism-method}} for "select"
     interface on \code{src_organism} objects.
 }
-
