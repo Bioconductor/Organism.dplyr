@@ -91,9 +91,9 @@
 
 .transcripts_tbl <- function(x, filter = NULL) {
     table <- .transcripts(x, filter)
-    fields <- unique(
-        c("tx_chrom", "tx_start", "tx_end", "tx_strand",
-          "tx_id", "tx_name", .filter_names(filter)))
+    fields <- unique(c(
+        "tx_chrom", "tx_start", "tx_end", "tx_strand",
+        "tx_id", "tx_name", .filter_names(filter)))
     do.call(select_, c(list(table), as.list(fields))) %>%
         arrange_(~ tx_id)
 }
@@ -171,10 +171,10 @@ setMethod("transcripts", "src_organism", function(x, filter = NULL) {
 
 .exons_tbl <- function(x, filter = NULL) {
     fields_remove <- c(x$schema, "tx_id", "exon_name", "exon_rank")
-    fields <- unique(
-        c("exon_chrom", "exon_start", "exon_end", "exon_strand",
-          x$schema, "tx_id", "exon_id", "exon_name", "exon_rank",
-          .filter_names(filter)))
+    fields <- unique(c(
+        "exon_chrom", "exon_start", "exon_end", "exon_strand",
+        x$schema, "tx_id", "exon_id", "exon_name", "exon_rank",
+        .filter_names(filter)))
     keep <- .keep(filter, fields, fields_remove)
 
     table <- .exons(x, filter)
@@ -205,10 +205,10 @@ setMethod("exons", "src_organism", function(x, filter = NULL) {
 
 .cds_tbl <- function(x, filter = NULL) {
     fields_remove <- c(x$schema, "tx_id", "cds_name", "exon_rank")
-    fields <- unique(
-        c("cds_chrom", "cds_start", "cds_end", "cds_strand",
-          x$schema, "tx_id", "cds_id", "cds_name", "exon_rank",
-          .filter_names(filter)))
+    fields <- unique(c(
+        "cds_chrom", "cds_start", "cds_end", "cds_strand",
+        x$schema, "tx_id", "cds_id", "cds_name", "exon_rank",
+        .filter_names(filter)))
     keep <- .keep(filter, fields, fields_remove)
 
     table <- .cds(x, filter)
@@ -241,9 +241,9 @@ setMethod("cds", "src_organism", function(x, filter = NULL) {
     #           HAVING count(*) > 1)")
     tbls <- setdiff(src_tbls(x), "ranges_gene")
     table <- .tbl_join(x, table, tbls, filter)
-    fields <- unique(
-        c("gene_chrom", "gene_start", "gene_end", "gene_strand",
-          x$schema, .filter_names(filter)))
+    fields <- unique(c(
+        "gene_chrom", "gene_start", "gene_end", "gene_strand",
+        x$schema, .filter_names(filter)))
     do.call(select_, c(list(table), as.list(fields))) %>% arrange_(x$schema)
 }
 
