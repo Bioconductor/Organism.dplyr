@@ -17,10 +17,19 @@
 
   \subsection{SIGNIFICANT USER-VISIBLE CHANGES}{
     \itemize{
+
       \item Filters use strict CamelCase convention.
+
     }
   }
 
-  \subsection{BUG FIXES}{}
+  \subsection{BUG FIXES}{
+    \itemize{
+
+      \item \code{*IdFilter} and \code{*RankFilter} are numeric
+      (integer), rather than character.
+
+    }
+  }
 
 }

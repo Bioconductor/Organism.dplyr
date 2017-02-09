@@ -2,9 +2,12 @@
 % Please edit documentation in R/utils.R
 \name{hg38light}
 \alias{hg38light}
+\alias{mm10light}
 \title{Utilities used in examples, vignettes, and tests}
 \usage{
 hg38light()
+
+mm10light()
 }
 \value{
 character(1) file path to the trimmed-down data base

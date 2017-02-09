@@ -18,6 +18,7 @@ hg38light <- function() {
     )
 }
 
+#' @rdname utils
 #' @export
 mm10light <- function() {
     system.file(
