@@ -2,7 +2,11 @@ context("src_organism-select")
 
 library(TxDb.Hsapiens.UCSC.hg38.knownGene)
 txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
-src <- src_organism("TxDb.Hsapiens.UCSC.hg38.knownGene")
+
+hg38light <- system.file(
+    package="Organism.dplyr", "extdata", "light.hg38.knownGene.sqlite"
+)
+src <- src_organism(dbpath=hg38light)
 
 test_that("keytypes", {
     expect_equal(class(keytypes(src)), "character")
@@ -18,11 +22,14 @@ test_that("keys", {
     expect_error(keys(src, "foo"))
     expect_equal(class(keys(src)), "character")
     expect_true(length(keys(src)) > 0)
-    expect_equal(keys(src, "tx_id"), keys(txdb, "TXID"))
+    expect_true(all(keys(src, "tx_id") %in% keys(txdb, "TXID")))
 })
 
 test_that("select", {
-    keys <- c("uc001aal.1", "uc001aaq.3", "uc001aar.3")
+    keys <- c(
+        "uc001hzz.2", "uc001iab.3", "uc001pde.4", "uc001pdf.5", "uc001xmf.5", 
+        "uc001yxg.4"
+    )
     columns_src <- c("entrez", "tx_id", "tx_name","exon_id")
     keytype_src <- "tx_name"
     columns_txdb <- c("GENEID", "TXID", "TXNAME","EXONID")
@@ -36,7 +43,10 @@ test_that("select", {
 })
 
 test_that("mapIds", {
-    keys <- c("uc001aal.1", "uc001aaq.3", "uc001aar.3")
+    keys <- c(
+        "uc001hzz.2", "uc001iab.3", "uc001pde.4", "uc001pdf.5", "uc001xmf.5", 
+        "uc001yxg.4"
+    )
     
     rs_src <- mapIds(src, keys, "exon_id", "tx_name")
     rs_txdb <- mapIds(txdb, keys, "EXONID", "TXNAME")
