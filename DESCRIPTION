@@ -18,9 +18,9 @@ Imports:
     RSQLite,
     S4Vectors,
     GenomeInfoDb,
-    GenomicFeatures,
     IRanges,
     GenomicRanges,
+    GenomicFeatures,
     AnnotationDbi,
     methods,
     tools,
@@ -43,5 +43,6 @@ Collate:
     filter.R
     extractors.R
     select.R
+    utils.R
 VignetteBuilder: knitr
 biocViews: Annotation, Sequencing, GenomeAnnotation

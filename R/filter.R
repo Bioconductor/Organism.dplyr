@@ -273,8 +273,10 @@ local({
 #'
 #' @importFrom methods show
 #' @rdname BasicFilter
-#' @export
-setMethod("show", "BasicFilter", function(object){
+#' @exportMethod show
+setMethod("show", "BasicFilter",
+    function(object)
+{
     cat("class:", class(object),
         "\ncondition:", .condition(object),
         "\nvalue:", .value(object), "\n")

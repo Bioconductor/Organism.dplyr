@@ -379,9 +379,9 @@ setOldClass("src_organism")
 #'
 #' @importFrom GenomeInfoDb Seqinfo seqinfo
 #' @rdname src_organism
-#' @export
-
-setMethod("seqinfo", "src_organism", function(x) {
+#' @exportMethod seqinfo
+setMethod("seqinfo", "src_organism",
+    function(x)
+{
     .getSeqinfo(x)
 })
-

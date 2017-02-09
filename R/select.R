@@ -61,7 +61,7 @@
 #' ## keytypes
 #' keytypes(src)
 #' 
-#' @export
+#' @exportMethod keytypes
 setMethod("keytypes", "src_organism", .getFields)
 
 #' @importFrom AnnotationDbi columns
@@ -71,7 +71,7 @@ setMethod("keytypes", "src_organism", .getFields)
 #' ## columns
 #' columns(src)
 #' 
-#' @export
+#' @exportMethod columns
 setMethod("columns", "src_organism", .getFields)
 
 .findTable <- function(x, field) {
@@ -124,8 +124,10 @@ setMethod("columns", "src_organism", .getFields)
 #' keys(src, "entrez")
 #' 
 #' @rdname select
-#' @export
-setMethod("keys", "src_organism", function(x, keytype, ...) {
+#' @exportMethod keys
+setMethod("keys", "src_organism",
+    function(x, keytype, ...)
+{
     if (missing(keytype)) 
         keytype <- x$schema
     AnnotationDbi:::smartKeys(x = x, keytype = keytype, ..., FUN = .keys)
@@ -215,7 +217,7 @@ select_tbl <- function (x, keys, columns, keytype) {
 #' select(src, keys, columns, keytype)
 #' 
 #' @rdname select
-#' @export
+#' @exportMethod select
 setMethod("select", "src_organism", .select)
 
 #' @param column character(1) the column to search on, can only have a
@@ -254,8 +256,9 @@ setMethod("select", "src_organism", .select)
 #' mapIds(src, keys, column = "tx_name", keytype)
 #' 
 #' @rdname select
-#' @export
+#' @exportMethod mapIds
 setMethod("mapIds", "src_organism", 
-function(x, keys, column, keytype, ..., multiVals) {
+    function(x, keys, column, keytype, ..., multiVals)
+{
     mapIds_base(x, keys, column, keytype, ..., multiVals = multiVals)
 })

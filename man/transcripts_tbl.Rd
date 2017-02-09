@@ -92,52 +92,52 @@ functions with \code{_tbl} return a \code{\link[tibble]{tibble}}
     \code{\link{GRangesList}} object.
 }
 \description{
-Generic functions to extract genomic features from an object. This page
-documents the methods for \code{\link{src_organism}} objects only.
+Generic functions to extract genomic features from an object. This
+page documents the methods for \code{\link{src_organism}} objects
+only.
 }
 \details{
-These are the main functions for extracting transcript information from a
-\code{\link{src_organism}} object, inherited from
-\code{\link[GenomicFeatures]{transcripts}} in \code{GenomicFeatures}
-package. Two versions of results are provided: \code{\link[tibble]{tibble}}
-(\code{transcripts_tbl()}) and \code{\link{GRanges}} or
-\code{\link{GRangesList}} (\code{transcripts()}).
+These are the main functions for extracting transcript information
+from a \code{\link{src_organism}} object, inherited from
+\code{\link[GenomicFeatures]{transcripts}} in
+\code{GenomicFeatures} package. Two versions of results are
+provided: \code{\link[tibble]{tibble}} (\code{transcripts_tbl()})
+and \code{\link{GRanges}} or \code{\link{GRangesList}}
+(\code{transcripts()}).
 }
 \examples{
-src <- src_ucsc("human")
+\dontrun{src <- src_ucsc("human")}
+src <- src_organism(dbpath=hg38light())
 
 ## transcript coordinates with filter in tibble format
-filters <- list(SymbolFilter(c("PTEN", "BRCA1")),
-                SymbolFilter("BRCA", "startsWith"),
-                GoFilter(c("GO:0000729", "GO:0000731")))
+filters <- list(SymbolFilter(c("A1BG", "CDH2")))
 transcripts_tbl(src, filters)
 
+transcripts_tbl(src, list(SymbolFilter("SNORD", "startsWith")))
+transcripts_tbl(src, list(GoFilter("GO:0005615")))
 transcripts_tbl(src, filter=list(
-     SymbolFilter(c("PTEN", "BRCA1")),
-     TxStartFilter(87863438,">"),
-     TxEndFilter(87933487, "<")))
-
+     SymbolFilter("SNORD", "startsWith"),
+     TxStartFilter(25070000, "<")
+))
 ## transcript coordinates with filter in granges format
-filters <- list(SymbolFilter(c("PTEN", "BRCA1")),
-                EntrezFilter(5728),
-                GRangesFilter(as("chr10:87869000-87876000", "GRanges")))
+filters <- list(GRangesFilter(GenomicRanges::GRanges("chr15:1-25070000")))
 transcripts(src, filters)
 
 ## promoters
 promoters(src, upstream=100, downstream=50,
-          filter = list(SymbolFilter("BRCA1")))
+          filter = list(SymbolFilter("ADA")))
 
 ## transcriptsBy
-transcriptsBy(src, by = "exon", filter = list(SymbolFilter("PTEN")))
+transcriptsBy(src, by = "exon", filter = list(SymbolFilter("ADA")))
 
 ## exonsBy
-exonsBy(src, filter = list(SymbolFilter("PTEN")))
+exonsBy(src, filter = list(SymbolFilter("ADA")))
 
 ## intronsByTranscript
-intronsByTranscript(src, filter = list(SymbolFilter("PTEN")))
+intronsByTranscript(src, filter = list(SymbolFilter("ADA")))
 
 ## fiveUTRsByTranscript
-fiveUTRsByTranscript(src, filter = list(SymbolFilter("PTEN")))
+fiveUTRsByTranscript(src, filter = list(SymbolFilter("ADA")))
 
 }
 \seealso{
