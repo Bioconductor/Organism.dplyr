@@ -339,7 +339,9 @@ setMethod("promoters", "src_organism",
         table <- .toGRanges(x, fun(x, filter), filter)
 
     f <- switch(by, gene=x$schema, exon="exon_id", cds="cds_id", tx="tx_id")
-    split(table, mcols(table)[[f]])
+    grp <- mcols(table)[[f]]
+    mcols(table)[[f]] <- NULL
+    split(table, grp)
 }
 
 
