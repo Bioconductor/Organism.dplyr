@@ -1,9 +1,5 @@
 context("src_organism-class")
 
-hg38light <- hg38light()
-
-mm10light <- mm10light()
-
 test_that("src_organism_constructor", {
     expect_error(src_organism())
     expect_error(src_organism("FOO"))
@@ -12,7 +8,7 @@ test_that("src_organism_constructor", {
         message("creating expensive 'src_organism'")
         src <- src_organism("TxDb.Hsapiens.UCSC.hg38.knownGene")
     } else {
-        src <- src_organism(dbpath=hg38light)
+        src <- src_organism(dbpath=hg38light())
     }
     expect_equal(is(src, "src_organism"), TRUE)
     expect_equal(length(src), 3)
@@ -41,7 +37,7 @@ test_that("src_ucsc_constructor", {
         message("creating expensive 'src_organism'")
         src <- src_ucsc("human")
     } else {
-        src <- src_organism(dbpath=hg38light)
+        src <- src_organism(dbpath=hg38light())
     }
     expect_equal(is(src, "src_organism"), TRUE)
 
@@ -55,7 +51,7 @@ test_that("mouse", {
         library(TxDb.Mmusculus.UCSC.mm10.ensGene)
     })
     txdb <- TxDb.Mmusculus.UCSC.mm10.ensGene
-    src <- src_organism(dbpath=mm10light)
+    src <- src_organism(dbpath=mm10light())
     expect_true(is(src, "src_organism"))
     
     tx_src <- transcriptsBy(src)
@@ -64,7 +60,7 @@ test_that("mouse", {
     expect_true(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)))
     
     ## test ensGene with filter
-    tx_src <- unlist(exonsBy(src, filter=list(TxIdFilter("2237"))))
+    tx_src <- unlist(exonsBy(src, filter=list(TxIdFilter(2237))))
     tx_txdb <- unlist(exonsBy(txdb)["2237"])
     expect_equal(length(unlist(tx_src)), length(unlist(tx_txdb)))
     expect_true(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)))
