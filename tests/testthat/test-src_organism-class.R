@@ -1,12 +1,8 @@
 context("src_organism-class")
 
-hg38light <- system.file(
-    package="Organism.dplyr", "extdata", "light.hg38.knownGene.sqlite"
-)
+hg38light <- hg38light()
 
-mm10light <- system.file(
-    package="Organism.dplyr", "extdata", "light.mm10.ensGene.sqlite"
-)
+mm10light <- mm10light()
 
 test_that("src_organism_constructor", {
     expect_error(src_organism())
