@@ -1,12 +1,22 @@
 context("src_organism-class")
 
-library(TxDb.Hsapiens.UCSC.hg38.knownGene)
+hg38light <- system.file(
+    package="Organism.dplyr", "extdata", "light.hg38.knownGene.sqlite"
+)
+
+mm10light <- system.file(
+    package="Organism.dplyr", "extdata", "light.mm10.ensGene.sqlite"
+)
 
 test_that("src_organism_constructor", {
     expect_error(src_organism())
     expect_error(src_organism("FOO"))
 
-    src <- src_organism("TxDb.Hsapiens.UCSC.hg38.knownGene")
+    if (interactive()) {
+        src <- src_organism("TxDb.Hsapiens.UCSC.hg38.knownGene")
+    } else {
+        src <- src_organism(dbpath=hg38light)
+    }
     expect_equal(is(src, "src_organism"), TRUE)
     expect_equal(length(src), 3)
     expect_equal(is(src$con, "SQLiteConnection"), TRUE)
@@ -30,7 +40,11 @@ test_that("src_ucsc_constructor", {
     expect_error(src_ucsc())
     expect_error(src_ucsc("FOO"))
 
-    src <- src_ucsc("human")
+    if (interactive()) {
+        src <- src_ucsc("human")
+    } else {
+        src <- src_organism(dbpath=hg38light)
+    }
     expect_equal(is(src, "src_organism"), TRUE)
 
     ## prevent overwrite
@@ -41,18 +55,18 @@ test_that("mouse", {
     ## test ensGene no filter
     library(TxDb.Mmusculus.UCSC.mm10.ensGene)
     txdb <- TxDb.Mmusculus.UCSC.mm10.ensGene
-    src <- src_ucsc("mouse", id = "ensGene")
+    src <- src_organism(dbpath=mm10light)
+    expect_true(is(src, "src_organism"))
     
     tx_src <- transcriptsBy(src)
-    tx_txdb <- transcriptsBy(txdb)
-    expect_equal(is(src, "src_organism"), TRUE)
-    expect_equal(length(tx_src), length(tx_txdb))
-    expect_equal(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)), TRUE)
+    tx_txdb <- transcriptsBy(txdb)[names(tx_src)]
+    expect_true(all(names(tx_src) %in% names(tx_txdb)))
+    expect_true(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)))
     
     ## test ensGene with filter
-    tx_src <- unlist(exonsBy(src, filter=list(TxIdFilter("3"))))
-    tx_txdb <- unlist(exonsBy(txdb)["3"])
+    tx_src <- unlist(exonsBy(src, filter=list(TxIdFilter("2237"))))
+    tx_txdb <- unlist(exonsBy(txdb)["2237"])
     expect_equal(length(unlist(tx_src)), length(unlist(tx_txdb)))
-    expect_equal(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)), TRUE)
+    expect_true(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)))
     expect_equal(tx_src$exon_id, tx_txdb$exon_id)
 })

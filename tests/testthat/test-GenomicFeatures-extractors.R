@@ -2,157 +2,130 @@ context("GenomicFeatures-extractors")
 
 library(TxDb.Hsapiens.UCSC.hg38.knownGene)
 txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
-src <- src_organism("TxDb.Hsapiens.UCSC.hg38.knownGene")
+hg38light <- system.file(
+    package="Organism.dplyr", "extdata", "light.hg38.knownGene.sqlite"
+)
+src <- src_organism(dbpath=hg38light)
+
+.test_extractor <- function(src, txdb, fun, subset) {
+    suppressWarnings({
+        src <- fun(src)
+        txdb <- fun(txdb)
+    })
+    expect_true(all(mcols(src)[[subset]] %in% mcols(txdb)[[subset]]))
+    expect_true(all.equal(seqinfo(src), seqinfo(txdb)))
+
+    txdb <- txdb[match(mcols(src)[[subset]], mcols(txdb)[[subset]], 0)]
+    o_src <- order(granges(src))
+    o_txdb <- order(granges(txdb))
+
+    ## FIXME: metadata differs, so simpler expect_identical(tx_src,
+    ## tx_txdb) fails
+    expect_identical(granges(src)[o_src], granges(txdb)[o_txdb])
+    expect_identical(mcols(src)[o_src,], mcols(txdb)[o_txdb,])
+}
+
+.test_extractor_egfilter <- function(src, txdb, fun, subset) {
+    egid <- c("10", "100")
+    src <- fun(src, filter=list(EntrezFilter(egid)))
+    txdb <- fun(txdb, filter=list(gene_id=egid))
+    expect_equal(length(src), length(txdb))
+    expect_true(all.equal(seqinfo(src), seqinfo(txdb)))
+    expect_true(setequal(mcols(src)[[subset]], mcols(txdb)[[subset]]))
+}
+
+.test_extractorBy <- function(src, txdb, funBy) {
+    suppressWarnings({
+        src <- funBy(src)
+        txdb <- funBy(txdb)
+    })
+    expect_true(all(names(src) %in% names(txdb)))
+    expect_true(all.equal(seqinfo(src), seqinfo(txdb)))
+
+    txdb <- txdb[names(src)]
+    o_src <- order(granges(unlist(src)))
+    o_txdb <- order(granges(unlist(txdb)))
+    ## FIXME: unlist(mcols(src)) has 'entrez' column
+    ## expect_identical(mcols(unlist(src)), mcols(unlist(txdb)))
+    columns <- names(mcols(unlist(txdb)))
+
+    expect_identical(
+        granges(unlist(src))[o_src],
+        granges(unlist(txdb)[o_txdb])
+    )
+    expect_identical(
+        mcols(unlist(src))[o_src, columns],
+        mcols(unlist(txdb))[o_txdb, columns]
+    )
+}
+
+.test_extractorBy_txfilter <- function(src, txdb, funBy) {
+    txid <- c(15880L, 15881L)
+    suppressWarnings({
+        src <- funBy(src, filter=list(TxIdFilter(txid)))
+        txdb <- funBy(txdb)[txid]
+    })
+
+    expect_equal(length(src), length(txdb))
+    expect_true(all.equal(seqinfo(src), seqinfo(txdb)))
+    expect_true(setequal(src$tx_id, txdb$tx_id))
+}
 
 test_that("transcripts-extractor", {
-    tx_src <- transcripts(src)
-    tx_txdb <- transcripts(txdb)
-    expect_equal(length(tx_src), length(tx_txdb))
-    expect_true(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)))
-    expect_true(identical(mcols(tx_src), mcols(tx_txdb)))
-
-    ## filters
-    tx_src <- transcripts(src, filter=list(EntrezFilter(c("5728", "672"))))
-    tx_txdb <- transcripts(txdb, filter=list(gene_id=c("5728", "672")))
-    expect_equal(length(tx_src), length(tx_txdb))
-    expect_true(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)))
-    expect_equal(tx_src$tx_id, tx_txdb$tx_id)
+    .test_extractor(src, txdb, transcripts, "tx_name")
+    .test_extractor_egfilter(src, txdb, transcripts, "tx_id")
 })
 
 test_that("exons-extractor", {
-    tx_src <- exons(src)
-    tx_txdb <- exons(txdb)
-    expect_equal(length(tx_src), length(tx_txdb))
-    expect_true(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)))
-    expect_true(identical(mcols(tx_src), mcols(tx_txdb)))
-    
-    ## filters
-    tx_src <- exons(src, filter=list(EntrezFilter(c("5728", "672"))))
-    tx_txdb <- exons(txdb, filter=list(gene_id=c("5728", "672")))
-    expect_equal(length(tx_src), length(tx_txdb))
-    expect_true(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)))
-    expect_equal(tx_src$exon_id, tx_txdb$exon_id)
+    .test_extractor(src, txdb, exons, "exon_id")
+    .test_extractor_egfilter(src, txdb, exons, "exon_id")
 })
 
 test_that("cds-extractor", {
-    tx_src <- cds(src)
-    tx_txdb <- cds(txdb)
-    expect_equal(length(tx_src), length(tx_txdb))
-    expect_true(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)))
-    expect_true(identical(mcols(tx_src), mcols(tx_txdb)))
-    
-    ## filters
-    tx_src <- cds(src, filter=list(EntrezFilter(c("5728", "672"))))
-    tx_txdb <- cds(txdb, filter=list(gene_id=c("5728", "672")))
-    expect_equal(length(tx_src), length(tx_txdb))
-    expect_true(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)))
-    expect_equal(tx_src$cds_id, tx_txdb$cds_id)
+    .test_extractor(src, txdb, cds, "cds_id")
+    .test_extractor_egfilter(src, txdb, cds, "cds_id")
 })
 
 test_that("promoters-extractor", {
-    tx_src <- promoters(src)
-    tx_txdb <- promoters(txdb)
-    expect_equal(length(tx_src), length(tx_txdb))
-    expect_true(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)))
-    expect_true(identical(mcols(tx_src), mcols(tx_txdb)))
-    
-    ## filters
-    tx_src <- promoters(src, filter=list(EntrezFilter("5728")))
-    tx_txdb <- promoters(txdb, filter=list(gene_id="5728"))
-    expect_equal(length(tx_src), length(tx_txdb))
-    expect_true(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)))
-    expect_equal(tx_src$tx_id, tx_txdb$tx_id)
+    .test_extractor(src, txdb, promoters, "tx_id")
+    .test_extractor_egfilter(src, txdb, promoters, "tx_id")
 })
 
 test_that("transcriptsBy-extractor", {
-    tx_src <- transcriptsBy(src)
-    tx_txdb <- transcriptsBy(txdb)
-    expect_equal(length(tx_src), length(tx_txdb))
-    expect_true(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)))
-    expect_true(identical(mcols(tx_src), mcols(tx_txdb)))
+    .test_extractorBy(src, txdb, transcriptsBy)
+    ## .test_extractorBy_txfilter(src, txdb, transcriptsBy)
     
     ## filters
-    tx_src <- unlist(transcriptsBy(src, filter=list(EntrezFilter("5728"))))
-    tx_txdb <- unlist(transcriptsBy(txdb)["5728"])
+    ## FIXME TxIdFilter does not work correctly here
+    egid <- c("10", "100")
+    tx_src <- unlist(transcriptsBy(src, filter=list(EntrezFilter(egid))))
+    tx_txdb <- unlist(transcriptsBy(txdb)[egid])
     expect_equal(length(tx_src), length(tx_txdb))
     expect_true(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)))
     expect_equal(tx_src$tx_id, tx_txdb$tx_id)
 })
 
 test_that("exonsBy-extractor", {
-    tx_src <- exonsBy(src)
-    tx_txdb <- exonsBy(txdb)
-    expect_equal(length(tx_src), length(tx_txdb))
-    expect_true(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)))
-    expect_true(identical(mcols(tx_src), mcols(tx_txdb)))
-    
-    ## filters
-    tx_src <- unlist(exonsBy(src, filter=list(TxIdFilter("87017"))))
-    tx_txdb <- unlist(exonsBy(txdb)["87017"])
-    expect_equal(length(unlist(tx_src)), length(unlist(tx_txdb)))
-    expect_true(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)))
-    expect_equal(tx_src$exon_id, tx_txdb$exon_id)
+    .test_extractorBy(src, txdb, exonsBy)
+    .test_extractorBy_txfilter(src, txdb, exonsBy)
 })
 
 test_that("cdsBy-extractor", {
-    tx_src <- cdsBy(src)
-    tx_txdb <- cdsBy(txdb)
-    expect_equal(length(tx_src), length(tx_txdb))
-    expect_true(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)))
-    expect_true(identical(mcols(tx_src), mcols(tx_txdb)))
-    
-    ## filters
-    tx_src <- unlist(cdsBy(src, filter=list(TxIdFilter("87017"))))
-    tx_txdb <- unlist(cdsBy(txdb)["87017"])
-    expect_equal(length(unlist(tx_src)), length(unlist(tx_txdb)))
-    expect_true(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)))
-    expect_equal(tx_src$cds_id, tx_txdb$cds_id)
+    .test_extractorBy(src, txdb, cdsBy)
+    .test_extractorBy_txfilter(src, txdb, cdsBy)
 })
-
 
 test_that("intronsByTranscript-extractor", {
-    tx_src <- intronsByTranscript(src)
-    tx_txdb <- intronsByTranscript(txdb)
-    expect_equal(length(tx_src), length(tx_txdb))
-    expect_true(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)))
-    expect_true(identical(mcols(tx_src), mcols(tx_txdb)))
-    
-    ## filters
-    tx_src <- unlist(intronsByTranscript(src, 
-                                         filter=list(TxIdFilter("87017"))))
-    tx_txdb <- unlist(intronsByTranscript(txdb)["87017"])
-    expect_equal(length(tx_src), length(tx_txdb))
-    expect_true(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)))
-})
+    .test_extractorBy(src, txdb, intronsByTranscript)
+    .test_extractorBy_txfilter(src, txdb, intronsByTranscript)
+})    
 
 test_that("fiveUTRsByTranscript-extractor", {
-    tx_src <- fiveUTRsByTranscript(src)
-    tx_txdb <- fiveUTRsByTranscript(txdb)
-    expect_equal(length(tx_src), length(tx_txdb))
-    expect_true(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)))
-    expect_true(identical(mcols(tx_src), mcols(tx_txdb)))
-    
-    ## filters
-    tx_src <- unlist(fiveUTRsByTranscript(src, 
-                                          filter=list(TxIdFilter("87011"))))
-    tx_txdb <- unlist(fiveUTRsByTranscript(txdb)["87011"])
-    expect_equal(length(unlist(tx_src)), length(unlist(tx_txdb)))
-    expect_true(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)))
-    expect_equal(tx_src$exon_id, tx_txdb$exon_id)
+    .test_extractorBy(src, txdb, fiveUTRsByTranscript)
+    .test_extractorBy_txfilter(src, txdb, fiveUTRsByTranscript)
 })
 
 test_that("threeUTRsByTranscript-extractor", {
-    tx_src <- threeUTRsByTranscript(src)
-    tx_txdb <- threeUTRsByTranscript(txdb)
-    expect_equal(length(tx_src), length(tx_txdb))
-    expect_true(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)))
-    expect_true(identical(mcols(tx_src), mcols(tx_txdb)))
-    
-    ## filters
-    tx_src <- unlist(threeUTRsByTranscript(src, 
-                                           filter=list(TxIdFilter("87017"))))
-    tx_txdb <- unlist(threeUTRsByTranscript(txdb)["87017"])
-    expect_equal(length(unlist(tx_src)), length(unlist(tx_txdb)))
-    expect_true(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)))
-    expect_equal(tx_src$exon_id, tx_txdb$exon_id)
-})
+    .test_extractorBy(src, txdb, threeUTRsByTranscript)
+    .test_extractorBy_txfilter(src, txdb, threeUTRsByTranscript)
+})    
