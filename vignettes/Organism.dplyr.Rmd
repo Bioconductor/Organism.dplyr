@@ -1,6 +1,6 @@
 ---
 title: "Organism.dplyr"
-output: 
+output:
   BiocStyle::html_document:
     toc: true
 vignette: >
@@ -11,16 +11,16 @@ vignette: >
 
 # Introduction
 
-The `r Biocpkg("Organism.dplyr")` creates an on disk sqlite database to hold 
-data of an organism combined from an 'org' package (e.g., 
-`r Biocpkg("org.Hs.eg.db")`) and a genome coordinate functionality of the 
-'TxDb' package (e.g., `r Biocpkg("TxDb.Hsapiens.UCSC.hg38.knownGene")`). It 
-aims to provide an integrated presentation of identifiers and genomic 
-coordinates. And a _src_organism_ object is created to point to the database. 
+The `r Biocpkg("Organism.dplyr")` creates an on disk sqlite database to hold
+data of an organism combined from an 'org' package (e.g.,
+`r Biocpkg("org.Hs.eg.db")`) and a genome coordinate functionality of the
+'TxDb' package (e.g., `r Biocpkg("TxDb.Hsapiens.UCSC.hg38.knownGene")`). It
+aims to provide an integrated presentation of identifiers and genomic
+coordinates. And a _src_organism_ object is created to point to the database.
 
-The _src_organism_ object is created as an extension of _src_sql_ and 
-_src_sqlite_ from [dplyr][], which inherited all [dplyr][] methods. It also 
-implements the `select()` interface from `r Biocpkg("AnnotationDbi")` and 
+The _src_organism_ object is created as an extension of _src_sql_ and
+_src_sqlite_ from [dplyr][], which inherited all [dplyr][] methods. It also
+implements the `select()` interface from `r Biocpkg("AnnotationDbi")` and
 genomic coordinates extractors from `r Biocpkg("GenomicFeatures")`.
 
 # Constructing a _src_organism_
@@ -42,24 +42,25 @@ suppressPackageStartupMessages({
 
 ```{r, eval=FALSE}
 library(Organism.dplyr)
-})
 ```
 
 Running `src_organism()` without a given path will save the sqlite file to a
-tempdir():
+`tempdir()`:
 
-```{r}
+```{r, eval=FALSE}
 src <- src_organism("TxDb.Hsapiens.UCSC.hg38.knownGene")
 ```
 
 Alternatively you can provide explicit path to where the sqlite file should
-be saved.
+be saved, and re-use the data base at a later date.
 
 ```{r, eval=FALSE}
-src <- src_organism("TxDb.Hsapiens.UCSC.hg38.knownGene", "path/to/save/sqlite")
+path <- "path/to/my.sqlite"
+src <- src_organism("TxDb.Hsapiens.UCSC.hg38.knownGene", path)
+src <- src_organism(dbpath=path)
 ```
 
-`supportedOrganisms()` provides a list of organisms with corresponding 'org' 
+`supportedOrganisms()` provides a list of organisms with corresponding 'org'
 and 'TxDb' packages being supported.
 
 ```{r}
@@ -68,18 +69,18 @@ supportedOrganisms()
 
 ## Make sqlite datebase from organism name
 
-Organism name, genome and id could be specified to create sqlite database. 
-Organism name (either Organism or common name) must be provided to create the 
-database, if genome and/or id are not provided, most recent 'TxDb' package is 
+Organism name, genome and id could be specified to create sqlite database.
+Organism name (either Organism or common name) must be provided to create the
+database, if genome and/or id are not provided, most recent 'TxDb' package is
 used.
 
 ```{r, eval=FALSE}
-src <- src_ucsc("human", "path/to/save/sqlite")
+src <- src_ucsc("human", path)
 ```
 
-## Access existing sqlite file 
+## Access existing sqlite file
 
-Existing on disk sqlite file can be accessed without recreating the database. 
+Existing on disk sqlite file can be accessed without recreating the database.
 
 ```{r}
 path <- system.file("extdata", package = "Organism.dplyr")
@@ -87,106 +88,98 @@ src <- src_organism(dbpath = file.path(path, "example.sqlite"))
 src
 ```
 
-# Common operations
+# The "dplyr" interface
 
-## Basic operations
+All methods from package [dplyr][] can be used for a _src_organism_ object.
 
-All methods from package [dplyr][] can be used for a _src_organism_ object. 
-
-Look at all available tables. 
+Look at all available tables.
 ```{r}
 src_tbls(src)
 ```
 
-Look at data from one specific table. 
+Look at data from one specific table.
 ```{r}
 tbl(src, "id")
 ```
 
-Look at fields of one table. 
+Look at fields of one table.
 ```{r}
 colnames(tbl(src, "id"))
 ```
 
-Below are some examples of querying tables using dplyr. 
+Below are some examples of querying tables using dplyr.
 
 1. Gene symbol start with "BRCA"
 
 ```{r}
-tbl(src, "id") %>% 
-    filter(symbol %like% "BRCA%") %>% 
-    dplyr::select(entrez, map, ensembl, symbol) %>% 
+tbl(src, "id") %>%
+    filter(symbol %like% "BRCA%") %>%
+    dplyr::select(entrez, map, ensembl, symbol) %>%
     distinct() %>% arrange(symbol) %>% collect()
 ```
 
-2. Go info for gene symbol "PTEN"
+2. Gene ontology (GO) info for gene symbol "PTEN"
 
 ```{r}
-inner_join(tbl(src, "id"), tbl(src, "id_go")) %>% 
-    filter(symbol == "PTEN") %>% 
+inner_join(tbl(src, "id"), tbl(src, "id_go")) %>%
+    filter(symbol == "PTEN") %>%
     dplyr::select(entrez, ensembl, symbol, go, evidence, ontology)
 ```
 
-3. Genes transcripts count
+3. Gene transcript counts
 
 ```{r}
-txcount <- inner_join(tbl(src, "id"), tbl(src, "ranges_tx")) %>% 
-    dplyr::select(symbol, tx_id) %>% 
-    group_by(symbol) %>% 
-    summarise(count = count(symbol)) %>% 
-    dplyr::select(symbol, count) %>% 
-    arrange(desc(count)) %>% 
+txcount <- inner_join(tbl(src, "id"), tbl(src, "ranges_tx")) %>%
+    dplyr::select(symbol, tx_id) %>%
+    group_by(symbol) %>%
+    summarise(count = count(symbol)) %>%
+    dplyr::select(symbol, count) %>%
+    arrange(desc(count)) %>%
     collect(n=Inf)
 
 txcount
 ```
 
 ```{r, echo=FALSE}
-ggplot(txcount, aes(x = txcount$symbol[order(txcount$symbol)], 
+ggplot(txcount, aes(x = txcount$symbol[order(txcount$symbol)],
                     y = txcount$count)) +
-    geom_point() + 
-    ggtitle("Transcript count") + 
-    labs(x = "symbol") + 
+    geom_point() +
+    ggtitle("Transcript count") +
+    labs(x = "symbol") +
     labs(y = "count")
 ```
 
 4. Gene coordinates of symbol "PTEN" and "BRCA1" as _GRanges_
 
 ```{r}
-inner_join(tbl(src, "id"), tbl(src, "ranges_gene")) %>% 
-    filter(symbol %in% c("PTEN", "BRCA1")) %>% 
-    dplyr::select(gene_chrom, gene_start, gene_end, gene_strand, 
-                  symbol, map) %>% 
-    collect() %>% GenomicRanges::GRanges() 
+inner_join(tbl(src, "id"), tbl(src, "ranges_gene")) %>%
+    filter(symbol %in% c("PTEN", "BRCA1")) %>%
+    dplyr::select(gene_chrom, gene_start, gene_end, gene_strand,
+                  symbol, map) %>%
+    collect() %>% GenomicRanges::GRanges()
 ```
 
-## "select" interface 
+# The "select" interface
 
-Methods `select()`, `keytypes()`, `keys()`, `columns()` and `mapIds` from 
-`r Biocpkg("AnnotationDbi")` are implemented for _src_organism_ objects.
+Methods `select()`, `keytypes()`, `keys()`, `columns()` and `mapIds` from
+`r Biocpkg("AnnotationDbi")` are implemented for _src\_organism_ objects.
 
-### `keytypes()`
-
-Use `keytypes()` to discover which keytypes can be passed to keytype argument 
+Use `keytypes()` to discover which keytypes can be passed to keytype argument
 of methods `select()` or `keys()`.
 
 ```{r}
 keytypes(src)
 ```
 
-### `columns()`
-
-Use `columns()` to discover which kinds of data can be returned for the 
+Use `columns()` to discover which kinds of data can be returned for the
 _src_organism_ object.
 
 ```{r}
 columns(src)
 ```
 
-### `keys()`
-
-`keys()` returns keys for the _src_organism_ object. By default it returns the 
-primary keys for the database, and returns the keys from that keytype when the 
+`keys()` returns keys for the _src\_organism_ object. By default it returns the
+primary keys for the database, and returns the keys from that keytype when the
 keytype argument is used.
 
 Keys of entrez
@@ -201,13 +194,11 @@ Keys of symbol
 head(keys(src, "symbol"))
 ```
 
-### `select()`
-
-`select()` retrieves the data as a _tibble_ based on parameters for selected 
-keys columns and keytype arguments. If requested columns that have multiple 
+`select()` retrieves the data as a _tibble_ based on parameters for selected
+keys columns and keytype arguments. If requested columns that have multiple
 matches for the keys, `select_tbl()` will return a _tibble_ with one row for
 each possible match, and `select()` will return a data frame.
- 
+
 
 ```{r}
 keytype <- "symbol"
@@ -216,54 +207,53 @@ columns <- c("entrez", "tx_id", "tx_name","exon_id")
 select_tbl(src, keys, columns, keytype)
 ```
 
-### `mapIds()`
-
-`mapIds()` gets the mapped ids (column) for a set of keys that are of a 
+`mapIds()` gets the mapped ids (column) for a set of keys that are of a
 particular keytype. Usually returned as a named character vector.
 
 ```{r}
 mapIds(src, keys, column = "tx_name", keytype)
 ```
 
-## Genomic coordinates extractors
+# The "GRanges" interface
 
-Eleven genomic coordinates extractor methods are available in this package: 
-`transcripts()`, `exons()`, `cds()`, `genes()`, `promoters()`, 
-`transcriptsBy()`, `exonsBy()`, `cdsBy()`, `intronsByTranscript()`, 
-`fiveUTRsByTranscript()`, `threeUTRsByTranscript()`. Two versions of results 
-are provided: _tibble_ (`transcripts_tbl()`) and _GRanges_ or _GRangesList_ 
-(`transcripts()`). 
+Eleven genomic coordinates extractor methods are available in this
+package: `transcripts()`, `exons()`, `cds()`, `genes()`,
+`promoters()`, `transcriptsBy()`, `exonsBy()`, `cdsBy()`,
+`intronsByTranscript()`, `fiveUTRsByTranscript()`,
+`threeUTRsByTranscript()`. Data can be returned in two versions, for
+instance _tibble_ (`transcripts_tbl()`) and _GRanges_ or _GRangesList_
+(`transcripts()`).
 
-Filter can be applied to all extractor functions. A named list of vectors can 
-be used to restrict the output, valid filters can be retrieved by 
-`supportedFilters()`. 
+Filters can be applied to all extractor functions. A named list of
+vectors can be used to restrict the output, valid filters can be
+retrieved by `supportedFilters()`.
 
 ```{r}
 supportedFilters()
 ```
 
-All filters take two parameters: value and condition, condition could be one of
-"==", "!=", "startsWith", "endsWith", ">", "<", ">=" and "<=", default 
-condition is "==".
+All filters take two parameters: value and condition, condition could
+be one of "==", "!=", "startsWith", "endsWith", ">", "<", ">=" and
+"<=", default condition is "==".
 
 ```{r}
 EnsemblFilter("ENSG00000171862")
 SymbolFilter("BRCA", "startsWith")
 ```
 
-Besides, `GRangesFilter()` could also be used as filter for the methods with 
-result displaying as _GRanges_ or _GRangesList_. 
+Besides, `GRangesFilter()` could also be used as filter for the methods with
+result displaying as _GRanges_ or _GRangesList_.
 
 ```{r}
 filters <- list(SymbolFilter(c("PTEN", "BRCA1")),
-                EntrezFilter(5728), 
+                EntrezFilter(5728),
                 GRangesFilter(as("chr10:87869000-87876000", "GRanges")))
 transcripts_tbl(src, filter=filters)
 transcripts(src, filter=filters)
 ```
 
-Transcript coordinates of gene symbol equal to "PTEN" or "BRCA1", and 
-transcript start position between 87863438 and 87933487. 
+Transcript coordinates of gene symbol equal to "PTEN" or "BRCA1", and
+transcript start position between 87863438 and 87933487.
 
 ```{r}
 transcripts_tbl(src, filter = list(
@@ -277,7 +267,5 @@ transcripts_tbl(src, filter = list(
 ```{r}
 sessionInfo()
 ```
-
-
 
 [dplyr]: https://CRAN.R-project.org/package=dplyr
