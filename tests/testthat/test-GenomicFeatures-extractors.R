@@ -35,10 +35,7 @@ src <- src_organism(dbpath=hg38light)
 }
 
 .test_extractorBy <- function(src, txdb, funBy) {
-    suppressWarnings({
-        src <- funBy(src)
-        txdb <- funBy(txdb)
-    })
+    src <- funBy(src)
     expect_true(all(names(src) %in% names(txdb)))
     expect_true(all.equal(seqinfo(src), seqinfo(txdb)))
 
@@ -61,10 +58,8 @@ src <- src_organism(dbpath=hg38light)
 
 .test_extractorBy_txfilter <- function(src, txdb, funBy) {
     txid <- c(15880L, 15881L)
-    suppressWarnings({
-        src <- funBy(src, filter=list(TxIdFilter(txid)))
-        txdb <- funBy(txdb)[txid]
-    })
+    src <- funBy(src, filter=list(TxIdFilter(txid)))
+    txdb <- txdb[txid]
 
     expect_equal(length(src), length(txdb))
     expect_true(all.equal(seqinfo(src), seqinfo(txdb)))
@@ -92,6 +87,7 @@ test_that("promoters-extractor", {
 })
 
 test_that("transcriptsBy-extractor", {
+    txdb <- suppressWarnings(transcriptsBy(txdb))
     .test_extractorBy(src, txdb, transcriptsBy)
     ## .test_extractorBy_txfilter(src, txdb, transcriptsBy)
     
@@ -99,33 +95,38 @@ test_that("transcriptsBy-extractor", {
     ## FIXME TxIdFilter does not work correctly here
     egid <- c("10", "100")
     tx_src <- unlist(transcriptsBy(src, filter=list(EntrezFilter(egid))))
-    tx_txdb <- unlist(transcriptsBy(txdb)[egid])
+    tx_txdb <- unlist(txdb[egid])
     expect_equal(length(tx_src), length(tx_txdb))
     expect_true(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)))
     expect_equal(tx_src$tx_id, tx_txdb$tx_id)
 })
 
 test_that("exonsBy-extractor", {
+    txdb <- suppressWarnings(exonsBy(txdb))
     .test_extractorBy(src, txdb, exonsBy)
     .test_extractorBy_txfilter(src, txdb, exonsBy)
 })
 
 test_that("cdsBy-extractor", {
+    txdb <- suppressWarnings(cdsBy(txdb))
     .test_extractorBy(src, txdb, cdsBy)
     .test_extractorBy_txfilter(src, txdb, cdsBy)
 })
 
 test_that("intronsByTranscript-extractor", {
+    txdb <- suppressWarnings(intronsByTranscript(txdb))
     .test_extractorBy(src, txdb, intronsByTranscript)
     .test_extractorBy_txfilter(src, txdb, intronsByTranscript)
 })    
 
 test_that("fiveUTRsByTranscript-extractor", {
+    txdb <- suppressWarnings(fiveUTRsByTranscript(txdb))
     .test_extractorBy(src, txdb, fiveUTRsByTranscript)
     .test_extractorBy_txfilter(src, txdb, fiveUTRsByTranscript)
 })
 
 test_that("threeUTRsByTranscript-extractor", {
+    txdb <- suppressWarnings(threeUTRsByTranscript(txdb))
     .test_extractorBy(src, txdb, threeUTRsByTranscript)
     .test_extractorBy_txfilter(src, txdb, threeUTRsByTranscript)
 })    
