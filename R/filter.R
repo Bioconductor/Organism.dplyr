@@ -157,7 +157,7 @@ setClass("GRangesFilter",
 
 #' @rdname BasicFilter
 #' @export
-GRangesFilter <- function(value){
+GRangesFilter <- function(value) {
     new("GRangesFilter",
         field="granges",
         value=value)
@@ -209,17 +209,18 @@ setValidity("BasicFilter", function(object) {
 .OPS <- c("==", "!=", "startsWith", "endsWith", ">", "<", ">=", "<=")
 
 .CHAR_FIELDS <- c(
-    "accnum", "alias", "cds_chrom", "cds_id", "cds_name", "cds_strand",
-    "ensembl", "ensemblprot", "ensembltrans", "entrez", "enzyme", "evidence",
-    "evidenceall", "exon_chrom", "exon_id", "exon_name", "exon_rank",
-    "exon_strand", "flybase", "flybase_cg", "flybase_prot", "gene_chrom",
-    "gene_strand", "genename", "go", "goall", "ipi", "map", "mgi", "omim",
-    "ontology", "ontologyall", "pfam", "pmid", "prosite", "refseq", "symbol",
-    "tx_chrom", "tx_id", "tx_name", "tx_strand", "tx_type", "unigene",
-    "uniprot", "wormbase", "zfin")
+    "accnum", "alias", "cds_chrom", "cds_name", "cds_strand",
+    "ensembl", "ensemblprot", "ensembltrans", "entrez", "enzyme",
+    "evidence", "evidenceall", "exon_chrom", "exon_name",
+    "exon_strand", "flybase", "flybase_cg", "flybase_prot",
+    "gene_chrom", "gene_strand", "genename", "go", "goall", "ipi",
+    "map", "mgi", "omim", "ontology", "ontologyall", "pfam", "pmid",
+    "prosite", "refseq", "symbol", "tx_chrom", "tx_name", "tx_strand",
+    "tx_type", "unigene", "uniprot", "wormbase", "zfin")
 
 .INT_FIELDS <- c(
-    "cds_start", "cds_end", "exon_start", "exon_end", "gene_start", "gene_end",
+    "cds_id", "cds_start", "cds_end", "exon_id", "exon_start",
+    "exon_end", "exon_rank", "gene_start", "gene_end", "tx_id",
     "tx_start", "tx_end")
 
 .fieldToClass <- function(field) {
