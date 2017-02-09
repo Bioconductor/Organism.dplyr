@@ -148,15 +148,15 @@ These functions are used to create filters for genomic extrators.
 }
 \details{
 All these filters except \code{GRangesFilter()} extend \code{BasicFilter}
-class. Each filter takes value(s) from the corresponding column. For 
-example, \code{AccnumFilter()} takes value of accession number(s), which 
+class. Each filter takes value(s) from the corresponding column. For
+example, \code{AccnumFilter()} takes value of accession number(s), which
 come from column \code{accnum}.
 
 \code{GRangesFilter()} takes a \code{GRanges} object as filter, and returns
 genomic extractors (\code{genes}, \code{transcripts}, etc.) that are
 partially overlapping with the region.
 
-\code{supportedFilters()} lists all available filters for 
+\code{supportedFilters()} lists all available filters for
 \code{src_organism} object.
 }
 \examples{
