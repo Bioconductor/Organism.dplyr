@@ -1,6 +1,8 @@
 context("src_organism-select")
 
-library(TxDb.Hsapiens.UCSC.hg38.knownGene)
+suppressPackageStartupMessages({
+    library(TxDb.Hsapiens.UCSC.hg38.knownGene)
+})
 txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
 
 hg38light <- system.file(

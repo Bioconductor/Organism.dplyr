@@ -13,6 +13,7 @@ test_that("src_organism_constructor", {
     expect_error(src_organism("FOO"))
 
     if (interactive()) {
+        message("creating expensive 'src_organism'")
         src <- src_organism("TxDb.Hsapiens.UCSC.hg38.knownGene")
     } else {
         src <- src_organism(dbpath=hg38light)
@@ -41,6 +42,7 @@ test_that("src_ucsc_constructor", {
     expect_error(src_ucsc("FOO"))
 
     if (interactive()) {
+        message("creating expensive 'src_organism'")
         src <- src_ucsc("human")
     } else {
         src <- src_organism(dbpath=hg38light)
@@ -53,7 +55,9 @@ test_that("src_ucsc_constructor", {
 
 test_that("mouse", {
     ## test ensGene no filter
-    library(TxDb.Mmusculus.UCSC.mm10.ensGene)
+    suppressPackageStartupMessages({
+        library(TxDb.Mmusculus.UCSC.mm10.ensGene)
+    })
     txdb <- TxDb.Mmusculus.UCSC.mm10.ensGene
     src <- src_organism(dbpath=mm10light)
     expect_true(is(src, "src_organism"))

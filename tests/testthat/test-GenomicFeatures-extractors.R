@@ -1,6 +1,8 @@
 context("GenomicFeatures-extractors")
 
-library(TxDb.Hsapiens.UCSC.hg38.knownGene)
+suppressPackageStartupMessages({
+    library(TxDb.Hsapiens.UCSC.hg38.knownGene)
+})
 txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
 hg38light <- system.file(
     package="Organism.dplyr", "extdata", "light.hg38.knownGene.sqlite"
