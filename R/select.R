@@ -56,7 +56,8 @@
 #' @rdname select
 #' 
 #' @examples
-#' src <- src_organism("TxDb.Hsapiens.UCSC.hg38.knownGene")
+#' \dontrun{src <- src_organism("TxDb.Hsapiens.UCSC.hg38.knownGene")}
+#' src <- src_organism(dbpath=hg38light())
 #' 
 #' ## keytypes
 #' keytypes(src)
@@ -209,7 +210,7 @@ select_tbl <- function (x, keys, columns, keytype) {
 #' 
 #' @examples
 #' keytype <- "symbol"
-#' keys <- c("PTEN", "BRCA1")
+#' keys <- c("ADA", "NAT2")
 #' columns <- c("entrez", "tx_id", "tx_name","exon_id")
 #' 
 #' ## select

@@ -76,15 +76,16 @@ corresponding OrgDb and TxDb.
 \examples{
 ## create human sqlite database with TxDb.Hsapiens.UCSC.hg38.knownGene and
 ## corresponding org.Hs.eg.db
-src <- src_organism("TxDb.Hsapiens.UCSC.hg38.knownGene")
+\dontrun{src <- src_organism("TxDb.Hsapiens.UCSC.hg38.knownGene")}
+src <- src_organism(dbpath=hg38light())
 
 ## query using dplyr
 inner_join(tbl(src, "id"), tbl(src, "id_go")) \%>\% 
-     filter(symbol == "PTEN") \%>\% 
+     filter(symbol == "ADA") \%>\% 
      dplyr::select(entrez, ensembl, symbol, go, evidence, ontology)
 
 ## create human sqlite database using hg38 genome
-human <- src_ucsc("human")
+\dontrun{human <- src_ucsc("human")}
 
 ## all supported organisms with corresponding OrgDb and TxDb
 supportedOrganisms()
