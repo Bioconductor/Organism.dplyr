@@ -18,8 +18,8 @@ src <- src_organism(dbpath=hg38light)
     expect_true(all.equal(seqinfo(src), seqinfo(txdb)))
 
     txdb <- txdb[match(mcols(src)[[subset]], mcols(txdb)[[subset]], 0)]
-    o_src <- order(granges(src))
-    o_txdb <- order(granges(txdb))
+    o_src <- GenomicRanges::order(granges(src))
+    o_txdb <- GenomicRanges::order(granges(txdb))
 
     ## FIXME: metadata differs, so simpler expect_identical(tx_src,
     ## tx_txdb) fails
@@ -42,8 +42,8 @@ src <- src_organism(dbpath=hg38light)
     expect_true(all.equal(seqinfo(src), seqinfo(txdb)))
 
     txdb <- txdb[names(src)]
-    o_src <- order(granges(unlist(src)))
-    o_txdb <- order(granges(unlist(txdb)))
+    o_src <- GenomicRanges::order(granges(unlist(src)))
+    o_txdb <- GenomicRanges::order(granges(unlist(txdb)))
     ## FIXME: unlist(mcols(src)) has 'entrez' column
     ## expect_identical(mcols(unlist(src)), mcols(unlist(txdb)))
     columns <- names(mcols(unlist(txdb)))
