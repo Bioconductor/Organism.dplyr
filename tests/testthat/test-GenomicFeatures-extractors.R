@@ -43,18 +43,9 @@ src <- src_organism(dbpath=hg38light)
     txdb <- txdb[names(src)]
     o_src <- GenomicRanges::order(granges(unlist(src)))
     o_txdb <- GenomicRanges::order(granges(unlist(txdb)))
-    ## FIXME: unlist(mcols(src)) has 'entrez' column
-    ## expect_identical(mcols(unlist(src)), mcols(unlist(txdb)))
-    columns <- names(mcols(unlist(txdb)))
 
-    expect_identical(
-        granges(unlist(src))[o_src],
-        granges(unlist(txdb)[o_txdb])
-    )
-    expect_identical(
-        mcols(unlist(src))[o_src, columns],
-        mcols(unlist(txdb))[o_txdb, columns]
-    )
+    expect_identical(granges(unlist(src))[o_src], granges(unlist(txdb)[o_txdb]))
+    expect_identical(mcols(unlist(src))[o_src, ], mcols(unlist(txdb))[o_txdb, ])
 }
 
 .test_extractorBy_txfilter <- function(src, txdb, funBy) {
