@@ -1,7 +1,7 @@
 .tbl_join <- function(x, table, tbls, filter) {
     if (is.null(filter))
         return(table)
-
+    
     names(filter) <- .fields(filter)
     if ("granges" %in% names(filter))
         filter <- filter[!(names(filter) %in% "granges")]
@@ -43,6 +43,13 @@
     keep <- fields[!(fields %in% drop)]
 }
 
+.filter_list <- function(filter) {
+    if (!is.null(filter) & is(filter, "BasicFilter"))
+        list(filter)
+    else
+        filter
+}
+
 .filter_names <- function(filter) {
     setdiff(.fields(filter), "granges")
 }
@@ -53,6 +60,7 @@
 }
 
 .return_tbl <- function(table, filter) {
+    filter <- .filter_list(filter)
     if ("granges" %in% .fields(filter))
         message("filter by 'granges' only supported by methods returning ",
                 "GRanges or GRangesList")
@@ -69,11 +77,12 @@
 #' @importFrom IRanges subsetByOverlaps
 .toGRanges <- function(x, table, filter) {
     if (!is.null(filter)) {
+        filter <- .filter_list(filter)
         names(filter) <- .fields(filter)
-    fields <- .fields(filter)
-    condition <- endsWith(fields, "start") | endsWith(fields, "end")
-    if (any(condition) && !fields[condition] %in% table)
-        stop("use GRanges as filter instead of ", fields[condition])
+        fields <- .fields(filter)
+        condition <- endsWith(fields, "start") | endsWith(fields, "end")
+        if (any(condition) && !fields[condition] %in% table)
+            stop("use GRanges as filter instead of ", fields[condition])
     }
 
     gr <- table %>% collect(n=Inf) %>% as("GRanges")
@@ -90,6 +99,7 @@
 }
 
 .transcripts_tbl <- function(x, filter = NULL) {
+    filter <- .filter_list(filter)
     table <- .transcripts(x, filter)
     fields <- unique(c(
         "tx_chrom", "tx_start", "tx_end", "tx_strand",
@@ -171,6 +181,7 @@ setMethod("transcripts", "src_organism",
 }
 
 .exons_tbl <- function(x, filter = NULL) {
+    filter <- .filter_list(filter)
     fields_remove <- c(x$schema, "tx_id", "exon_name", "exon_rank")
     fields <- unique(c(
         "exon_chrom", "exon_start", "exon_end", "exon_strand",
@@ -206,6 +217,7 @@ setMethod("exons", "src_organism",
 }
 
 .cds_tbl <- function(x, filter = NULL) {
+    filter <- .filter_list(filter)
     fields_remove <- c(x$schema, "tx_id", "cds_name", "exon_rank")
     fields <- unique(c(
         "cds_chrom", "cds_start", "cds_end", "cds_strand",
@@ -233,6 +245,7 @@ setMethod("cds", "src_organism",
 })
 
 .genes_tbl <- function(x, filter = NULL) {
+    filter <- .filter_list(filter)
     table <- tbl(x, "ranges_gene")
     # genes() from GenomicFeatures
     # table <- dbGetQuery(
@@ -280,7 +293,8 @@ setMethod("genes", "src_organism",
         upstream = 0
     if(missing(downstream))
         downstream = 2200
-
+    
+    filter <- .filter_list(filter)
     table <- .transcripts_tbl(x, filter = filter) %>%
         mutate_(start = ~ ifelse(tx_strand == "-",
                               tx_end - downstream + 1,
@@ -345,8 +359,8 @@ setMethod("promoters", "src_organism",
 }
 
 
-.transcriptsBy_tbl <- function(x, by, filter = NULL)
-{
+.transcriptsBy_tbl <- function(x, by, filter = NULL) {
+    filter <- .filter_list(filter)
     tx <- .transcripts(x, filter = filter)
 
     if (by == "gene") {
@@ -402,6 +416,7 @@ setMethod("transcriptsBy", "src_organism",
 })
 
 .exonsBy_tbl <- function(x, by, filter = NULL) {
+    filter <- .filter_list(filter)
     exons <- .exons(x, filter = filter)
 
     if (by == "tx") {
@@ -445,6 +460,7 @@ setMethod("exonsBy", "src_organism",
 })
 
 .cdsBy_tbl <- function(x, by, filter = NULL) {
+    filter <- .filter_list(filter)
     cds <- .cds(x, filter = filter)
 
     if (by == "tx") {
@@ -512,6 +528,7 @@ intronsByTranscript_tbl <-
 setMethod("intronsByTranscript", "src_organism",
     function(x, filter=NULL)
 {
+    filter <- .filter_list(filter)
     tx <- .transcripts(x, filter=filter)
     exn <- .exonsBy_tbl(x, by="tx", filter=filter)
 
@@ -599,6 +616,7 @@ setMethod("intronsByTranscript", "src_organism",
 }
 
 .fiveUTRsByTranscript_tbl <- function(x, filter = NULL) {
+    filter <- .filter_list(filter)
     .UTRsByTranscript(x, filter, "-", "+")
 }
 
@@ -622,6 +640,7 @@ setMethod("fiveUTRsByTranscript", "src_organism",
 })
 
 .threeUTRsByTranscript_tbl <- function(x, filter = NULL) {
+    filter <- .filter_list(filter)
     .UTRsByTranscript(x, filter, "+", "-")
 }
 
