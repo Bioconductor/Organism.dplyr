@@ -73,7 +73,7 @@
     fields <- .fields(filter)
     condition <- endsWith(fields, "start") | endsWith(fields, "end")
     if (any(condition) && !fields[condition] %in% table)
-        stop(paste0("use GRanges as filter instead of ", fields[condition]))
+        stop("use GRanges as filter instead of ", fields[condition])
     }
 
     gr <- table %>% collect(n=Inf) %>% as("GRanges")
