@@ -57,7 +57,6 @@ be saved, and re-use the data base at a later date.
 ```{r, eval=FALSE}
 path <- "path/to/my.sqlite"
 src <- src_organism("TxDb.Hsapiens.UCSC.hg38.knownGene", path)
-src <- src_organism(dbpath=path)
 ```
 
 `supportedOrganisms()` provides a list of organisms with corresponding 'org'
@@ -80,11 +79,13 @@ src <- src_ucsc("human", path)
 
 ## Access existing sqlite file
 
-Existing on disk sqlite file can be accessed without recreating the database.
+An existing on-disk sqlite file can be accessed without recreating the
+database. A version of the database created with
+[TxDb.Hsapiens.UCSC.hg38.knownGene][], with just 50 Entrez gene
+identifiers, is distributed with the Organism.dplyr package
 
 ```{r}
-path <- system.file("extdata", package = "Organism.dplyr")
-src <- src_organism(dbpath = file.path(path, "example.sqlite"))
+src <- src_organism(dbpath = hg38light())
 src
 ```
 
@@ -109,24 +110,25 @@ colnames(tbl(src, "id"))
 
 Below are some examples of querying tables using dplyr.
 
-1. Gene symbol start with "BRCA"
+1. Gene symbol starting with "SNORD" (the notation `SNORD%` is from
+   SQL, with `%` representing a wild-card match to any string)
 
 ```{r}
 tbl(src, "id") %>%
-    filter(symbol %like% "BRCA%") %>%
+    filter(symbol %like% "SNORD%") %>%
     dplyr::select(entrez, map, ensembl, symbol) %>%
     distinct() %>% arrange(symbol) %>% collect()
 ```
 
-2. Gene ontology (GO) info for gene symbol "PTEN"
+2. Gene ontology (GO) info for gene symbol "ADA"
 
 ```{r}
 inner_join(tbl(src, "id"), tbl(src, "id_go")) %>%
-    filter(symbol == "PTEN") %>%
+    filter(symbol == "ADA") %>%
     dplyr::select(entrez, ensembl, symbol, go, evidence, ontology)
 ```
 
-3. Gene transcript counts
+3. Gene transcript counts per gene symbol
 
 ```{r}
 txcount <- inner_join(tbl(src, "id"), tbl(src, "ranges_tx")) %>%
@@ -138,22 +140,21 @@ txcount <- inner_join(tbl(src, "id"), tbl(src, "ranges_tx")) %>%
     collect(n=Inf)
 
 txcount
-```
 
-```{r, echo=FALSE}
-ggplot(txcount, aes(x = txcount$symbol[order(txcount$symbol)],
-                    y = txcount$count)) +
-    geom_point() +
+library(ggplot2)
+ggplot(txcount, aes(x = symbol, y = count)) + 
+    geom_bar(stat="identity") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
     ggtitle("Transcript count") +
-    labs(x = "symbol") +
-    labs(y = "count")
+    labs(x = "Symbol") +
+    labs(y = "Count")
 ```
 
-4. Gene coordinates of symbol "PTEN" and "BRCA1" as _GRanges_
+4. Gene coordinates of symbol "ADA" and "NAT2" as _GRanges_
 
 ```{r}
 inner_join(tbl(src, "id"), tbl(src, "ranges_gene")) %>%
-    filter(symbol %in% c("PTEN", "BRCA1")) %>%
+    filter(symbol %in% c("ADA", "NAT2")) %>%
     dplyr::select(gene_chrom, gene_start, gene_end, gene_strand,
                   symbol, map) %>%
     collect() %>% GenomicRanges::GRanges()
@@ -202,7 +203,7 @@ each possible match, and `select()` will return a data frame.
 
 ```{r}
 keytype <- "symbol"
-keys <- c("PTEN", "BRCA1")
+keys <- c("ADA", "NAT2")
 columns <- c("entrez", "tx_id", "tx_name","exon_id")
 select_tbl(src, keys, columns, keytype)
 ```
@@ -212,6 +213,7 @@ particular keytype. Usually returned as a named character vector.
 
 ```{r}
 mapIds(src, keys, column = "tx_name", keytype)
+mapIds(src, keys, column = "tx_name", keytype, multiVals="CharacterList")
 ```
 
 # The "GRanges" interface
@@ -237,29 +239,30 @@ be one of "==", "!=", "startsWith", "endsWith", ">", "<", ">=" and
 "<=", default condition is "==".
 
 ```{r}
-EnsemblFilter("ENSG00000171862")
-SymbolFilter("BRCA", "startsWith")
+EnsemblFilter("ENSG00000196839")
+SymbolFilter("SNORD", "startsWith")
 ```
 
-Besides, `GRangesFilter()` could also be used as filter for the methods with
+A `GRangesFilter()` can also be used as filter for the methods with
 result displaying as _GRanges_ or _GRangesList_.
 
 ```{r}
-filters <- list(SymbolFilter(c("PTEN", "BRCA1")),
-                EntrezFilter(5728),
-                GRangesFilter(as("chr10:87869000-87876000", "GRanges")))
+filters <- list(SymbolFilter("SNORD", "startsWith"))
 transcripts_tbl(src, filter=filters)
+filters <- list(
+    SymbolFilter("SNORD", "startsWith"),
+    GRangesFilter(GenomicRanges::GRanges("chr15:25062333-25065121"))
+)
 transcripts(src, filter=filters)
 ```
 
-Transcript coordinates of gene symbol equal to "PTEN" or "BRCA1", and
-transcript start position between 87863438 and 87933487.
+Transcript coordinates of gene symbol equal to "ADA" and transcript
+start position between 87863438 and 87933487.
 
 ```{r}
 transcripts_tbl(src, filter = list(
-    SymbolFilter(c("PTEN", "BRCA1")),
-    TxStartFilter(87863438,">="),
-    TxStartFilter(87933487, "<=")
+    SymbolFilter("ADA"),
+    TxStartFilter(44619810,"<")
 ))
 ```
 
@@ -269,3 +272,4 @@ sessionInfo()
 ```
 
 [dplyr]: https://CRAN.R-project.org/package=dplyr
+[TxDb.Hsapiens.UCSC.hg38.knownGene]: https://bioconductor.org/packages/TxDb.Hsapiens.UCSC.hg38.knownGene
