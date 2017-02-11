@@ -1,7 +1,7 @@
 .tbl_join <- function(x, table, tbls, filter) {
     if (is.null(filter))
         return(table)
-    
+
     names(filter) <- .fields(filter)
     if ("granges" %in% names(filter))
         filter <- filter[!(names(filter) %in% "granges")]
@@ -10,9 +10,9 @@
         stopifnot(is(i, "BasicFilter"))
 
     fields <- .fields(filter)
-    
-    if (!all(fields %in% columns(x))) 
-        stop(paste0("'", fields[!(fields %in% columns(x))], "'", 
+
+    if (!all(fields %in% columns(x)))
+        stop(paste0("'", fields[!(fields %in% columns(x))], "'",
                     collapse = ","), " filter not available")
 
     ## filter by fields from main table
@@ -157,7 +157,7 @@ transcripts_tbl <- function(x, filter = NULL) {
 
 
 #' @importFrom GenomicRanges GRanges
-#' 
+#'
 #' @examples
 #' ## transcript coordinates with filter in granges format
 #' filters <- list(GRangesFilter(GenomicRanges::GRanges("chr15:1-25070000")))
@@ -293,7 +293,7 @@ setMethod("genes", "src_organism",
         upstream = 0
     if(missing(downstream))
         downstream = 2200
-    
+
     filter <- .filter_list(filter)
     table <- .transcripts_tbl(x, filter = filter) %>%
         mutate_(start = ~ ifelse(tx_strand == "-",
@@ -508,11 +508,11 @@ intronsByTranscript_tbl <-
 {
     ans <- unlist(intronsByTranscript(x, filter))
     mcols(ans)[, "tx_id"] <- names(ans)
-    unname(unlist(ans)) %>% as.data.frame %>% tbl_df %>% 
-        dplyr::select_(.dots = c('tx_id', 
-                          intron_chrom = 'seqnames', 
-                          intron_start = 'start', 
-                          intron_end = 'end', 
+    unname(unlist(ans)) %>% as.data.frame %>% tbl_df %>%
+        dplyr::select_(.dots = c('tx_id',
+                          intron_chrom = 'seqnames',
+                          intron_start = 'start',
+                          intron_end = 'end',
                           intron_strand = 'strand'))
 }
 
@@ -550,7 +550,7 @@ setMethod("intronsByTranscript", "src_organism",
     exn_grl <- do.call(select_, c(list(table), as.list(fields))) %>%
         as("GRanges")
     exn_grl <- split(exn_grl, exn_grl$tx_id)
-    
+
     tx_gr<- tx_gr[match(names(exn_grl), mcols(tx_gr)[, "tx_id"])]
     ans <- psetdiff(tx_gr, exn_grl)
     ans
@@ -595,11 +595,11 @@ setMethod("intronsByTranscript", "src_organism",
     splicings <- S4Vectors:::extract_data_frame_rows(splicings, idx)
 
     table <- splicings %>%
-        mutate_(start = ~ 
+        mutate_(start = ~
                    ifelse(!is.na(cds_id) & exon_strand == strand1,
                           cds_end + 1L,
                           exon_start),
-               end = ~ 
+               end = ~
                    ifelse(!is.na(cds_id) & exon_strand == strand2,
                           cds_start - 1L,
                           exon_end)) %>%
