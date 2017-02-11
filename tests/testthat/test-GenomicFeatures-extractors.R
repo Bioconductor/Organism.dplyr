@@ -28,8 +28,17 @@ src <- src_organism(dbpath=hg38light)
 
 .test_extractor_egfilter <- function(src, txdb, fun, subset) {
     egid <- c("10", "100")
-    src <- fun(src, filter=list(EntrezFilter(egid)))
+    src0 <- src
     txdb <- fun(txdb, filter=list(gene_id=egid))
+
+    ## list(*Filter)
+    src <- fun(src0, filter=list(EntrezFilter(egid)))
+    expect_equal(length(src), length(txdb))
+    expect_true(all.equal(seqinfo(src), seqinfo(txdb)))
+    expect_true(setequal(mcols(src)[[subset]], mcols(txdb)[[subset]]))
+
+    ## #Filter
+    src <- fun(src0, filter=EntrezFilter(egid))
     expect_equal(length(src), length(txdb))
     expect_true(all.equal(seqinfo(src), seqinfo(txdb)))
     expect_true(setequal(mcols(src)[[subset]], mcols(txdb)[[subset]]))
@@ -50,9 +59,17 @@ src <- src_organism(dbpath=hg38light)
 
 .test_extractorBy_txfilter <- function(src, txdb, funBy) {
     txid <- c(15880L, 15881L)
-    src <- funBy(src, filter=list(TxIdFilter(txid)))
+    src0 <- src
     txdb <- txdb[txid]
 
+    ## list(*Filter)
+    src <- funBy(src0, filter=list(TxIdFilter(txid)))
+    expect_equal(length(src), length(txdb))
+    expect_true(all.equal(seqinfo(src), seqinfo(txdb)))
+    expect_true(setequal(src$tx_id, txdb$tx_id))
+
+    ## *Filter
+    src <- funBy(src0, filter=TxIdFilter(txid))
     expect_equal(length(src), length(txdb))
     expect_true(all.equal(seqinfo(src), seqinfo(txdb)))
     expect_true(setequal(src$tx_id, txdb$tx_id))
