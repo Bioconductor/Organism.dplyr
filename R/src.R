@@ -1,4 +1,4 @@
-#' Create a sqlite database from an org package and a txdb package
+#' Create a sqlite database from TxDb and corresponding Org packages
 #'
 #' The database provides a convenient way to map between gene, transcript,
 #' and protein identifiers.
@@ -31,9 +31,11 @@
 #'     extract genomic features from a \code{src_organism} object.
 #'     
 #'     \code{\link[Organism.dplyr]{select,src_organism-method}} for "select" 
-#'     interface on \code{src_organism} objects. 
+#'     interface on \code{src_organism} objects.
+#'
+#' @author Yubo Cheng.
 #' 
-#' @rdname src_organism
+#' @rdname src
 #' 
 #' @importFrom  dplyr %>% arrange arrange_ as.tbl build_sql collect compute 
 #'     desc distinct distinct_ filter filter_ full_join group_by group_by_ 
@@ -217,7 +219,7 @@ src_organism <- function(txdb=NULL, dbpath=NULL) {
 #' ## create human sqlite database using hg38 genome
 #' \dontrun{human <- src_ucsc("human")}
 #'
-#' @rdname src_organism
+#' @rdname src
 #' @importFrom GenomeInfoDb genomeBuilds
 #' @importFrom utils read.csv tail installed.packages
 #' @export
@@ -307,7 +309,7 @@ src_ucsc <- function(organism, genome = NULL, id = NULL,
 #' ## all supported organisms with corresponding OrgDb and TxDb
 #' supportedOrganisms()
 #' 
-#' @rdname src_organism
+#' @rdname src
 #' @export
 supportedOrganisms <- function() {
     filename <- system.file(
@@ -323,7 +325,7 @@ supportedOrganisms <- function() {
 #' variable names like they are positions. Use positive values to select
 #' variables; use negative values to drop variables.
 #'
-#' @rdname src_organism
+#' @rdname src
 #' @export
 select_.tbl_organism <- function(.data, ...) {
     .data = NextMethod(.data, ...)
@@ -337,7 +339,7 @@ select_.tbl_organism <- function(.data, ...) {
 #' src_tbls(src)
 #' 
 #' @importFrom RSQLite dbGetQuery
-#' @rdname src_organism
+#' @rdname src
 #' @export
 src_tbls.src_organism <- function(x) {
     sql <- "SELECT name FROM sqlite_master WHERE type IN ('view', 'table')
@@ -354,7 +356,7 @@ src_tbls.src_organism <- function(x) {
 #' ## Look at fields of one table 
 #' colnames(tbl(src, "id"))
 #' 
-#' @rdname src_organism
+#' @rdname src
 #' @export
 tbl.src_organism <- function(src, ...) {
     tbl <- NextMethod(src, ...)
@@ -379,7 +381,7 @@ setOldClass("src_organism")
 #' seqinfo(src)
 #'
 #' @importFrom GenomeInfoDb Seqinfo seqinfo
-#' @rdname src_organism
+#' @rdname src
 #' @exportMethod seqinfo
 setMethod("seqinfo", "src_organism",
     function(x)

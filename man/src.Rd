@@ -9,7 +9,7 @@
 \alias{src_tbls.src_organism}
 \alias{tbl.src_organism}
 \alias{seqinfo,src_organism-method}
-\title{Create a sqlite database from an org package and a txdb package}
+\title{Create a sqlite database from TxDb and corresponding Org packages}
 \usage{
 src_organism(txdb = NULL, dbpath = NULL)
 
@@ -112,4 +112,7 @@ seqinfo(src)
     
     \code{\link[Organism.dplyr]{select,src_organism-method}} for "select" 
     interface on \code{src_organism} objects.
+}
+\author{
+Yubo Cheng.
 }

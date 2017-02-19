@@ -109,7 +109,7 @@
 }
 
 
-#' Extract genomic features from src_organism object
+#' Extract genomic features from src_organism objects
 #'
 #' Generic functions to extract genomic features from an object. This
 #' page documents the methods for \code{\link{src_organism}} objects
@@ -135,6 +135,10 @@
 #'
 #' @seealso \code{\link{src_organism}} for creating a \code{src_organism}
 #'     object.
+#'
+#' @author Yubo Cheng.
+#'
+#' @rdname extractors
 #'
 #' @examples
 #' \dontrun{src <- src_ucsc("human")}
@@ -165,7 +169,7 @@ transcripts_tbl <- function(x, filter = NULL) {
 #'
 #' @importFrom GenomicFeatures transcripts
 #' @importFrom GenomeInfoDb seqinfo<- seqlevels seqlevels<-
-#' @rdname transcripts_tbl
+#' @rdname extractors
 #' @exportMethod transcripts
 setMethod("transcripts", "src_organism",
     function(x, filter = NULL)
@@ -193,14 +197,14 @@ setMethod("transcripts", "src_organism",
     do.call(select_, c(list(table), as.list(keep))) %>% arrange_(~ exon_id)
 }
 
-#' @rdname transcripts_tbl
+#' @rdname extractors
 #' @export
 exons_tbl <- function(x, filter = NULL) {
     .return_tbl(.exons_tbl(x, filter), filter)
 }
 
 
-#' @rdname transcripts_tbl
+#' @rdname extractors
 #' @importFrom GenomicFeatures exons
 #' @exportMethod exons
 setMethod("exons", "src_organism",
@@ -229,13 +233,13 @@ setMethod("exons", "src_organism",
     do.call(select_, c(list(table), as.list(keep))) %>% arrange_(~ cds_id)
 }
 
-#' @rdname transcripts_tbl
+#' @rdname extractors
 #' @export
 cds_tbl <- function(x, filter = NULL) {
     .return_tbl(.cds_tbl(x, filter), filter)
 }
 
-#' @rdname transcripts_tbl
+#' @rdname extractors
 #' @importFrom GenomicFeatures cds
 #' @exportMethod cds
 setMethod("cds", "src_organism",
@@ -263,13 +267,13 @@ setMethod("cds", "src_organism",
     do.call(select_, c(list(table), as.list(fields))) %>% arrange_(x$schema)
 }
 
-#' @rdname transcripts_tbl
+#' @rdname extractors
 #' @export
 genes_tbl <- function(x, filter = NULL) {
     .return_tbl(.genes_tbl(x, filter), filter)
 }
 
-#' @rdname transcripts_tbl
+#' @rdname extractors
 #' @importFrom GenomicFeatures genes
 #' @exportMethod genes
 setMethod("genes", "src_organism",
@@ -318,7 +322,7 @@ setMethod("genes", "src_organism",
 #' @param downstream For \code{promoters()}: An integer(1) value indicating
 #' the number of bases downstream from the transcription start site.
 #'
-#' @rdname transcripts_tbl
+#' @rdname extractors
 #' @export
 promoters_tbl <- function(x, upstream, downstream, filter = NULL) {
     .return_tbl(.promoters_tbl(x, upstream, downstream, filter), filter)
@@ -329,7 +333,7 @@ promoters_tbl <- function(x, upstream, downstream, filter = NULL) {
 #' promoters(src, upstream=100, downstream=50,
 #'           filter = list(SymbolFilter("ADA")))
 #'
-#' @rdname transcripts_tbl
+#' @rdname extractors
 #' @importFrom GenomicFeatures promoters
 #' @importFrom S4Vectors isSingleNumber
 #' @exportMethod promoters
@@ -391,7 +395,7 @@ setMethod("promoters", "src_organism",
     }
 }
 
-#' @rdname transcripts_tbl
+#' @rdname extractors
 #' @export
 transcriptsBy_tbl <- function(x, by = c("gene", "exon", "cds"), filter = NULL)
 {
@@ -405,7 +409,7 @@ transcriptsBy_tbl <- function(x, by = c("gene", "exon", "cds"), filter = NULL)
 #' ## transcriptsBy
 #' transcriptsBy(src, by = "exon", filter = list(SymbolFilter("ADA")))
 #'
-#' @rdname transcripts_tbl
+#' @rdname extractors
 #' @importFrom GenomicFeatures transcriptsBy
 #' @exportMethod transcriptsBy
 setMethod("transcriptsBy", "src_organism",
@@ -438,7 +442,7 @@ setMethod("transcriptsBy", "src_organism",
     }
 }
 
-#' @rdname transcripts_tbl
+#' @rdname extractors
 #' @export
 exonsBy_tbl <- function(x, by = c("tx", "gene"), filter = NULL) {
     by <- match.arg(by)
@@ -449,7 +453,7 @@ exonsBy_tbl <- function(x, by = c("tx", "gene"), filter = NULL) {
 #' ## exonsBy
 #' exonsBy(src, filter = list(SymbolFilter("ADA")))
 #'
-#' @rdname transcripts_tbl
+#' @rdname extractors
 #' @importFrom GenomicFeatures exonsBy
 #' @exportMethod exonsBy
 setMethod("exonsBy", "src_organism",
@@ -482,7 +486,7 @@ setMethod("exonsBy", "src_organism",
     }
 }
 
-#' @rdname transcripts_tbl
+#' @rdname extractors
 #' @export
 cdsBy_tbl <- function(x, by = c("tx", "gene"), filter = NULL) {
     by <- match.arg(by)
@@ -490,7 +494,7 @@ cdsBy_tbl <- function(x, by = c("tx", "gene"), filter = NULL) {
 }
 
 
-#' @rdname transcripts_tbl
+#' @rdname extractors
 #' @importFrom GenomicFeatures cdsBy
 #' @exportMethod cdsBy
 setMethod("cdsBy", "src_organism",
@@ -501,7 +505,7 @@ setMethod("cdsBy", "src_organism",
 })
 
 
-#' @rdname transcripts_tbl
+#' @rdname extractors
 #' @export
 intronsByTranscript_tbl <-
     function(x, filter = NULL)
@@ -520,7 +524,7 @@ intronsByTranscript_tbl <-
 #' ## intronsByTranscript
 #' intronsByTranscript(src, filter = list(SymbolFilter("ADA")))
 #'
-#' @rdname transcripts_tbl
+#' @rdname extractors
 #' @importFrom GenomicFeatures intronsByTranscript
 #' @importFrom GenomicRanges split mcols mcols<-
 #' @importFrom IRanges psetdiff
@@ -620,7 +624,7 @@ setMethod("intronsByTranscript", "src_organism",
     .UTRsByTranscript(x, filter, "-", "+")
 }
 
-#' @rdname transcripts_tbl
+#' @rdname extractors
 #' @export
 fiveUTRsByTranscript_tbl <- function(x, filter = NULL) {
     .return_tbl(.fiveUTRsByTranscript_tbl(x, filter), filter)
@@ -630,7 +634,7 @@ fiveUTRsByTranscript_tbl <- function(x, filter = NULL) {
 #' ## fiveUTRsByTranscript
 #' fiveUTRsByTranscript(src, filter = list(SymbolFilter("ADA")))
 #'
-#' @rdname transcripts_tbl
+#' @rdname extractors
 #' @importFrom GenomicFeatures fiveUTRsByTranscript
 #' @exportMethod fiveUTRsByTranscript
 setMethod("fiveUTRsByTranscript", "src_organism",
@@ -644,13 +648,13 @@ setMethod("fiveUTRsByTranscript", "src_organism",
     .UTRsByTranscript(x, filter, "+", "-")
 }
 
-#' @rdname transcripts_tbl
+#' @rdname extractors
 #' @export
 threeUTRsByTranscript_tbl <- function(x, filter = NULL) {
     .return_tbl(.threeUTRsByTranscript_tbl(x, filter), filter)
 }
 
-#' @rdname transcripts_tbl
+#' @rdname extractors
 #' @importFrom GenomicFeatures threeUTRsByTranscript
 #' @exportMethod threeUTRsByTranscript
 setMethod("threeUTRsByTranscript", "src_organism",

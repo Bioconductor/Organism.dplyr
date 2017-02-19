@@ -144,3 +144,6 @@ fiveUTRsByTranscript(src, filter = list(SymbolFilter("ADA")))
 \code{\link{src_organism}} for creating a \code{src_organism}
     object.
 }
+\author{
+Yubo Cheng.
+}

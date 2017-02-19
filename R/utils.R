@@ -1,7 +1,7 @@
 #' Utilities used in examples, vignettes, and tests
 #'
 #' These functions are primarily for illustrating
-#' funtionality. \code{hg38light()} and \code{mm10light()} provide
+#' functionality. \code{hg38light()} and \code{mm10light()} provide
 #' access to trimmed-down versions of Organism.dplyr data based
 #' derived from the TxDb.Hsapiens.UCSC.hg38.knownGene and
 #' TxDb.Mmusculus.UCSC.mm10.ensGene data bases.

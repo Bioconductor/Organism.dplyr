@@ -138,3 +138,6 @@ mapIds(src, keys, column = "tx_name", keytype)
     functions to extract genomic features from a
     \code{src_organism} object.
 }
+\author{
+Yubo Cheng.
+}

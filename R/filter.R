@@ -1,11 +1,13 @@
-#' Functions for filter objects
+#' Filtering src_organism objects
 #'
-#' These functions are used to create filters for genomic extrators.
+#' These functions create filters to be used by the "select"
+#' interface to \code{src_organism} objects.
 #'
-#' All these filters except \code{GRangesFilter()} extend \code{BasicFilter}
-#' class. Each filter takes value(s) from the corresponding column. For
-#' example, \code{AccnumFilter()} takes value of accession number(s), which
-#' come from column \code{accnum}.
+#' All filters except \code{GRangesFilter()} takes value(s) from
+#' corresponding fields in the data base. For example,
+#' \code{AccnumFilter()} takes values of accession number(s), which
+#' come from field \code{accnum}. See \code{keytypes()} and
+#' \code{keys()} for possible values.
 #'
 #' \code{GRangesFilter()} takes a \code{GRanges} object as filter, and returns
 #' genomic extractors (\code{genes}, \code{transcripts}, etc.) that are
@@ -106,7 +108,13 @@
 #'      \code{\link[Organism.dplyr]{select,src_organism-method}} for "select"
 #'     interface on \code{src_organism} objects.
 #'
+#' @author Yubo Cheng.
+#'
 #' @examples
+#' src <- src_organism(dbpath=hg38light())
+#' keytypes(src)
+#' head(keys(src, "ensembl"))
+#'
 #' ## filter by ensembl
 #' EnsemblFilter("ENSG00000171862")
 #'
@@ -131,7 +139,7 @@
 #' @export TxTypeFilter UnigeneFilter UniprotFilter WormbaseFilter ZfinFilter
 #' @export CdsStartFilter CdsEndFilter ExonStartFilter ExonEndFilter
 #' @export GeneStartFilter GeneEndFilter TxStartFilter TxEndFilter
-#' @rdname BasicFilter
+#' @rdname filter
 #' @importFrom methods new setClass slot
 #' @export
 setClass("BasicFilter",
@@ -149,13 +157,13 @@ setClass("BasicFilter",
          )
 )
 
-#' @rdname BasicFilter
+#' @rdname filter
 #' @export
 setClass("GRangesFilter",
          slots = list(field="character",
                       value="GRanges"))
 
-#' @rdname BasicFilter
+#' @rdname filter
 #' @export
 GRangesFilter <- function(value) {
     new("GRangesFilter",
@@ -273,7 +281,7 @@ local({
 #' @param object A \code{BasicFilter} object
 #'
 #' @importFrom methods show
-#' @rdname BasicFilter
+#' @rdname filter
 #' @exportMethod show
 setMethod("show", "BasicFilter",
     function(object)
@@ -318,7 +326,7 @@ setMethod("show", "BasicFilter",
     }
 }
 
-#' @rdname BasicFilter
+#' @rdname filter
 #' @export
 supportedFilters <- function() {
     .fieldToClass(c(.CHAR_FIELDS, .INT_FIELDS))

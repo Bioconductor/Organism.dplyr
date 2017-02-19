@@ -61,7 +61,7 @@
 \alias{GRangesFilter}
 \alias{show,BasicFilter-method}
 \alias{supportedFilters}
-\title{Functions for filter objects}
+\title{Filtering src_organism objects}
 \usage{
 AccnumFilter(value, condition = "==")
 AliasFilter(value, condition = "==")
@@ -144,13 +144,15 @@ and "endsWith" are allowed, for numeric values
 A Filter object showing class, value and condition of the filter
 }
 \description{
-These functions are used to create filters for genomic extrators.
+These functions create filters to be used by the "select"
+interface to \code{src_organism} objects.
 }
 \details{
-All these filters except \code{GRangesFilter()} extend \code{BasicFilter}
-class. Each filter takes value(s) from the corresponding column. For
-example, \code{AccnumFilter()} takes value of accession number(s), which
-come from column \code{accnum}.
+All filters except \code{GRangesFilter()} takes value(s) from
+corresponding fields in the data base. For example,
+\code{AccnumFilter()} takes values of accession number(s), which
+come from field \code{accnum}. See \code{keytype()} and
+\code{keys()} for possible values.
 
 \code{GRangesFilter()} takes a \code{GRanges} object as filter, and returns
 genomic extractors (\code{genes}, \code{transcripts}, etc.) that are
@@ -160,6 +162,10 @@ partially overlapping with the region.
 \code{src_organism} object.
 }
 \examples{
+src <- src_organism(dbpath=hg38light())
+keytypes(src)
+head(keys(src, "ensembl"))
+
 ## filter by ensembl
 EnsemblFilter("ENSG00000171862")
 
@@ -182,4 +188,7 @@ TxStartFilter(87863438, ">")
 
      \code{\link[Organism.dplyr]{select,src_organism-method}} for "select"
     interface on \code{src_organism} objects.
+}
+\author{
+Yubo Cheng.
 }
