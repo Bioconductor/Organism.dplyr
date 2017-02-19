@@ -122,7 +122,7 @@
 #' SymbolFilter("BRCA", "startsWith")
 #'
 #' ## filter by GRanges
-#' GRangesFilter(as("chr10:87869000-87876000", "GRanges"))
+#' GRangesFilter(GenomicRanges::GRanges("chr10:87869000-87876000"))
 #'
 #' ## filter by transcript start position
 #' TxStartFilter(87863438, ">")
@@ -177,6 +177,16 @@ setValidity("GRangesFilter", function(object) {
     if (!is(value, "GRanges"))
         txt <- c(txt, "'value' must be 'GRanges' object")
     if (length(txt)) txt else TRUE
+})
+
+#' @rdname filter
+#' @exportMethod show
+setMethod("show", "GRangesFilter",
+    function(object)
+{
+    cat("class:", class(object),
+        "\nvalue:\n")
+    print(.value(object))
 })
 
 setValidity("BasicFilter", function(object) {
@@ -277,8 +287,7 @@ local({
 
 .isCharacter <- function(x) x@.valueIsCharacter
 
-
-#' @param object A \code{BasicFilter} object
+#' @param object A \code{BasicFilter} or \code{GRangesFilter} object
 #'
 #' @importFrom methods show
 #' @rdname filter

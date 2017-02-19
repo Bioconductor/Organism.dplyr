@@ -59,6 +59,7 @@
 \alias{TxEndFilter}
 \alias{GRangesFilter-class}
 \alias{GRangesFilter}
+\alias{show,GRangesFilter-method}
 \alias{show,BasicFilter-method}
 \alias{supportedFilters}
 \title{Filtering src_organism objects}
@@ -120,6 +121,8 @@ TxEndFilter(value, condition = "==")
 
 GRangesFilter(value)
 
+\S4method{show}{GRangesFilter}(object)
+
 \S4method{show}{BasicFilter}(object)
 
 supportedFilters()
@@ -128,7 +131,7 @@ supportedFilters()
 \item{value}{Value of the filter. For \code{GRangesFilter} value should be a
 \code{GRanges} object.}
 
-\item{object}{A \code{BasicFilter} object}
+\item{object}{A \code{BasicFilter} or \code{GRangesFilter} object}
 
 \item{condition}{The condition to be used in filter for genomic
 extractors, one of "==", "!=", "startsWith", "endsWith", ">",
@@ -151,7 +154,7 @@ interface to \code{src_organism} objects.
 All filters except \code{GRangesFilter()} takes value(s) from
 corresponding fields in the data base. For example,
 \code{AccnumFilter()} takes values of accession number(s), which
-come from field \code{accnum}. See \code{keytype()} and
+come from field \code{accnum}. See \code{keytypes()} and
 \code{keys()} for possible values.
 
 \code{GRangesFilter()} takes a \code{GRanges} object as filter, and returns
@@ -173,7 +176,7 @@ EnsemblFilter("ENSG00000171862")
 SymbolFilter("BRCA", "startsWith")
 
 ## filter by GRanges
-GRangesFilter(as("chr10:87869000-87876000", "GRanges"))
+GRangesFilter(GenomicRanges::GRanges("chr10:87869000-87876000"))
 
 ## filter by transcript start position
 TxStartFilter(87863438, ">")

@@ -24,7 +24,7 @@
 \alias{fiveUTRsByTranscript,src_organism-method}
 \alias{threeUTRsByTranscript_tbl}
 \alias{threeUTRsByTranscript,src_organism-method}
-\title{Extract genomic features from src_organism object}
+\title{Extract genomic features from src_organism objects}
 \usage{
 transcripts_tbl(x, filter = NULL)
 
