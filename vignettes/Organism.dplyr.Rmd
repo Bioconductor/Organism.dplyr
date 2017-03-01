@@ -1,0 +1,275 @@
+---
+title: "Organism.dplyr"
+output:
+  BiocStyle::html_document:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{Organism.dplyr}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Introduction
+
+The `r Biocpkg("Organism.dplyr")` creates an on disk sqlite database to hold
+data of an organism combined from an 'org' package (e.g.,
+`r Biocpkg("org.Hs.eg.db")`) and a genome coordinate functionality of the
+'TxDb' package (e.g., `r Biocpkg("TxDb.Hsapiens.UCSC.hg38.knownGene")`). It
+aims to provide an integrated presentation of identifiers and genomic
+coordinates. And a _src_organism_ object is created to point to the database.
+
+The _src_organism_ object is created as an extension of _src_sql_ and
+_src_sqlite_ from [dplyr][], which inherited all [dplyr][] methods. It also
+implements the `select()` interface from `r Biocpkg("AnnotationDbi")` and
+genomic coordinates extractors from `r Biocpkg("GenomicFeatures")`.
+
+# Constructing a _src_organism_
+
+## Make sqlite datebase from 'TxDb' package
+
+The `src_organism()` constructor creates an on disk sqlite database file with
+data from a given 'TxDb' package and corresponding 'org' package. When dbpath
+is given, file is created at the given path, otherwise temporary file is
+created.
+
+```{r, echo=FALSE}
+suppressPackageStartupMessages({
+    library(Organism.dplyr)
+    library(GenomicRanges)
+    library(ggplot2)
+})
+```
+
+```{r, eval=FALSE}
+library(Organism.dplyr)
+```
+
+Running `src_organism()` without a given path will save the sqlite file to a
+`tempdir()`:
+
+```{r, eval=FALSE}
+src <- src_organism("TxDb.Hsapiens.UCSC.hg38.knownGene")
+```
+
+Alternatively you can provide explicit path to where the sqlite file should
+be saved, and re-use the data base at a later date.
+
+```{r, eval=FALSE}
+path <- "path/to/my.sqlite"
+src <- src_organism("TxDb.Hsapiens.UCSC.hg38.knownGene", path)
+```
+
+`supportedOrganisms()` provides a list of organisms with corresponding 'org'
+and 'TxDb' packages being supported.
+
+```{r}
+supportedOrganisms()
+```
+
+## Make sqlite datebase from organism name
+
+Organism name, genome and id could be specified to create sqlite database.
+Organism name (either Organism or common name) must be provided to create the
+database, if genome and/or id are not provided, most recent 'TxDb' package is
+used.
+
+```{r, eval=FALSE}
+src <- src_ucsc("human", path)
+```
+
+## Access existing sqlite file
+
+An existing on-disk sqlite file can be accessed without recreating the
+database. A version of the database created with
+[TxDb.Hsapiens.UCSC.hg38.knownGene][], with just 50 Entrez gene
+identifiers, is distributed with the Organism.dplyr package
+
+```{r}
+src <- src_organism(dbpath = hg38light())
+src
+```
+
+# The "dplyr" interface
+
+All methods from package [dplyr][] can be used for a _src_organism_ object.
+
+Look at all available tables.
+```{r}
+src_tbls(src)
+```
+
+Look at data from one specific table.
+```{r}
+tbl(src, "id")
+```
+
+Look at fields of one table.
+```{r}
+colnames(tbl(src, "id"))
+```
+
+Below are some examples of querying tables using dplyr.
+
+1. Gene symbol starting with "SNORD" (the notation `SNORD%` is from
+   SQL, with `%` representing a wild-card match to any string)
+
+```{r}
+tbl(src, "id") %>%
+    filter(symbol %like% "SNORD%") %>%
+    dplyr::select(entrez, map, ensembl, symbol) %>%
+    distinct() %>% arrange(symbol) %>% collect()
+```
+
+2. Gene ontology (GO) info for gene symbol "ADA"
+
+```{r}
+inner_join(tbl(src, "id"), tbl(src, "id_go")) %>%
+    filter(symbol == "ADA") %>%
+    dplyr::select(entrez, ensembl, symbol, go, evidence, ontology)
+```
+
+3. Gene transcript counts per gene symbol
+
+```{r}
+txcount <- inner_join(tbl(src, "id"), tbl(src, "ranges_tx")) %>%
+    dplyr::select(symbol, tx_id) %>%
+    group_by(symbol) %>%
+    summarise(count = count(symbol)) %>%
+    dplyr::select(symbol, count) %>%
+    arrange(desc(count)) %>%
+    collect(n=Inf)
+
+txcount
+
+library(ggplot2)
+ggplot(txcount, aes(x = symbol, y = count)) + 
+    geom_bar(stat="identity") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    ggtitle("Transcript count") +
+    labs(x = "Symbol") +
+    labs(y = "Count")
+```
+
+4. Gene coordinates of symbol "ADA" and "NAT2" as _GRanges_
+
+```{r}
+inner_join(tbl(src, "id"), tbl(src, "ranges_gene")) %>%
+    filter(symbol %in% c("ADA", "NAT2")) %>%
+    dplyr::select(gene_chrom, gene_start, gene_end, gene_strand,
+                  symbol, map) %>%
+    collect() %>% GenomicRanges::GRanges()
+```
+
+# The "select" interface
+
+Methods `select()`, `keytypes()`, `keys()`, `columns()` and `mapIds` from
+`r Biocpkg("AnnotationDbi")` are implemented for _src\_organism_ objects.
+
+Use `keytypes()` to discover which keytypes can be passed to keytype argument
+of methods `select()` or `keys()`.
+
+```{r}
+keytypes(src)
+```
+
+Use `columns()` to discover which kinds of data can be returned for the
+_src_organism_ object.
+
+```{r}
+columns(src)
+```
+
+`keys()` returns keys for the _src\_organism_ object. By default it returns the
+primary keys for the database, and returns the keys from that keytype when the
+keytype argument is used.
+
+Keys of entrez
+
+```{r}
+head(keys(src))
+```
+
+Keys of symbol
+
+```{r}
+head(keys(src, "symbol"))
+```
+
+`select()` retrieves the data as a _tibble_ based on parameters for selected
+keys columns and keytype arguments. If requested columns that have multiple
+matches for the keys, `select_tbl()` will return a _tibble_ with one row for
+each possible match, and `select()` will return a data frame.
+
+
+```{r}
+keytype <- "symbol"
+keys <- c("ADA", "NAT2")
+columns <- c("entrez", "tx_id", "tx_name","exon_id")
+select_tbl(src, keys, columns, keytype)
+```
+
+`mapIds()` gets the mapped ids (column) for a set of keys that are of a
+particular keytype. Usually returned as a named character vector.
+
+```{r}
+mapIds(src, keys, column = "tx_name", keytype)
+mapIds(src, keys, column = "tx_name", keytype, multiVals="CharacterList")
+```
+
+# The "GRanges" interface
+
+Eleven genomic coordinates extractor methods are available in this
+package: `transcripts()`, `exons()`, `cds()`, `genes()`,
+`promoters()`, `transcriptsBy()`, `exonsBy()`, `cdsBy()`,
+`intronsByTranscript()`, `fiveUTRsByTranscript()`,
+`threeUTRsByTranscript()`. Data can be returned in two versions, for
+instance _tibble_ (`transcripts_tbl()`) and _GRanges_ or _GRangesList_
+(`transcripts()`).
+
+Filters can be applied to all extractor functions. A named list of
+vectors can be used to restrict the output, valid filters can be
+retrieved by `supportedFilters()`.
+
+```{r}
+supportedFilters()
+```
+
+All filters take two parameters: value and condition, condition could
+be one of "==", "!=", "startsWith", "endsWith", ">", "<", ">=" and
+"<=", default condition is "==".
+
+```{r}
+EnsemblFilter("ENSG00000196839")
+SymbolFilter("SNORD", "startsWith")
+```
+
+A `GRangesFilter()` can also be used as filter for the methods with
+result displaying as _GRanges_ or _GRangesList_.
+
+```{r}
+filters <- list(SymbolFilter("SNORD", "startsWith"))
+transcripts_tbl(src, filter=filters)
+filters <- list(
+    SymbolFilter("SNORD", "startsWith"),
+    GRangesFilter(GenomicRanges::GRanges("chr15:25062333-25065121"))
+)
+transcripts(src, filter=filters)
+```
+
+Transcript coordinates of gene symbol equal to "ADA" and transcript
+start position between 87863438 and 87933487.
+
+```{r}
+transcripts_tbl(src, filter = list(
+    SymbolFilter("ADA"),
+    TxStartFilter(44619810,"<")
+))
+```
+
+
+```{r}
+sessionInfo()
+```
+
+[dplyr]: https://CRAN.R-project.org/package=dplyr
+[TxDb.Hsapiens.UCSC.hg38.knownGene]: https://bioconductor.org/packages/TxDb.Hsapiens.UCSC.hg38.knownGene
