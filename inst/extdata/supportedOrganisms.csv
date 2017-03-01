@@ -1,0 +1,22 @@
+organism,OrgDb,TxDb
+Bos taurus,org.Bt.eg.db,TxDb.Btaurus.UCSC.bosTau8.refGene
+Caenorhabditis elegans,org.Ce.eg.db,TxDb.Celegans.UCSC.ce11.refGene
+Caenorhabditis elegans,org.Ce.eg.db,TxDb.Celegans.UCSC.ce6.ensGene
+Canis familiaris,org.Cf.eg.db,TxDb.Cfamiliaris.UCSC.canFam3.refGene
+Drosophila melanogaster,org.Dm.eg.db,TxDb.Dmelanogaster.UCSC.dm3.ensGene
+Drosophila melanogaster,org.Dm.eg.db,TxDb.Dmelanogaster.UCSC.dm6.ensGene
+Danio rerio,org.Dr.eg.db,TxDb.Drerio.UCSC.danRer10.refGene
+Gallus gallus,org.Gg.eg.db,TxDb.Ggallus.UCSC.galGal4.refGene
+Homo sapiens,org.Hs.eg.db,TxDb.Hsapiens.UCSC.hg18.knownGene
+Homo sapiens,org.Hs.eg.db,TxDb.Hsapiens.UCSC.hg19.knownGene
+Homo sapiens,org.Hs.eg.db,TxDb.Hsapiens.UCSC.hg38.knownGene
+Mus musculus,org.Mm.eg.db,TxDb.Mmusculus.UCSC.mm10.ensGene
+Mus musculus,org.Mm.eg.db,TxDb.Mmusculus.UCSC.mm10.knownGene
+Mus musculus,org.Mm.eg.db,TxDb.Mmusculus.UCSC.mm9.knownGene
+Macaca mulatta,org.Mmu.eg.db,TxDb.Mmulatta.UCSC.rheMac3.refGene
+Macaca mulatta,org.Mmu.eg.db,TxDb.Mmulatta.UCSC.rheMac8.refGene
+Pan troglodytes,org.Pt.eg.db,TxDb.Ptroglodytes.UCSC.panTro4.refGene
+Rattus norvegicus,org.Rn.eg.db,TxDb.Rnorvegicus.UCSC.rn4.ensGene
+Rattus norvegicus,org.Rn.eg.db,TxDb.Rnorvegicus.UCSC.rn5.refGene
+Rattus norvegicus,org.Rn.eg.db,TxDb.Rnorvegicus.UCSC.rn6.refGene
+Sus scrofa,org.Ss.eg.db,TxDb.Sscrofa.UCSC.susScr3.refGene
