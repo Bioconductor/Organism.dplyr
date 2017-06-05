@@ -49,7 +49,8 @@
 #' @importFrom tools file_ext
 #' @importFrom AnnotationDbi dbfile
 #' @importFrom GenomeInfoDb as.data.frame
-#'
+#' @importFrom BiocFileCache BiocFileCache bfccache
+#' 
 #' @examples
 #' ## create human sqlite database with TxDb.Hsapiens.UCSC.hg38.knownGene and
 #' ## corresponding org.Hs.eg.db
@@ -69,7 +70,7 @@ src_organism <- function(txdb=NULL, dbpath=NULL) {
             stop("input valid sqlite file path or specify 'txdb'")
     } else {
         ## check org, txdb
-        if (is.character(txdb) && length(txdb) == 1L)
+        if (is.character(txdb) && length(txdb) == 1L) 
             txdb <- loadNamespace(txdb)[[txdb]]
         else 
             stop("input one valid 'txdb'")
@@ -85,6 +86,10 @@ src_organism <- function(txdb=NULL, dbpath=NULL) {
         org_schema <- org_meta$value[org_meta$name == "DBSCHEMA"]
         txdb_meta <- metadata(txdb)
         txdb_type <- txdb_meta$value[txdb_meta$name == "Type of Gene ID"]
+
+    	if (is.null(dbpath)) {
+        	dbpath <- file.path(bfccache(BiocFileCache()), txdb_name)
+    	}
 
         ## check metadata of org, txdb match tables in dbpath
         if ((!is.null(dbpath)) && file.exists(dbpath)) {
@@ -104,9 +109,6 @@ src_organism <- function(txdb=NULL, dbpath=NULL) {
     }
 
     ## check dbpath
-    if (is.null(dbpath)) {
-        dbpath <- file.path(tempdir(), txdb_name)
-    }
 
     ## create db connection
     found <- file.exists(dbpath)
