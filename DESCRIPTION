@@ -1,48 +1,25 @@
 Package: Organism.dplyr
 Title: dplyr-based Access to Bioconductor Annotation Resources
-Version: 0.99.7
-Authors@R: c(
-    person("Martin", "Morgan", email = "martin.morgan@roswellpark.org",
-        role = c("aut", "cre")),
-    person("Yubo", "Cheng", email="yubo.cheng@roswellpark.org",
+Version: 1.1.0
+Authors@R: c( person("Martin", "Morgan", email =
+        "martin.morgan@roswellpark.org", role = c("aut", "cre")),
+        person("Yubo", "Cheng", email="yubo.cheng@roswellpark.org",
         role="ctb"))
 Description: This package provides an alternative interface to
-    Bioconductor 'annotation' resources, in particular the gene
-    identifier mapping functionality of the 'org' packages (e.g.,
-    org.Hs.eg.db) and the genome coordinate functionality of the
-    'TxDb' packages (e.g., TxDb.Hsapiens.UCSC.hg38.knownGene).
-Depends:
-    R (>= 3.4),
-    dplyr
-Imports:
-    RSQLite,
-    S4Vectors,
-    GenomeInfoDb,
-    IRanges,
-    GenomicRanges,
-    GenomicFeatures,
-    AnnotationDbi,
-    methods,
-    tools,
-    utils
-Suggests:
-    org.Hs.eg.db,
-    TxDb.Hsapiens.UCSC.hg38.knownGene,
-    org.Mm.eg.db,
-    TxDb.Mmusculus.UCSC.mm10.ensGene,
-    testthat,
-    knitr,
-    rmarkdown,
-    ggplot2
+        Bioconductor 'annotation' resources, in particular the gene
+        identifier mapping functionality of the 'org' packages (e.g.,
+        org.Hs.eg.db) and the genome coordinate functionality of the
+        'TxDb' packages (e.g., TxDb.Hsapiens.UCSC.hg38.knownGene).
+Depends: R (>= 3.4), dplyr
+Imports: RSQLite, S4Vectors, GenomeInfoDb, IRanges, GenomicRanges,
+        GenomicFeatures, AnnotationDbi, methods, tools, utils
+Suggests: org.Hs.eg.db, TxDb.Hsapiens.UCSC.hg38.knownGene,
+        org.Mm.eg.db, TxDb.Mmusculus.UCSC.mm10.ensGene, testthat,
+        knitr, rmarkdown, ggplot2
 License: Artistic-2.0
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.0.1
-Collate:
-    src.R
-    filter.R
-    extractors.R
-    select.R
-    utils.R
+Collate: src.R filter.R extractors.R select.R utils.R
 VignetteBuilder: knitr
 biocViews: Annotation, Sequencing, GenomeAnnotation
