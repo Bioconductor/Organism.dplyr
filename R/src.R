@@ -3,45 +3,45 @@
 #' The database provides a convenient way to map between gene, transcript,
 #' and protein identifiers.
 #'
-#' \code{src_organism()} and \code{src_ucsc()} are meant to be a building block 
+#' \code{src_organism()} and \code{src_ucsc()} are meant to be a building block
 #' for \code{\link{src_organism}}, which provides an integrated
 #' presentation of identifiers and genomic coordinates.
-#' 
-#' \code{src_organism()} creates a dplyr database integrating org.* and TxDb.* 
-#' information by given TxDb. And \code{src_ucsc()} creates the database by 
+#'
+#' \code{src_organism()} creates a dplyr database integrating org.* and TxDb.*
+#' information by given TxDb. And \code{src_ucsc()} creates the database by
 #' given organism name, genome and/or id.
-#' 
-#' supportedOrganisms() provides all supported organisms in this package with 
+#'
+#' supportedOrganisms() provides all supported organisms in this package with
 #' corresponding OrgDb and TxDb.
-#'     
+#'
 #' @param txdb character(1) naming a \code{TxDb.*} package (e.g.,
 #'     \code{TxDb.Hsapiens.UCSC.hg38.knownGene}) or \code{TxDb}
 #'     object instantiating the content of a \code{TxDb.*} pacakge.
 #'
 #' @param dbpath path and file name where SQLite file will be accessed
 #'      or created if not already exists.
-#' 
-#' @return \code{src_organism()} and \code{src_ucsc()} returns a dplyr 
+#'
+#' @return \code{src_organism()} and \code{src_ucsc()} returns a dplyr
 #'     \code{src_sqlite} instance representing the data tables.
-#' 
-#' @seealso \code{\link{dplyr}} for details about using \code{dplyr} to 
-#'     manipulate data. 
-#'     
-#'     \code{\link[Organism.dplyr]{transcripts_tbl}} for generic functions to 
+#'
+#' @seealso \code{\link{dplyr}} for details about using \code{dplyr} to
+#'     manipulate data.
+#'
+#'     \code{\link[Organism.dplyr]{transcripts_tbl}} for generic functions to
 #'     extract genomic features from a \code{src_organism} object.
-#'     
-#'     \code{\link[Organism.dplyr]{select,src_organism-method}} for "select" 
+#'
+#'     \code{\link[Organism.dplyr]{select,src_organism-method}} for "select"
 #'     interface on \code{src_organism} objects.
 #'
 #' @author Yubo Cheng.
-#' 
+#'
 #' @rdname src
-#' 
-#' @importFrom  dplyr %>% arrange arrange_ as.tbl build_sql collect compute 
-#'     desc distinct distinct_ filter filter_ full_join group_by group_by_ 
-#'     inner_join is.tbl left_join mutate mutate_ order_by rename rename_ 
-#'     right_join select_ src src_sql src_sqlite src_tbls summarise summarise_ 
-#'     summarize summarize_ tbl tbl_df tbl_sql union union_all 
+#'
+#' @importFrom  dplyr %>% arrange arrange_ as.tbl build_sql collect compute
+#'     desc distinct distinct_ filter filter_ full_join group_by group_by_
+#'     inner_join is.tbl left_join mutate mutate_ order_by rename rename_
+#'     right_join select_ src src_sql src_sqlite src_tbls summarise summarise_
+#'     summarize summarize_ tbl tbl_df tbl_sql union union_all
 #' @importFrom RSQLite dbGetQuery dbConnect dbDisconnect SQLite
 #'     dbWriteTable dbListTables
 #' @importFrom S4Vectors metadata
@@ -50,18 +50,18 @@
 #' @importFrom AnnotationDbi dbfile
 #' @importFrom GenomeInfoDb as.data.frame
 #' @importFrom BiocFileCache BiocFileCache bfccache
-#' 
+#'
 #' @examples
 #' ## create human sqlite database with TxDb.Hsapiens.UCSC.hg38.knownGene and
 #' ## corresponding org.Hs.eg.db
 #' \dontrun{src <- src_organism("TxDb.Hsapiens.UCSC.hg38.knownGene")}
 #' src <- src_organism(dbpath=hg38light())
-#' 
+#'
 #' ## query using dplyr
-#' inner_join(tbl(src, "id"), tbl(src, "id_go")) %>% 
-#'      filter(symbol == "ADA") %>% 
+#' inner_join(tbl(src, "id"), tbl(src, "id_go")) %>%
+#'      filter(symbol == "ADA") %>%
 #'      dplyr::select(entrez, ensembl, symbol, go, evidence, ontology)
-#' 
+#'
 #' @export
 src_organism <- function(txdb=NULL, dbpath=NULL) {
     if (is.null(txdb)) {
@@ -70,9 +70,9 @@ src_organism <- function(txdb=NULL, dbpath=NULL) {
             stop("input valid sqlite file path or specify 'txdb'")
     } else {
         ## check org, txdb
-        if (is.character(txdb) && length(txdb) == 1L) 
+        if (is.character(txdb) && length(txdb) == 1L)
             txdb <- loadNamespace(txdb)[[txdb]]
-        else 
+        else
             stop("input one valid 'txdb'")
         stopifnot(is(txdb, "TxDb"))
 
@@ -87,9 +87,10 @@ src_organism <- function(txdb=NULL, dbpath=NULL) {
         txdb_meta <- metadata(txdb)
         txdb_type <- txdb_meta$value[txdb_meta$name == "Type of Gene ID"]
 
-    	if (is.null(dbpath)) {
-        	dbpath <- file.path(bfccache(BiocFileCache()), txdb_name)
-    	}
+        ## check dbpath
+        if (is.null(dbpath)) {
+            dbpath <- file.path(bfccache(BiocFileCache()), txdb_name)
+        }
 
         ## check metadata of org, txdb match tables in dbpath
         if ((!is.null(dbpath)) && file.exists(dbpath)) {
@@ -107,8 +108,6 @@ src_organism <- function(txdb=NULL, dbpath=NULL) {
         } else
             stop("unknown TxDb type: ", sQuote(txdb_type))
     }
-
-    ## check dbpath
 
     ## create db connection
     found <- file.exists(dbpath)
@@ -307,15 +306,15 @@ src_ucsc <- function(organism, genome = NULL, id = NULL,
 }
 
 
-#' @examples 
+#' @examples
 #' ## all supported organisms with corresponding OrgDb and TxDb
 #' supportedOrganisms()
-#' 
+#'
 #' @rdname src
 #' @export
 supportedOrganisms <- function() {
     filename <- system.file(
-        package = "Organism.dplyr", "extdata", 
+        package = "Organism.dplyr", "extdata",
         "supportedOrganisms.csv")
     csv <- read.csv(filename, header = TRUE, stringsAsFactors = FALSE)
     tbl_df(csv)
@@ -335,11 +334,11 @@ select_.tbl_organism <- function(.data, ...) {
 }
 
 #' @param x A src_organism object
-#' 
-#' @examples 
+#'
+#' @examples
 #' ## Look at all available tables
 #' src_tbls(src)
-#' 
+#'
 #' @importFrom RSQLite dbGetQuery
 #' @rdname src
 #' @export
@@ -350,14 +349,14 @@ src_tbls.src_organism <- function(x) {
 }
 
 #' @param src A src_organism object
-#' 
-#' @examples 
+#'
+#' @examples
 #' ## Look at data in table "id"
 #' tbl(src, "id")
-#' 
-#' ## Look at fields of one table 
+#'
+#' ## Look at fields of one table
 #' colnames(tbl(src, "id"))
-#' 
+#'
 #' @rdname src
 #' @export
 tbl.src_organism <- function(src, ...) {
@@ -369,12 +368,12 @@ tbl.src_organism <- function(src, ...) {
 setOldClass("src_organism")
 
 .getSeqinfo <- function(x) {
-    seqinfo <- mutate_(tbl(x, "seqinfo") %>% collect(n=Inf), 
-                       seqnames = ~ as.character(seqnames), 
+    seqinfo <- mutate_(tbl(x, "seqinfo") %>% collect(n=Inf),
+                       seqnames = ~ as.character(seqnames),
                        seqlengths = ~ as.integer(seqlengths),
                        isCircular = ~ as.logical(isCircular),
                        genome = ~ as.character(genome))
-    Seqinfo(seqnames=seqinfo[[1]], seqlengths=seqinfo[[2]], 
+    Seqinfo(seqnames=seqinfo[[1]], seqlengths=seqinfo[[2]],
             isCircular=seqinfo[[3]], genome=seqinfo[[4]])
 }
 

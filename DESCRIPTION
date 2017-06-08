@@ -12,8 +12,8 @@ Description: This package provides an alternative interface to
         'TxDb' packages (e.g., TxDb.Hsapiens.UCSC.hg38.knownGene).
 Depends: R (>= 3.4), dplyr
 Imports: RSQLite, S4Vectors, GenomeInfoDb, IRanges, GenomicRanges,
-        GenomicFeatures, AnnotationDbi, methods, tools, utils, 
-		BiocFileCache
+        GenomicFeatures, AnnotationDbi, methods, tools, utils,
+        BiocFileCache
 Suggests: org.Hs.eg.db, TxDb.Hsapiens.UCSC.hg38.knownGene,
         org.Mm.eg.db, TxDb.Mmusculus.UCSC.mm10.ensGene, testthat,
         knitr, rmarkdown, BiocStyle, ggplot2
