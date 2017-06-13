@@ -22,7 +22,7 @@
 #'      or created if not already exists.
 #'
 #' @return \code{src_organism()} and \code{src_ucsc()} returns a dplyr
-#'     \code{src_sqlite} instance representing the data tables.
+#'     \code{src_dbi} instance representing the data tables.
 #'
 #' @seealso \code{\link{dplyr}} for details about using \code{dplyr} to
 #'     manipulate data.
@@ -37,11 +37,12 @@
 #'
 #' @rdname src
 #'
-#' @importFrom  dplyr %>% arrange arrange_ as.tbl build_sql collect compute
+#' @importFrom  dplyr %>% arrange arrange_ as.tbl collect compute
 #'     desc distinct distinct_ filter filter_ full_join group_by group_by_
 #'     inner_join is.tbl left_join mutate mutate_ order_by rename rename_
-#'     right_join select_ src src_sql src_sqlite src_tbls summarise summarise_
-#'     summarize summarize_ tbl tbl_df tbl_sql union union_all
+#'     right_join select_ src src_tbls summarise summarise_
+#'     summarize summarize_ tbl tbl_df union union_all
+#' @importFrom dbplyr build_sql src_sql src_dbi tbl_sql
 #' @importFrom RSQLite dbGetQuery dbConnect dbDisconnect SQLite
 #'     dbWriteTable dbListTables
 #' @importFrom S4Vectors metadata
@@ -109,7 +110,7 @@ src_organism <- function(txdb=NULL, dbpath=NULL) {
         ## check metadata of org, txdb match tables in dbpath
         if ((!is.null(dbpath)) && file.exists(dbpath)) {
             con <- dbConnect(SQLite(), dbpath)
-            src <- src_sql("sqlite", con, path=dbfile(con))
+            src <- src_dbi(con)
             txdb_md <- tbl(src, "metadata_txdb") %>% collect()
             if (!identical(txdb_meta$value, txdb_md$value))
                 stop("'txdb', 'dbpath' sqlite schemas differ; use new dbpath?")
@@ -149,7 +150,7 @@ src_organism <- function(txdb=NULL, dbpath=NULL) {
         })
     }
 
-    src <- src_sql("sqlite", con, path=dbfile(con))
+    src <- src_dbi(con)
     schema <- tail(colnames(tbl(src, "ranges_gene")), 1L)
     src$schema <-
         if (startsWith(schema, "entrez")) {

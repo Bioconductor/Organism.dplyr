@@ -55,7 +55,7 @@ variables; use negative values to drop variables.}
 }
 \value{
 \code{src_organism()} and \code{src_ucsc()} returns a dplyr
-    \code{src_sqlite} instance representing the data tables.
+    \code{src_dbi} instance representing the data tables.
 }
 \description{
 The database provides a convenient way to map between gene, transcript,

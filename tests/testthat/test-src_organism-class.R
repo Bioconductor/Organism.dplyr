@@ -13,11 +13,13 @@ test_that("src_organism_constructor", {
     expect_equal(is(src, "src_organism"), TRUE)
     expect_equal(length(src), 3)
     expect_equal(is(src$con, "SQLiteConnection"), TRUE)
-    expect_equal(class(src$path), "character")
     expect_equal(class(src$schema), "character")
     
     ## prevent overwrite
-    expect_error(src_organism("TxDb.Hsapiens.UCSC.hg19.knownGene", src$path))
+    expect_error(src_organism(
+        "TxDb.Hsapiens.UCSC.hg19.knownGene",
+        dbfile(src$con)
+    ))
     
     ## test for expected tables
     tbls <- src_tbls(src)
