@@ -54,23 +54,23 @@ variables; use negative values to drop variables.}
 \item{src}{A src_organism object}
 }
 \value{
-\code{src_organism()} and \code{src_ucsc()} returns a dplyr 
-    \code{src_sqlite} instance representing the data tables.
+\code{src_organism()} and \code{src_ucsc()} returns a dplyr
+    \code{src_dbi} instance representing the data tables.
 }
 \description{
 The database provides a convenient way to map between gene, transcript,
 and protein identifiers.
 }
 \details{
-\code{src_organism()} and \code{src_ucsc()} are meant to be a building block 
+\code{src_organism()} and \code{src_ucsc()} are meant to be a building block
 for \code{\link{src_organism}}, which provides an integrated
 presentation of identifiers and genomic coordinates.
 
-\code{src_organism()} creates a dplyr database integrating org.* and TxDb.* 
-information by given TxDb. And \code{src_ucsc()} creates the database by 
+\code{src_organism()} creates a dplyr database integrating org.* and TxDb.*
+information by given TxDb. And \code{src_ucsc()} creates the database by
 given organism name, genome and/or id.
 
-supportedOrganisms() provides all supported organisms in this package with 
+supportedOrganisms() provides all supported organisms in this package with
 corresponding OrgDb and TxDb.
 }
 \examples{
@@ -80,8 +80,8 @@ corresponding OrgDb and TxDb.
 src <- src_organism(dbpath=hg38light())
 
 ## query using dplyr
-inner_join(tbl(src, "id"), tbl(src, "id_go")) \%>\% 
-     filter(symbol == "ADA") \%>\% 
+inner_join(tbl(src, "id"), tbl(src, "id_go")) \%>\%
+     filter(symbol == "ADA") \%>\%
      dplyr::select(entrez, ensembl, symbol, go, evidence, ontology)
 
 ## create human sqlite database using hg38 genome
@@ -96,7 +96,7 @@ src_tbls(src)
 ## Look at data in table "id"
 tbl(src, "id")
 
-## Look at fields of one table 
+## Look at fields of one table
 colnames(tbl(src, "id"))
 
 ## seqinfo of src_organism object
@@ -104,13 +104,13 @@ seqinfo(src)
 
 }
 \seealso{
-\code{\link{dplyr}} for details about using \code{dplyr} to 
-    manipulate data. 
-    
-    \code{\link[Organism.dplyr]{transcripts_tbl}} for generic functions to 
+\code{\link{dplyr}} for details about using \code{dplyr} to
+    manipulate data.
+
+    \code{\link[Organism.dplyr]{transcripts_tbl}} for generic functions to
     extract genomic features from a \code{src_organism} object.
-    
-    \code{\link[Organism.dplyr]{select,src_organism-method}} for "select" 
+
+    \code{\link[Organism.dplyr]{select,src_organism-method}} for "select"
     interface on \code{src_organism} objects.
 }
 \author{
