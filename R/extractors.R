@@ -2,10 +2,9 @@
     if (is.null(filter))
         return(table)
 
-	# Remove GRangesFilter (needed?)
     fields <- .fields(filter)
     if ("granges" %in% fields)
-        filter <- filter[!(fields %in% "granges")]
+        filter <- filter[!fields %in% "granges")]
 
     for (i in filter)
         stopifnot(is(i, "AnnotationFilter"))
@@ -21,8 +20,7 @@
     if (length(keep) != 0) {
         filters <- .filter(filter, keep)
         table <- table %>% filter_(filters)
-		filter <- filter[[
-        #filter <- filter[setdiff(fields, keep)]
+        filter <- filter[setdiff(fields, keep)]
     }
 
     ## filter by fields from other tables
@@ -57,17 +55,10 @@
 }
 
 .filter <- function(filter, keep) {
-    filter <- lapply(.filter_subset(filter, .fields(filter) %in% keep), .convertFilter)
-    #filter <- lapply(filter[.fields(filter) %in% keep], .convertFilter)
-    paste0(filter, collapse=" & ")
-}
-
-.filter_subset <- function(filter, fields) {
-	filter_fields <- .fields(filter)
-	s <- filter_fields %in% fields
-	for( i in seq_along(1, s)) {
-	#	if (s[i])
-	}
+	fields <- .fields(filter)
+    filter <- lapply(filter[fields %in% keep], .convertFilter)
+    #paste0(filter, collapse=" & ")
+	paste(c(sprintf("%s %s ", head(filter, -1), op), tail(filter, 1)), collapse="")
 }
 
 .return_tbl <- function(table, filter) {
@@ -89,7 +80,6 @@
 .toGRanges <- function(x, table, filter) {
     if (!is.null(filter)) {
         filter <- .filter_list(filter)
-        #names(filter) <- .fields(filter)
         fields <- .fields(filter)
         condition <- endsWith(fields, "start") | endsWith(fields, "end")
         if (any(condition) && !fields[condition] %in% table)
@@ -275,6 +265,31 @@ setMethod("cds", "src_organism",
     fields <- unique(c(
         "gene_chrom", "gene_start", "gene_end", "gene_strand",
         x$schema, .filter_names(filter)))
+#' @rdname filter
+#' @export
+GRangesFilter <- function(value) {
+    new("GRangesFilter",
+        field="granges",
+        value=value)
+}
+
+setValidity("GRangesFilter", function(object) {
+    value <- .value(object)
+    txt <- character()
+    if (!is(value, "GRanges"))
+        txt <- c(txt, "'value' must be 'GRanges' object")
+    if (length(txt)) txt else TRUE
+})
+
+#' @rdname filter
+#' @exportMethod show
+setMethod("show", "GRangesFilter",
+    function(object)
+{
+    cat("class:", class(object),
+        "\nvalue:\n")
+    print(.value(object))
+})
     do.call(select_, c(list(table), as.list(fields))) %>% arrange_(x$schema)
 }
 
@@ -342,7 +357,7 @@ promoters_tbl <- function(x, upstream, downstream, filter = NULL) {
 #' @examples
 #' ## promoters
 #' promoters(src, upstream=100, downstream=50,
-#'           filter = AnnotationFilterList(SymbolFilter("ADA"))))
+#'           filter = list(SymbolFilter("ADA")))
 #'
 #' @rdname extractors
 #' @importFrom GenomicFeatures promoters
@@ -462,7 +477,7 @@ exonsBy_tbl <- function(x, by = c("tx", "gene"), filter = NULL) {
 
 #' @examples
 #' ## exonsBy
-#' exonsBy(src, filter = AnnotationFilterList(SymbolFilter("ADA")))
+#' exonsBy(src, filter = list(SymbolFilter("ADA")))
 #'
 #' @rdname extractors
 #' @importFrom GenomicFeatures exonsBy
@@ -533,7 +548,7 @@ intronsByTranscript_tbl <-
 
 #' @examples
 #' ## intronsByTranscript
-#' intronsByTranscript(src, filter = AnnotationFilterList(SymbolFilter("ADA")))
+#' intronsByTranscript(src, filter = list(SymbolFilter("ADA")))
 #'
 #' @rdname extractors
 #' @importFrom GenomicFeatures intronsByTranscript

@@ -11,13 +11,15 @@ NULL
 #' object.  Use \code{AnnotationFilter} instead.
 #'
 #' @rdname Deprecated
-BasicFilter <- function(){
-	.Depricated("AnnotationFilter")
-	
-	return(new("AnnotationFilter"))
-}
+#BasicFilter <- function(){
+#	.Depricated("AnnotationFilter")
+#	
+#	return(new("AnnotationFilter"))
+#}
 
-setMethod("initialize", "Foo", 
+#setMethod("initialize", "BasicFilter", function()
+#	.Depricated(
+#}
 
 
 #' @description \code{GRangesFilter} will initiate a \code

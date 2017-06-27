@@ -164,32 +164,6 @@ setClass("GRangesFilter",
          slots = list(field="character",
                       value="GRanges"))
 
-#' @rdname filter
-#' @export
-GRangesFilter <- function(value) {
-    new("GRangesFilter",
-        field="granges",
-        value=value)
-}
-
-setValidity("GRangesFilter", function(object) {
-    value <- .value(object)
-    txt <- character()
-    if (!is(value, "GRanges"))
-        txt <- c(txt, "'value' must be 'GRanges' object")
-    if (length(txt)) txt else TRUE
-})
-
-#' @rdname filter
-#' @exportMethod show
-setMethod("show", "GRangesFilter",
-    function(object)
-{
-    cat("class:", class(object),
-        "\nvalue:\n")
-    print(.value(object))
-})
-
 setValidity("BasicFilter", function(object) {
     value <- .value(object)
     condition <- .condition(object)
@@ -321,7 +295,8 @@ setMethod("show", "CharacterFilter", function(object) {
 local({
 	makeClass <- function(contains){
     	fields <- .FIELD[[contains]]
-		fields <- fields[!(fields %in% AnnotationFilter::supportedFilters())]
+		fields <- 
+			fields[!(fields %in% AnnotationFilter::supportedFilters()[,1])]
     	classes <- .fieldToClass(fields)
     	for (i in seq_along(fields)) {
         	setClass(classes[[i]], contains=contains, where=topenv())
