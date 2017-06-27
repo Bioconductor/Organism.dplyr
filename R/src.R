@@ -388,8 +388,8 @@ setOldClass("src_organism")
                        seqlengths = ~ as.integer(seqlengths),
                        isCircular = ~ as.logical(isCircular),
                        genome = ~ as.character(genome))
-    Seqinfo(seqnames=seqinfo[[1]], seqlengths=seqinfo[[2]],
-            isCircular=seqinfo[[3]], genome=seqinfo[[4]])
+    Seqinfo(seqnames=seqinfo[['seqnames']], seqlengths=seqinfo[['seqlengths']],
+            isCircular=seqinfo[['isCircular']], genome=seqinfo[['genome']])
 }
 
 #' @examples
