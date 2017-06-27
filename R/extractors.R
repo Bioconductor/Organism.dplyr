@@ -2,12 +2,13 @@
     if (is.null(filter))
         return(table)
 
-    names(filter) <- .fields(filter)
-    if ("granges" %in% names(filter))
-        filter <- filter[!(names(filter) %in% "granges")]
+	# Remove GRangesFilter (needed?)
+    fields <- .fields(filter)
+    if ("granges" %in% fields)
+        filter <- filter[!(fields %in% "granges")]
 
     for (i in filter)
-        stopifnot(is(i, "BasicFilter"))
+        stopifnot(is(i, "AnnotationFilter"))
 
     fields <- .fields(filter)
 
@@ -20,7 +21,8 @@
     if (length(keep) != 0) {
         filters <- .filter(filter, keep)
         table <- table %>% filter_(filters)
-        filter <- filter[setdiff(fields, keep)]
+		filter <- filter[[
+        #filter <- filter[setdiff(fields, keep)]
     }
 
     ## filter by fields from other tables
@@ -44,8 +46,8 @@
 }
 
 .filter_list <- function(filter) {
-    if (!is.null(filter) & is(filter, "BasicFilter"))
-        list(filter)
+    if (!is.null(filter) & is(filter, "AnnotationFilter"))
+        AnnotationFilterList(filter)
     else
         filter
 }
@@ -55,8 +57,17 @@
 }
 
 .filter <- function(filter, keep) {
-    filter <- lapply(filter[names(filter) %in% keep], .convertFilter)
+    filter <- lapply(.filter_subset(filter, .fields(filter) %in% keep), .convertFilter)
+    #filter <- lapply(filter[.fields(filter) %in% keep], .convertFilter)
     paste0(filter, collapse=" & ")
+}
+
+.filter_subset <- function(filter, fields) {
+	filter_fields <- .fields(filter)
+	s <- filter_fields %in% fields
+	for( i in seq_along(1, s)) {
+	#	if (s[i])
+	}
 }
 
 .return_tbl <- function(table, filter) {
@@ -78,7 +89,7 @@
 .toGRanges <- function(x, table, filter) {
     if (!is.null(filter)) {
         filter <- .filter_list(filter)
-        names(filter) <- .fields(filter)
+        #names(filter) <- .fields(filter)
         fields <- .fields(filter)
         condition <- endsWith(fields, "start") | endsWith(fields, "end")
         if (any(condition) && !fields[condition] %in% table)
@@ -331,7 +342,7 @@ promoters_tbl <- function(x, upstream, downstream, filter = NULL) {
 #' @examples
 #' ## promoters
 #' promoters(src, upstream=100, downstream=50,
-#'           filter = list(SymbolFilter("ADA")))
+#'           filter = AnnotationFilterList(SymbolFilter("ADA"))))
 #'
 #' @rdname extractors
 #' @importFrom GenomicFeatures promoters
@@ -451,7 +462,7 @@ exonsBy_tbl <- function(x, by = c("tx", "gene"), filter = NULL) {
 
 #' @examples
 #' ## exonsBy
-#' exonsBy(src, filter = list(SymbolFilter("ADA")))
+#' exonsBy(src, filter = AnnotationFilterList(SymbolFilter("ADA")))
 #'
 #' @rdname extractors
 #' @importFrom GenomicFeatures exonsBy
@@ -522,7 +533,7 @@ intronsByTranscript_tbl <-
 
 #' @examples
 #' ## intronsByTranscript
-#' intronsByTranscript(src, filter = list(SymbolFilter("ADA")))
+#' intronsByTranscript(src, filter = AnnotationFilterList(SymbolFilter("ADA")))
 #'
 #' @rdname extractors
 #' @importFrom GenomicFeatures intronsByTranscript

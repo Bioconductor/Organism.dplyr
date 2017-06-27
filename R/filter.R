@@ -141,6 +141,7 @@
 #' @export GeneStartFilter GeneEndFilter TxStartFilter TxEndFilter
 #' @rdname filter
 #' @importFrom methods new setClass slot
+#' @importFrom AnnotationFilter AnnotationFilter
 #' @export
 setClass("BasicFilter",
          representation(
@@ -226,20 +227,21 @@ setValidity("BasicFilter", function(object) {
 
 .OPS <- c("==", "!=", "startsWith", "endsWith", ">", "<", ">=", "<=")
 
-.CHAR_FIELDS <- c(
-    "accnum", "alias", "cds_chrom", "cds_name", "cds_strand",
-    "ensembl", "ensemblprot", "ensembltrans", "entrez", "enzyme",
-    "evidence", "evidenceall", "exon_chrom", "exon_name",
-    "exon_strand", "flybase", "flybase_cg", "flybase_prot",
-    "gene_chrom", "gene_strand", "genename", "go", "goall", "ipi",
-    "map", "mgi", "omim", "ontology", "ontologyall", "pfam", "pmid",
-    "prosite", "refseq", "symbol", "tx_chrom", "tx_name", "tx_strand",
-    "tx_type", "unigene", "uniprot", "wormbase", "zfin")
-
-.INT_FIELDS <- c(
-    "cds_id", "cds_start", "cds_end", "exon_id", "exon_start",
-    "exon_end", "exon_rank", "gene_start", "gene_end", "tx_id",
-    "tx_start", "tx_end")
+.FIELD <- list(
+	CharacterFilter = c(
+	    "accnum", "alias", "cds_chrom", "cds_name", "cds_strand",
+    	"ensembl", "ensemblprot", "ensembltrans", "entrez", "enzyme",
+   		"evidence", "evidenceall", "exon_chrom", "exon_name",
+    	"exon_strand", "flybase", "flybase_cg", "flybase_prot",
+    	"gene_chrom", "gene_strand", "genename", "go", "goall", "ipi",
+    	"map", "mgi", "omim", "ontology", "ontologyall", "pfam", "pmid",
+    	"prosite", "refseq", "symbol", "tx_chrom", "tx_name", "tx_strand",
+    	"tx_type", "unigene", "uniprot", "wormbase", "zfin")
+	IntegerFilter <- c(
+    	"cds_id", "cds_start", "cds_end", "exon_id", "exon_start",
+    	"exon_end", "exon_rank", "gene_start", "gene_end", "tx_id",
+    	"tx_start", "tx_end")
+)
 
 .fieldToClass <- function(field) {
     class <- sub("_([[:alpha:]])", "\\U\\1", field, perl=TRUE)
@@ -247,10 +249,60 @@ setValidity("BasicFilter", function(object) {
     paste0(class, "Filter")
 }
 
+#' @exportClass CharacterFilter
+.CharacterFilter <- setClass(
+	"CharacterFilter",
+	contains = c("VIRTUAL", "AnnotationFilter"),
+    slots = c(value = "character"),
+    prototype = list(
+        value = character()
+    )
+ )
+
+setValidity("CharacterFilter", function(object) {
+     .valid_condition(.condition(object), "CharacterFilter")
+ })
+
+#' @importFrom methods show callNextMethod
+#'
+#' @export
+setMethod("show", "CharacterFilter", function(object) {
+     callNextMethod()
+     cat("value:", .value(object), "\n")
+ })
+
+#' @exportClass IntegerFilter
+.IntegerFilter <- setClass(
+      "IntegerFilter",
+      contains = c("VIRTUAL", "AnnotationFilter"),
+      slots = c(value = "integer"),
+      prototype = list(
+      value = integer()
+	  )
+)
+
+setValidity("IntegerFilter", function(object) {
+      .valid_condition(.condition(object), "IntegerFilter")
+})
+
+#' @export
+setMethod("show", "IntegerFilter", function(object) {
+      callNextMethod()
+      cat("value:", .value(object), "\n")
+})
+
+#' @importFrom methods show callNextMethod
+#'
+#' @export
+setMethod("show", "CharacterFilter", function(object) {
+     callNextMethod()
+     cat("value:", .value(object), "\n")
+})
+
 .filterFactory <- function(field, class, .valueIsCharacter) {
     force(field); force(class)          # watch for lazy evaluation
     as.value <-
-        if (.valueIsCharacter) {
+        if (field %in% .FIELD[["CharacterFilter"]]) {
             as.character
         } else {
             function(x) {
@@ -260,30 +312,35 @@ setValidity("BasicFilter", function(object) {
         }
     function(value, condition = "==") {
         value <- as.value(value)
-        new(class, field=field, condition=condition,
-            value=value, .valueIsCharacter=.valueIsCharacter)
+		condition <- as.character(condition)
+        new(class, field=field, condition=condition, value=value)
     }
 }
 
-## create filter functions
+## create filter functions not already implemented in AnnotationFilter
 local({
-    field <- c(.CHAR_FIELDS, .INT_FIELDS)
-    class <- .fieldToClass(field)
-    for (i in seq_along(field)) {
-        setClass(class[[i]], contains="BasicFilter", where=topenv())
-        assign(class[[i]],
-               .filterFactory(
-                   field[[i]], class[[i]], field[[i]] %in% .CHAR_FIELDS
-               ),
-               envir=topenv())
+	makeClass <- function(contains){
+    	fields <- .FIELD[[contains]]
+		fields <- fields[!(fields %in% AnnotationFilter::supportedFilters())]
+    	classes <- .fieldToClass(fields)
+    	for (i in seq_along(fields)) {
+        	setClass(classes[[i]], contains=contains, where=topenv())
+        	assign(
+			   classes[[i]],
+               .filterFactory(fields[[i]], classes[[i]]),
+               envir=topenv()
+			)
+		}
     }
+	for (contains in names(.FIELD))
+		makeClass(contains)
 })
 
-.field <- function(x) x@field
+.field <- function(x) AnnotationFilter::field(x)
 
-.condition <- function(x) x@condition
+.condition <- function(x) AnnotationFilter::condition(x)
 
-.value <- function(x) x@value
+.value <- function(x) AnnotationFilter::value(x)
 
 .isCharacter <- function(x) x@.valueIsCharacter
 
@@ -335,8 +392,11 @@ setMethod("show", "BasicFilter",
     }
 }
 
+.supportedFilters <- function() {
+	sort(c(.fieldToClass(unlist(.FIELD, use.names=FALSE)), "GRangesFilter"))
+
 #' @rdname filter
 #' @export
-supportedFilters <- function() {
-    .fieldToClass(c(.CHAR_FIELDS, .INT_FIELDS))
+setMethod("supportedFilters", "missing", function(object) {
+	.supportedFilters()
 }
