@@ -31,7 +31,13 @@ src <- src_organism(dbpath=hg38light)
     src0 <- src
     txdb <- fun(txdb, filter=list(gene_id=egid))
 
-    ## list(*Filter)
+    ## AnnotationFilterList(*Filter)
+    src <- fun(src0, filter=AnnotationFilterList(EntrezFilter(egid)))
+    expect_equal(length(src), length(txdb))
+    expect_true(all.equal(seqinfo(src), seqinfo(txdb)))
+    expect_true(setequal(mcols(src)[[subset]], mcols(txdb)[[subset]]))
+
+	## list(*Filter)
     src <- fun(src0, filter=list(EntrezFilter(egid)))
     expect_equal(length(src), length(txdb))
     expect_true(all.equal(seqinfo(src), seqinfo(txdb)))
@@ -61,6 +67,12 @@ src <- src_organism(dbpath=hg38light)
     txid <- c(15880L, 15881L)
     src0 <- src
     txdb <- txdb[txid]
+
+    ## AnnotationFilterList(*Filter)
+    src <- funBy(src0, filter=AnnotationFilterList(TxIdFilter(txid)))
+    expect_equal(length(src), length(txdb))
+    expect_true(all.equal(seqinfo(src), seqinfo(txdb)))
+    expect_true(setequal(src$tx_id, txdb$tx_id))
 
     ## list(*Filter)
     src <- funBy(src0, filter=list(TxIdFilter(txid)))
@@ -103,7 +115,7 @@ test_that("transcriptsBy-extractor", {
     ## filters
     ## FIXME TxIdFilter does not work correctly here
     egid <- c("10", "100")
-    tx_src <- unlist(transcriptsBy(src, filter=list(EntrezFilter(egid))))
+    tx_src <- unlist(transcriptsBy(src, filter=AnnotationFilterList(EntrezFilter(egid))))
     tx_txdb <- unlist(txdb[egid])
     expect_equal(length(tx_src), length(tx_txdb))
     expect_true(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)))

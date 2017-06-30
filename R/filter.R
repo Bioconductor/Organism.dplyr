@@ -28,6 +28,8 @@
 #'     TxStrandFilter TxTypeFilter UnigeneFilter UniprotFilter WormbaseFilter
 #'     ZfinFilter CdsStartFilter CdsEndFilter ExonStartFilter ExonEndFilter
 #'     GeneStartFilter GeneEndFilter TxStartFilter TxEndFilter
+#'     CharacterFilter-class IntegerFilter-class show,CharacterFilter-method
+#'     show,IntegerFilter-method
 #'
 #' @usage AccnumFilter(value, condition = "==")
 #' AliasFilter(value, condition = "==")
@@ -129,19 +131,17 @@
 #'
 #' @export AccnumFilter AliasFilter CdsChromFilter CdsIdFilter CdsNameFilter
 #' @export CdsStrandFilter EnsemblFilter EnsemblprotFilter EnsembltransFilter
-#' @export EntrezFilter EnzymeFilter EvidenceFilter EvidenceallFilter
-#' @export ExonChromFilter ExonIdFilter ExonNameFilter ExonRankFilter
+#' @export EnzymeFilter EvidenceFilter EvidenceallFilter
+#' @export ExonChromFilter
 #' @export ExonStrandFilter FlybaseFilter FlybaseCgFilter FlybaseProtFilter
-#' @export GeneChromFilter GeneStrandFilter GenenameFilter GoFilter
+#' @export GeneChromFilter GeneStrandFilter GoFilter
 #' @export GoallFilter IpiFilter MapFilter MgiFilter OmimFilter OntologyFilter
 #' @export OntologyallFilter PfamFilter PmidFilter PrositeFilter RefseqFilter
-#' @export SymbolFilter TxChromFilter TxIdFilter TxNameFilter TxStrandFilter
-#' @export TxTypeFilter UnigeneFilter UniprotFilter WormbaseFilter ZfinFilter
-#' @export CdsStartFilter CdsEndFilter ExonStartFilter ExonEndFilter
-#' @export GeneStartFilter GeneEndFilter TxStartFilter TxEndFilter
+#' @export TxChromFilter TxStrandFilter
+#' @export TxTypeFilter UnigeneFilter WormbaseFilter ZfinFilter
 #' @rdname filter
-#' @importFrom methods new setClass slot
-#' @importFrom AnnotationFilter AnnotationFilter
+#' @importFrom methods new setClass slot setMethod setValidity
+#' @importFrom AnnotationFilter AnnotationFilter GRangesFilter field value condition
 #' @export
 setClass("BasicFilter",
          representation(
@@ -158,12 +158,6 @@ setClass("BasicFilter",
          )
 )
 
-#' @rdname filter
-#' @export
-setClass("GRangesFilter",
-         slots = list(field="character",
-                      value="GRanges"))
-
 setValidity("BasicFilter", function(object) {
     value <- .value(object)
     condition <- .condition(object)
@@ -172,34 +166,40 @@ setValidity("BasicFilter", function(object) {
     if (length(condition) != 1L)
         txt <- c(txt, "'condition' must be length 1")
     if (!condition %in% .OPS)
-        txt <- c(txt,
+		txt <- c(txt,
                  sprintf("'condition' must be one of %s",
-                         paste("'", .OPS, "'", collapse=", ")))
+	                           paste("'", .OPS, "'", collapse=", ")))
     if (isCharacter && !is.character(value))
         txt <- c(txt,
-                 paste0("'", class(object),
-                        "' can only take character value"))
+                  paste0("'", class(object),
+                         "' can only take character value"))
     if (!isCharacter && (!is.integer(value)) || is.na(value))
         txt <- c(txt,
-                 paste0("'", class(object),
-                        "' can only take integer value"))
+                  paste0("'", class(object),
+                         "' can only take integer value"))
     if (condition  %in% c("startsWith", "endsWith", ">", "<", ">=", "<=") &&
-        length(value) > 1L)
+		length(value) > 1L)
         txt <- c(txt,
-                 paste0("'value' must be length 1 when condition is '",
-                        condition, "'"))
+                  paste0("'value' must be length 1 when condition is '",
+                         condition, "'"))
     if (condition  %in% c("startsWith", "endsWith") && !isCharacter)
         txt <- c(txt,
-                 paste0("'", condition,
-                        "' can only work with character value"))
+				 paste0("'", condition,
+                         "' can only work with character value"))
     if (condition  %in% c(">", "<", ">=", "<=") && isCharacter)
         txt <- c(txt,
-                 paste0("'", condition,
-                        "' can only work with integer value"))
+                  paste0("'", condition,
+                         "' can only work with integer value"))
     if (length(txt)) txt else TRUE
 })
 
 .OPS <- c("==", "!=", "startsWith", "endsWith", ">", "<", ">=", "<=")
+
+.CONDITION <- list(
+	IntegerFilter = c("==", "!=", ">", "<", ">=", "<="),
+	CharacterFilter = c("==", "!=", "startsWith", "endsWith", "contains"),
+	GRangesFilter = c("any", "start", "end", "within", "equal")
+)
 
 .FIELD <- list(
 	CharacterFilter = c(
@@ -210,18 +210,12 @@ setValidity("BasicFilter", function(object) {
     	"gene_chrom", "gene_strand", "genename", "go", "goall", "ipi",
     	"map", "mgi", "omim", "ontology", "ontologyall", "pfam", "pmid",
     	"prosite", "refseq", "symbol", "tx_chrom", "tx_name", "tx_strand",
-    	"tx_type", "unigene", "uniprot", "wormbase", "zfin")
-	IntegerFilter <- c(
+    	"tx_type", "unigene", "uniprot", "wormbase", "zfin"),
+	IntegerFilter = c(
     	"cds_id", "cds_start", "cds_end", "exon_id", "exon_start",
     	"exon_end", "exon_rank", "gene_start", "gene_end", "tx_id",
     	"tx_start", "tx_end")
 )
-
-.fieldToClass <- function(field) {
-    class <- sub("_([[:alpha:]])", "\\U\\1", field, perl=TRUE)
-    class <- sub("^([[:alpha:]])", "\\U\\1", class, perl=TRUE)
-    paste0(class, "Filter")
-}
 
 #' @exportClass CharacterFilter
 .CharacterFilter <- setClass(
@@ -234,7 +228,9 @@ setValidity("BasicFilter", function(object) {
  )
 
 setValidity("CharacterFilter", function(object) {
-     .valid_condition(.condition(object), "CharacterFilter")
+	if (!is.character(value(object)))
+		return('value must be a character')
+	.valid_condition(.condition(object), "CharacterFilter")
  })
 
 #' @importFrom methods show callNextMethod
@@ -242,7 +238,7 @@ setValidity("CharacterFilter", function(object) {
 #' @export
 setMethod("show", "CharacterFilter", function(object) {
      callNextMethod()
-     cat("value:", .value(object), "\n")
+     cat("value:", object@value, "\n")
  })
 
 #' @exportClass IntegerFilter
@@ -256,24 +252,42 @@ setMethod("show", "CharacterFilter", function(object) {
 )
 
 setValidity("IntegerFilter", function(object) {
-      .valid_condition(.condition(object), "IntegerFilter")
+	if(!is.numeric(value(object)))
+		return('value must be numeric')
+    .valid_condition(.condition(object), "IntegerFilter")
 })
 
 #' @export
 setMethod("show", "IntegerFilter", function(object) {
       callNextMethod()
-      cat("value:", .value(object), "\n")
+      cat("value:", object@value, "\n")
 })
 
-#' @importFrom methods show callNextMethod
-#'
-#' @export
-setMethod("show", "CharacterFilter", function(object) {
-     callNextMethod()
-     cat("value:", .value(object), "\n")
-})
+.valid_condition <- function(condition, class){
+	txt <- character()
 
-.filterFactory <- function(field, class, .valueIsCharacter) {
+	test0 <- length(condition) == 1L
+	if (!test0)
+		txt <- c(txt, "'condition' must be length 1")
+
+	test1 <- test0 && (condition %in% .CONDITION[[class]])
+	if (!test1) {
+		value <- paste(sQuote(.CONDITION[[class]]), collapse=" ")
+		txt <- c(txt, paste0("'", condition, "' must be in ", value))
+	}
+
+	if(length(txt)) txt else TRUE
+}
+
+
+
+.fieldToClass <- function(field) {
+    class <- sub("_([[:alpha:]])", "\\U\\1", field, perl=TRUE)
+    class <- sub("^([[:alpha:]])", "\\U\\1", class, perl=TRUE)
+    paste0(class, "Filter")
+}
+
+.filterFactory <- function(field, class) {
     force(field); force(class)          # watch for lazy evaluation
     as.value <-
         if (field %in% .FIELD[["CharacterFilter"]]) {
@@ -296,7 +310,7 @@ local({
 	makeClass <- function(contains){
     	fields <- .FIELD[[contains]]
 		fields <- 
-			fields[!(fields %in% AnnotationFilter::supportedFilters()[,1])]
+			fields[!(fields %in% as.character(AnnotationFilter::supportedFilters()[,2]))]
     	classes <- .fieldToClass(fields)
     	for (i in seq_along(fields)) {
         	setClass(classes[[i]], contains=contains, where=topenv())
@@ -311,13 +325,11 @@ local({
 		makeClass(contains)
 })
 
-.field <- function(x) AnnotationFilter::field(x)
+.field <- function(object) AnnotationFilter::field(object)
 
-.condition <- function(x) AnnotationFilter::condition(x)
+.condition <- function(object) AnnotationFilter::condition(object)
 
-.value <- function(x) AnnotationFilter::value(x)
-
-.isCharacter <- function(x) x@.valueIsCharacter
+.value <- function(object) AnnotationFilter::value(object)
 
 #' @param object A \code{BasicFilter} or \code{GRangesFilter} object
 #'
@@ -332,14 +344,14 @@ setMethod("show", "BasicFilter",
         "\nvalue:", .value(object), "\n")
 })
 
-.fields <- function(filter) {
-    vapply(filter, .field, character(1))
+.fields <- function(object) {
+    vapply(object, .field, character(1))
 }
 
-.convertFilter <- function(filter) {
-    field <- .field(filter)
-    value <- .value(filter)
-    condition <- .condition(filter)
+.convertFilter <- function(object) {
+    field <- .field(object)
+    value <- .value(object)
+    condition <- .condition(object)
 
     op <- switch(
         condition,
@@ -367,11 +379,14 @@ setMethod("show", "BasicFilter",
     }
 }
 
-.supportedFilters <- function() {
-	sort(c(.fieldToClass(unlist(.FIELD, use.names=FALSE)), "GRangesFilter"))
-
 #' @rdname filter
 #' @export
-setMethod("supportedFilters", "missing", function(object) {
-	.supportedFilters()
+supportedFilters <- function() {
+	sort(c(.fieldToClass(unlist(.FIELD, use.names=FALSE)), "GRangesFilter"))
 }
+
+##' @rdname filter
+##' @export
+#setMethod("supportedFilters", "missing", function(object){
+#	.supportedFilters()
+#})
