@@ -4,6 +4,8 @@
     if (is.null(filter))
         return(table)
 
+	stopifnot(.check_filters(filter))
+
     fields <- .fields(filter)
     if ("granges" %in% fields)
         filter <- .filter_subset(filter, !(fields %in% "granges"))
@@ -38,6 +40,11 @@
         fields <- setdiff(fields, keep)
     }
     table
+}
+
+.check_filters <- function(filter) {
+	filters <- vapply(lapply(value(filter), function(x) class(x)[1]), function(x) x, character(1))
+	!any(!(filters %in% supportedFilters()))
 }
 
 .keep <- function(filter, fields, fields_remove) {

@@ -87,6 +87,13 @@ src <- src_organism(dbpath=hg38light)
     expect_true(setequal(src$tx_id, txdb$tx_id))
 }
 
+test_that("validate-filter", {
+	an1 <- AnnotationFilterList(SymbolFilter("ADA"), SeqNameFilter('NFkB'))
+	an2 <- AnnotationFilterList(SymbolFilter("ADA"), TxEndFilter(1000000, '<'))
+	expect_false(.check_filters(an1))
+	expect_true(.check_filters(an2))
+})
+
 test_that("transcripts-extractor", {
     .test_extractor(src, txdb, transcripts, "tx_name")
     .test_extractor_egfilter(src, txdb, transcripts, "tx_id")
