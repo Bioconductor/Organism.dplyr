@@ -37,7 +37,7 @@ src <- src_organism(dbpath=hg38light)
     expect_true(all.equal(seqinfo(src), seqinfo(txdb)))
     expect_true(setequal(mcols(src)[[subset]], mcols(txdb)[[subset]]))
 
-	## list(*Filter)
+    ## list(*Filter)
     src <- fun(src0, filter=list(EntrezFilter(egid)))
     expect_equal(length(src), length(txdb))
     expect_true(all.equal(seqinfo(src), seqinfo(txdb)))
@@ -88,10 +88,10 @@ src <- src_organism(dbpath=hg38light)
 }
 
 test_that("validate-filter", {
-	an1 <- AnnotationFilterList(SymbolFilter("ADA"), SeqNameFilter('NFkB'))
-	an2 <- AnnotationFilterList(SymbolFilter("ADA"), TxEndFilter(1000000, '<'))
-	expect_false(.check_filters(an1))
-	expect_true(.check_filters(an2))
+    an1 <- AnnotationFilterList(SymbolFilter("ADA"), SeqNameFilter('NFkB'))
+    an2 <- AnnotationFilterList(SymbolFilter("ADA"), TxEndFilter(1000000, '<'))
+    expect_false(.check_filters(an1))
+    expect_true(.check_filters(an2))
 })
 
 test_that("transcripts-extractor", {

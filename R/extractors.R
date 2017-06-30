@@ -4,7 +4,7 @@
     if (is.null(filter))
         return(table)
 
-	stopifnot(.check_filters(filter))
+    stopifnot(.check_filters(filter))
 
     fields <- .fields(filter)
     if ("granges" %in% fields)
@@ -43,8 +43,8 @@
 }
 
 .check_filters <- function(filter) {
-	filters <- vapply(lapply(value(filter), function(x) class(x)[1]), function(x) x, character(1))
-	!any(!(filters %in% supportedFilters()))
+    filters <- vapply(lapply(value(filter), function(x) class(x)[1]), function(x) x, character(1))
+    !any(!(filters %in% supportedFilters()))
 }
 
 .keep <- function(filter, fields, fields_remove) {
@@ -53,57 +53,57 @@
 }
 
 .filter_subset <- function(filter, fields_subset) {
-	if (is.null(filter))
-		return(NULL)
-	if (is.character(fields_subset))
-		fields_subset <- .fields(filter) %in% fields_subset
-	if (is.numeric(fields_subset))
-		fields_subset <- seq_len(length(filter)) %in% fields_subset
-	res <- value(filter)
-	names(res) <- .fields(filter)
-	ops <- .logicOp_subset(logicOp(filter), fields_subset)
-	do.call(AnnotationFilterList, c(res[fields_subset], list(logicOp=ops)))
+    if (is.null(filter))
+        return(NULL)
+    if (is.character(fields_subset))
+        fields_subset <- .fields(filter) %in% fields_subset
+    if (is.numeric(fields_subset))
+        fields_subset <- seq_len(length(filter)) %in% fields_subset
+    res <- value(filter)
+    names(res) <- .fields(filter)
+    ops <- .logicOp_subset(logicOp(filter), fields_subset)
+    do.call(AnnotationFilterList, c(res[fields_subset], list(logicOp=ops)))
 }
 
 .logicOp_subset <- function(op, fields_subset) {
-	keepOp <- rep(TRUE, length(op))
-	for (i in seq_len(length(fields_subset))) {
-		if (!fields_subset[i]) {
-			first = i-1
-			second = i
-			if (first == 0 | second == length(fields_subset)) {
-				if (first == 0)
-					keepOp[second] <- FALSE
-				else
-					keepOp[first] <- FALSE
-			} else {
-				if (((op[first] == '&') & (op[second] == '|')) | 
-						((op[first] == '|') & (op[second] == '&'))) {
-					if (op[first] == '&')
-						keepOp[second] <- FALSE
-					else
-						keepOp[first] <- FALSE
-				} else {
-					keepOp[second] <- FALSE
-				}
-			}
-		}	
-	}
-	if (!any(fields_subset))
-		return(character())
-	if (table(fields_subset)["TRUE"] <= 1)
-		character()
-	else
-		op[keepOp]
+    keepOp <- rep(TRUE, length(op))
+    for (i in seq_len(length(fields_subset))) {
+        if (!fields_subset[i]) {
+            first = i-1
+            second = i
+            if (first == 0 | second == length(fields_subset)) {
+                if (first == 0)
+                    keepOp[second] <- FALSE
+                else
+                    keepOp[first] <- FALSE
+            } else {
+                if (((op[first] == '&') & (op[second] == '|')) | 
+                        ((op[first] == '|') & (op[second] == '&'))) {
+                    if (op[first] == '&')
+                        keepOp[second] <- FALSE
+                    else
+                        keepOp[first] <- FALSE
+                } else {
+                    keepOp[second] <- FALSE
+                }
+            }
+        }   
+    }
+    if (!any(fields_subset))
+        return(character())
+    if (table(fields_subset)["TRUE"] <= 1)
+        character()
+    else
+        op[keepOp]
 }
 
 .filter_list <- function(filter) {
     if (!is.null(filter) & is(filter, "AnnotationFilter"))
         return(AnnotationFilterList(filter))
-	if (!is.null(filter) & is(filter, "list") &
-			!is(filter, "AnnotationFilterList"))
-		return(do.call(AnnotationFilterList, filter))
-	filter
+    if (!is.null(filter) & is(filter, "list") &
+            !is(filter, "AnnotationFilterList"))
+        return(do.call(AnnotationFilterList, filter))
+    filter
 }
 
 .filter_names <- function(filter) {
@@ -111,11 +111,11 @@
 }
 
 .filter <- function(filter, keep) {
-	fields <- .fields(filter)
-	ops <- logicOp(filter)
+    fields <- .fields(filter)
+    ops <- logicOp(filter)
     filter <- lapply(.filter_subset(filter, fields %in% keep), .convertFilter)
     #paste0(filter, collapse=" & ")
-	paste(c(sprintf("%s %s ", head(filter, -1), ops), tail(filter, 1)), collapse="")
+    paste(c(sprintf("%s %s ", head(filter, -1), ops), tail(filter, 1)), collapse="")
 }
 
 .return_tbl <- function(table, filter) {

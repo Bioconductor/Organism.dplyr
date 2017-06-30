@@ -166,9 +166,9 @@ setValidity("BasicFilter", function(object) {
     if (length(condition) != 1L)
         txt <- c(txt, "'condition' must be length 1")
     if (!condition %in% .OPS)
-		txt <- c(txt,
+        txt <- c(txt,
                  sprintf("'condition' must be one of %s",
-	                           paste("'", .OPS, "'", collapse=", ")))
+                               paste("'", .OPS, "'", collapse=", ")))
     if (isCharacter && !is.character(value))
         txt <- c(txt,
                   paste0("'", class(object),
@@ -178,13 +178,13 @@ setValidity("BasicFilter", function(object) {
                   paste0("'", class(object),
                          "' can only take integer value"))
     if (condition  %in% c("startsWith", "endsWith", ">", "<", ">=", "<=") &&
-		length(value) > 1L)
+        length(value) > 1L)
         txt <- c(txt,
                   paste0("'value' must be length 1 when condition is '",
                          condition, "'"))
     if (condition  %in% c("startsWith", "endsWith") && !isCharacter)
         txt <- c(txt,
-				 paste0("'", condition,
+                 paste0("'", condition,
                          "' can only work with character value"))
     if (condition  %in% c(">", "<", ">=", "<=") && isCharacter)
         txt <- c(txt,
@@ -196,31 +196,31 @@ setValidity("BasicFilter", function(object) {
 .OPS <- c("==", "!=", "startsWith", "endsWith", ">", "<", ">=", "<=")
 
 .CONDITION <- list(
-	IntegerFilter = c("==", "!=", ">", "<", ">=", "<="),
-	CharacterFilter = c("==", "!=", "startsWith", "endsWith", "contains"),
-	GRangesFilter = c("any", "start", "end", "within", "equal")
+    IntegerFilter = c("==", "!=", ">", "<", ">=", "<="),
+    CharacterFilter = c("==", "!=", "startsWith", "endsWith", "contains"),
+    GRangesFilter = c("any", "start", "end", "within", "equal")
 )
 
 .FIELD <- list(
-	CharacterFilter = c(
-	    "accnum", "alias", "cds_chrom", "cds_name", "cds_strand",
-    	"ensembl", "ensemblprot", "ensembltrans", "entrez", "enzyme",
-   		"evidence", "evidenceall", "exon_chrom", "exon_name",
-    	"exon_strand", "flybase", "flybase_cg", "flybase_prot",
-    	"gene_chrom", "gene_strand", "genename", "go", "goall", "ipi",
-    	"map", "mgi", "omim", "ontology", "ontologyall", "pfam", "pmid",
-    	"prosite", "refseq", "symbol", "tx_chrom", "tx_name", "tx_strand",
-    	"tx_type", "unigene", "uniprot", "wormbase", "zfin"),
-	IntegerFilter = c(
-    	"cds_id", "cds_start", "cds_end", "exon_id", "exon_start",
-    	"exon_end", "exon_rank", "gene_start", "gene_end", "tx_id",
-    	"tx_start", "tx_end")
+    CharacterFilter = c(
+        "accnum", "alias", "cds_chrom", "cds_name", "cds_strand",
+        "ensembl", "ensemblprot", "ensembltrans", "entrez", "enzyme",
+        "evidence", "evidenceall", "exon_chrom", "exon_name",
+        "exon_strand", "flybase", "flybase_cg", "flybase_prot",
+        "gene_chrom", "gene_strand", "genename", "go", "goall", "ipi",
+        "map", "mgi", "omim", "ontology", "ontologyall", "pfam", "pmid",
+        "prosite", "refseq", "symbol", "tx_chrom", "tx_name", "tx_strand",
+        "tx_type", "unigene", "uniprot", "wormbase", "zfin"),
+    IntegerFilter = c(
+        "cds_id", "cds_start", "cds_end", "exon_id", "exon_start",
+        "exon_end", "exon_rank", "gene_start", "gene_end", "tx_id",
+        "tx_start", "tx_end")
 )
 
 #' @exportClass CharacterFilter
 .CharacterFilter <- setClass(
-	"CharacterFilter",
-	contains = c("VIRTUAL", "AnnotationFilter"),
+    "CharacterFilter",
+    contains = c("VIRTUAL", "AnnotationFilter"),
     slots = c(value = "character"),
     prototype = list(
         value = character()
@@ -228,9 +228,9 @@ setValidity("BasicFilter", function(object) {
  )
 
 setValidity("CharacterFilter", function(object) {
-	if (!is.character(value(object)))
-		return('value must be a character')
-	.valid_condition(.condition(object), "CharacterFilter")
+    if (!is.character(value(object)))
+        return('value must be a character')
+    .valid_condition(.condition(object), "CharacterFilter")
  })
 
 #' @importFrom methods show callNextMethod
@@ -248,12 +248,12 @@ setMethod("show", "CharacterFilter", function(object) {
       slots = c(value = "integer"),
       prototype = list(
       value = integer()
-	  )
+      )
 )
 
 setValidity("IntegerFilter", function(object) {
-	if(!is.numeric(value(object)))
-		return('value must be numeric')
+    if(!is.numeric(value(object)))
+        return('value must be numeric')
     .valid_condition(.condition(object), "IntegerFilter")
 })
 
@@ -264,19 +264,19 @@ setMethod("show", "IntegerFilter", function(object) {
 })
 
 .valid_condition <- function(condition, class){
-	txt <- character()
+    txt <- character()
 
-	test0 <- length(condition) == 1L
-	if (!test0)
-		txt <- c(txt, "'condition' must be length 1")
+    test0 <- length(condition) == 1L
+    if (!test0)
+        txt <- c(txt, "'condition' must be length 1")
 
-	test1 <- test0 && (condition %in% .CONDITION[[class]])
-	if (!test1) {
-		value <- paste(sQuote(.CONDITION[[class]]), collapse=" ")
-		txt <- c(txt, paste0("'", condition, "' must be in ", value))
-	}
+    test1 <- test0 && (condition %in% .CONDITION[[class]])
+    if (!test1) {
+        value <- paste(sQuote(.CONDITION[[class]]), collapse=" ")
+        txt <- c(txt, paste0("'", condition, "' must be in ", value))
+    }
 
-	if(length(txt)) txt else TRUE
+    if(length(txt)) txt else TRUE
 }
 
 
@@ -300,29 +300,29 @@ setMethod("show", "IntegerFilter", function(object) {
         }
     function(value, condition = "==") {
         value <- as.value(value)
-		condition <- as.character(condition)
+        condition <- as.character(condition)
         new(class, field=field, condition=condition, value=value)
     }
 }
 
 ## create filter functions not already implemented in AnnotationFilter
 local({
-	makeClass <- function(contains){
-    	fields <- .FIELD[[contains]]
-		fields <- 
-			fields[!(fields %in% as.character(AnnotationFilter::supportedFilters()[,2]))]
-    	classes <- .fieldToClass(fields)
-    	for (i in seq_along(fields)) {
-        	setClass(classes[[i]], contains=contains, where=topenv())
-        	assign(
-			   classes[[i]],
+    makeClass <- function(contains){
+        fields <- .FIELD[[contains]]
+        fields <- 
+            fields[!(fields %in% as.character(AnnotationFilter::supportedFilters()[,2]))]
+        classes <- .fieldToClass(fields)
+        for (i in seq_along(fields)) {
+            setClass(classes[[i]], contains=contains, where=topenv())
+            assign(
+               classes[[i]],
                .filterFactory(fields[[i]], classes[[i]]),
                envir=topenv()
-			)
-		}
+            )
+        }
     }
-	for (contains in names(.FIELD))
-		makeClass(contains)
+    for (contains in names(.FIELD))
+        makeClass(contains)
 })
 
 .field <- function(object) AnnotationFilter::field(object)
@@ -382,11 +382,11 @@ setMethod("show", "BasicFilter",
 #' @rdname filter
 #' @export
 supportedFilters <- function() {
-	sort(c(.fieldToClass(unlist(.FIELD, use.names=FALSE)), "GRangesFilter"))
+    sort(c(.fieldToClass(unlist(.FIELD, use.names=FALSE)), "GRangesFilter"))
 }
 
 ##' @rdname filter
 ##' @export
 #setMethod("supportedFilters", "missing", function(object){
-#	.supportedFilters()
+#   .supportedFilters()
 #})
