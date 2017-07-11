@@ -215,6 +215,7 @@ setValidity("BasicFilter", function(object) {
 
 #' @exportClass CharacterFilter
 .CharacterFilter <- setClass(
+    ## FIXME: reuse AnnotationFilter
     "CharacterFilter",
     contains = c("VIRTUAL", "AnnotationFilter"),
     slots = c(value = "character"),
@@ -319,6 +320,7 @@ local({
         makeClass(contains)
 })
 
+## FIXME: import from AnnotationFilter
 .field <- function(object) AnnotationFilter::field(object)
 
 .condition <- function(object) AnnotationFilter::condition(object)
