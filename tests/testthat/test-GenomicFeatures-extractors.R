@@ -158,3 +158,22 @@ test_that("threeUTRsByTranscript-extractor", {
     .test_extractorBy(src, txdb, threeUTRsByTranscript)
     .test_extractorBy_txfilter(src, txdb, threeUTRsByTranscript)
 })    
+
+test_that(".logicOp_subset works", {
+    logicOp_subset <- Organism.dplyr:::.logicalOp_subset
+
+    expect_equal(logicalOp_subset(character(), FALSE), character())
+    expect_equal(logicalOp_subset(character(), TRUE), character())
+
+    expect_equal(logicalOp_subset("&", c(TRUE, TRUE)), character())
+    expect_equal(logicalOp_subset("&", c(TRUE, FALSE)), character())
+    expect_equal(logicalOp_subset("&", c(FALSE, TRUE)), character())
+    expect_equal(logicalOp_subset("&", c(TRUE, TRUE)), character())
+
+    expect_equal(logicalOp_subset("|", c(TRUE, TRUE)), character())
+    expect_equal(logicalOp_subset("|", c(TRUE, FALSE)), character())
+    expect_equal(logicalOp_subset("|", c(FALSE, TRUE)), character())
+    expect_equal(logicalOp_subset("|", c(TRUE, TRUE)), character())
+
+    expect_equal(logicalOp_subset("|", TRUE), character())
+})

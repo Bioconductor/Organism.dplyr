@@ -47,11 +47,8 @@
 
 .check_filters <- function(filter) {
     ## FIXME: no-op? vapply(value(filter), class, character(1)) ?
-    filters <- vapply(
-        lapply(value(filter), function(x) class(x)[1]),
-        function(x) x,
-        character(1)
-    )
+    ## filters <- vapply(value(filter), function(x) class(x)[1], character(1))
+    filters <- vapply(value(filter), class, character(1))
     ## all(filters %in% supportedFilters()[[2]])
     !any(!(filters %in% supportedFilters()))
 }
@@ -76,36 +73,24 @@
 
 .logicOp_subset <- function(op, fields_subset) {
     keepOp <- rep(TRUE, length(op))
-    ## FIXME seq_along()
-    ## FIXME: cyclomatic complexity
-    for (i in seq_len(length(fields_subset))) {
-        if (!fields_subset[i]) {
-            first = i-1
-            second = i
-            if (first == 0 | second == length(fields_subset)) {
-                if (first == 0)
-                    keepOp[second] <- FALSE
-                else
-                    keepOp[first] <- FALSE
-            } else {
-                if (((op[first] == '&') & (op[second] == '|')) |
-                        ((op[first] == '|') & (op[second] == '&'))) {
-                    if (op[first] == '&')
-                        keepOp[second] <- FALSE
-                    else
-                        keepOp[first] <- FALSE
-                } else {
-                    keepOp[second] <- FALSE
-                }
-            }
-        }
-    }
-    if (!any(fields_subset))
-        return(character())
-    if (table(fields_subset)["TRUE"] <= 1)
-        character()
-    else
-        op[keepOp]
+
+    first <- which(fields_subset) - 1L
+    second <- which(fields_subset)
+
+    isFirst <- first == 0L
+    keepOp[ second[isFirst] ] <- FALSE
+
+    isLast <- second == length(fields_subset)
+    keepOp[ first[isLast] ] <- FALSE
+
+    isOther <- !(isFirst | isLast)
+    isDifferent <- op[first] != op[second]
+
+    keepOp[ second[isOther & isDifferent & first == "&"] ] <- FALSE
+    keepOp[  first[isOther & isDifferent & first != "&"] ] <- FALSE
+    keepOp[ second[isOther & !isDifferent] ] <- FALSE
+
+    op[keepOp]
 }
 
 .filter_list <- function(filter) {
