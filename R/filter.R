@@ -225,13 +225,13 @@ setValidity("BasicFilter", function(object) {
     prototype = list(
         value = character()
     )
- )
+)
 
 setValidity("CharacterFilter", function(object) {
     if (!is.character(value(object)))
         return('value must be a character')
     .valid_condition(.condition(object), "CharacterFilter")
- })
+})
 
 #' @importFrom methods show callNextMethod
 #'
@@ -279,8 +279,6 @@ setMethod("show", "IntegerFilter", function(object) {
     if(length(txt)) txt else TRUE
 }
 
-
-
 .fieldToClass <- function(field) {
     class <- sub("_([[:alpha:]])", "\\U\\1", field, perl=TRUE)
     class <- sub("^([[:alpha:]])", "\\U\\1", class, perl=TRUE)
@@ -309,8 +307,8 @@ setMethod("show", "IntegerFilter", function(object) {
 local({
     makeClass <- function(contains){
         fields <- .FIELD[[contains]]
-        fields <- 
-            fields[!(fields %in% as.character(AnnotationFilter::supportedFilters()[,2]))]
+        supported <- as.character(AnnotationFilter::supportedFilters()[,2])
+        fields <- fields[!(fields %in% supported)]
         classes <- .fieldToClass(fields)
         for (i in seq_along(fields)) {
             setClass(classes[[i]], contains=contains, where=topenv())

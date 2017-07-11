@@ -1,5 +1,4 @@
 #' @importFrom AnnotationFilter AnnotationFilter AnnotationFilterList field
-
 .tbl_join <- function(x, table, tbls, filter) {
     if (is.null(filter))
         return(table)
@@ -16,8 +15,12 @@
     fields <- .fields(filter)
 
     if (!all(fields %in% columns(x)))
-        stop(paste0("'", .filter_subset(filter, !(fields %in% columns(x))), "'",
-                    collapse = ","), " filter not available")
+        stop(
+            paste0(
+                "'", .filter_subset(filter, !(fields %in% columns(x))), "'",
+                collapse = ","
+            ), " filter not available"
+        )
 
     ## filter by fields from main table
     keep <- unique(fields[fields %in% colnames(table)])
@@ -43,7 +46,10 @@
 }
 
 .check_filters <- function(filter) {
-    filters <- vapply(lapply(value(filter), function(x) class(x)[1]), function(x) x, character(1))
+    filters <- vapply(
+        lapply(value(filter), function(x) class(x)[1]),
+        function(x) x, character(1)
+    )
     !any(!(filters %in% supportedFilters()))
 }
 
@@ -114,8 +120,10 @@
     fields <- .fields(filter)
     ops <- logicOp(filter)
     filter <- lapply(.filter_subset(filter, fields %in% keep), .convertFilter)
-    #paste0(filter, collapse=" & ")
-    paste(c(sprintf("%s %s ", head(filter, -1), ops), tail(filter, 1)), collapse="")
+    ##paste0(filter, collapse=" & ")
+    paste(c(
+        sprintf("%s %s ", head(filter, -1), ops), tail(filter, 1)
+    ), collapse="")
 }
 
 .return_tbl <- function(table, filter) {
@@ -145,7 +153,10 @@
 
     gr <- table %>% collect(n=Inf) %>% as("GRanges")
     if ("granges" %in% .fields(filter)) {
-        gr <- subsetByOverlaps(gr, .value(.filter_subset(filter, "granges")[[1]]))
+        gr <- subsetByOverlaps(
+            gr,
+            .value(.filter_subset(filter, "granges")[[1]])
+        )
     }
     .updateSeqinfo(x, gr)
 }
@@ -322,6 +333,9 @@ setMethod("cds", "src_organism",
     fields <- unique(c(
         "gene_chrom", "gene_start", "gene_end", "gene_strand",
         x$schema, .filter_names(filter)))
+    do.call(select_, c(list(table), as.list(fields))) %>% arrange_(x$schema)
+}
+
 #' @rdname filter
 #' @export
 GRangesFilter <- function(value) {
@@ -347,8 +361,6 @@ setMethod("show", "GRangesFilter",
         "\nvalue:\n")
     print(.value(object))
 })
-    do.call(select_, c(list(table), as.list(fields))) %>% arrange_(x$schema)
-}
 
 #' @rdname extractors
 #' @export
