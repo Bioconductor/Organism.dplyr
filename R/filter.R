@@ -380,6 +380,8 @@ setMethod("show", "BasicFilter",
 #' @rdname filter
 #' @export
 supportedFilters <- function() {
+    ## FIXME: method on AnnotationFilter::supportedFilters
+    ## FIXME: same format (data.frame()) as AnnotationFilter::supportedFilters
     sort(c(.fieldToClass(unlist(.FIELD, use.names=FALSE)), "GRangesFilter"))
 }
 

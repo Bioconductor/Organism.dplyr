@@ -46,10 +46,13 @@
 }
 
 .check_filters <- function(filter) {
+    ## FIXME: no-op? vapply(value(filter), class, character(1)) ?
     filters <- vapply(
         lapply(value(filter), function(x) class(x)[1]),
-        function(x) x, character(1)
+        function(x) x,
+        character(1)
     )
+    ## all(filters %in% supportedFilters()[[2]])
     !any(!(filters %in% supportedFilters()))
 }
 
