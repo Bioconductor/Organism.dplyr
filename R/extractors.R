@@ -76,6 +76,8 @@
 
 .logicOp_subset <- function(op, fields_subset) {
     keepOp <- rep(TRUE, length(op))
+    ## FIXME seq_along()
+    ## FIXME: cyclomatic complexity
     for (i in seq_len(length(fields_subset))) {
         if (!fields_subset[i]) {
             first = i-1
@@ -86,7 +88,7 @@
                 else
                     keepOp[first] <- FALSE
             } else {
-                if (((op[first] == '&') & (op[second] == '|')) | 
+                if (((op[first] == '&') & (op[second] == '|')) |
                         ((op[first] == '|') & (op[second] == '&'))) {
                     if (op[first] == '&')
                         keepOp[second] <- FALSE
@@ -96,7 +98,7 @@
                     keepOp[second] <- FALSE
                 }
             }
-        }   
+        }
     }
     if (!any(fields_subset))
         return(character())
@@ -107,10 +109,12 @@
 }
 
 .filter_list <- function(filter) {
+    ## `&&`, `||` for scalar logcial operations
     if (!is.null(filter) & is(filter, "AnnotationFilter"))
         return(AnnotationFilterList(filter))
     if (!is.null(filter) & is(filter, "list") &
-            !is(filter, "AnnotationFilterList"))
+        !is(filter, "AnnotationFilterList"))
+        ## FIXME: do.call() necessary?
         return(do.call(AnnotationFilterList, filter))
     filter
 }
@@ -342,6 +346,8 @@ setMethod("cds", "src_organism",
 #' @rdname filter
 #' @export
 GRangesFilter <- function(value) {
+    ## FIXME where is class defined? Re-use constructor from there
+    ## FIXME why here rather than filter.R with other filters?
     new("GRangesFilter",
         field="granges",
         value=value)

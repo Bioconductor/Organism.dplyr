@@ -168,28 +168,24 @@ setValidity("BasicFilter", function(object) {
     if (!condition %in% .OPS)
         txt <- c(txt,
                  sprintf("'condition' must be one of %s",
-                               paste("'", .OPS, "'", collapse=", ")))
+                         paste("'", .OPS, "'", collapse=", ")))
     if (isCharacter && !is.character(value))
         txt <- c(txt,
-                  paste0("'", class(object),
-                         "' can only take character value"))
+                 paste0("'", class(object), "' can only take character value"))
     if (!isCharacter && (!is.integer(value)) || is.na(value))
         txt <- c(txt,
-                  paste0("'", class(object),
-                         "' can only take integer value"))
+                  paste0("'", class(object), "' can only take integer value"))
     if (condition  %in% c("startsWith", "endsWith", ">", "<", ">=", "<=") &&
         length(value) > 1L)
         txt <- c(txt,
-                  paste0("'value' must be length 1 when condition is '",
+                 paste0("'value' must be length 1 when condition is '",
                          condition, "'"))
     if (condition  %in% c("startsWith", "endsWith") && !isCharacter)
         txt <- c(txt,
-                 paste0("'", condition,
-                         "' can only work with character value"))
+                 paste0("'", condition, "' can only work with character value"))
     if (condition  %in% c(">", "<", ">=", "<=") && isCharacter)
         txt <- c(txt,
-                  paste0("'", condition,
-                         "' can only work with integer value"))
+                 paste0("'", condition, "' can only work with integer value"))
     if (length(txt)) txt else TRUE
 })
 
