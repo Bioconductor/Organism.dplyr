@@ -74,21 +74,33 @@
 .logicOp_subset <- function(op, fields_subset) {
     keepOp <- rep(TRUE, length(op))
 
-    first <- which(fields_subset) - 1L
-    second <- which(fields_subset)
+    first <- seq_along(fields_subset) - 1L
+    second <- seq_along(fields_subset)
 
     isFirst <- first == 0L
-    keepOp[ second[isFirst] ] <- FALSE
+    keepOp[ which(!fields_subset & isFirst)  ] <- FALSE
 
     isLast <- second == length(fields_subset)
-    keepOp[ first[isLast] ] <- FALSE
+    keepOp[ which(!fields_subset & isLast) - 1 ] <- FALSE
 
     isOther <- !(isFirst | isLast)
-    isDifferent <- op[first] != op[second]
+    isDifferent <- c(FALSE, op[first] != op[second[-length(second)]])
 
-    keepOp[ second[isOther & isDifferent & first == "&"] ] <- FALSE
-    keepOp[  first[isOther & isDifferent & first != "&"] ] <- FALSE
-    keepOp[ second[isOther & !isDifferent] ] <- FALSE
+    keepOp[ second[isOther & !fields_subset & c(FALSE, op[first] == "&")] ] <- FALSE
+    keepOp[  first[isOther & !fields_subset & c(FALSE, op[first] != "&")] ] <- FALSE
+    keepOp[ second[isOther & isDifferent] ] <- FALSE
+
+	if(!any(fields_subset[-1]) || !any(head(fields_subset, -1)))   ## Catch an edge case
+		keepOp <- rep(FALSE, length(op))
+
+	if(length(fields_subset) >= 4 &&
+	   		!any(fields_subset[2:(length(fields_subset)-1)]) &&
+	   		fields_subset[1] == TRUE && fields_subset[length(fields_subset)]) {
+		if(any(op[c(1, length(op))] == c('|', '|')))
+			return('|')
+		else
+			return('&')
+	}
 
     op[keepOp]
 }

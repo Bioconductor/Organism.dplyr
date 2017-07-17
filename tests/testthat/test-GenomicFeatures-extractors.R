@@ -160,20 +160,54 @@ test_that("threeUTRsByTranscript-extractor", {
 })    
 
 test_that(".logicOp_subset works", {
-    logicOp_subset <- Organism.dplyr:::.logicalOp_subset
+    logicalOp_subset <- Organism.dplyr:::.logicOp_subset
 
     expect_equal(logicalOp_subset(character(), FALSE), character())
     expect_equal(logicalOp_subset(character(), TRUE), character())
 
-    expect_equal(logicalOp_subset("&", c(TRUE, TRUE)), character())
+    expect_equal(logicalOp_subset("&", c(TRUE, TRUE)), "&")
     expect_equal(logicalOp_subset("&", c(TRUE, FALSE)), character())
     expect_equal(logicalOp_subset("&", c(FALSE, TRUE)), character())
-    expect_equal(logicalOp_subset("&", c(TRUE, TRUE)), character())
+    expect_equal(logicalOp_subset("&", c(FALSE, FALSE)), character())
 
-    expect_equal(logicalOp_subset("|", c(TRUE, TRUE)), character())
+    expect_equal(logicalOp_subset("|", c(TRUE, TRUE)), "|")
     expect_equal(logicalOp_subset("|", c(TRUE, FALSE)), character())
     expect_equal(logicalOp_subset("|", c(FALSE, TRUE)), character())
-    expect_equal(logicalOp_subset("|", c(TRUE, TRUE)), character())
+    expect_equal(logicalOp_subset("|", c(FALSE, FALSE)), character())
+	
+    expect_equal(logicalOp_subset(c("&", "&"), c(TRUE, TRUE, TRUE)), c("&", "&"))
+    expect_equal(logicalOp_subset(c("&", "&"), c(FALSE, TRUE, TRUE)), "&")
+    expect_equal(logicalOp_subset(c("&", "&"), c(TRUE, TRUE, FALSE)), "&")
+    expect_equal(logicalOp_subset(c("&", "&"), c(TRUE, FALSE, TRUE)), "&")
+    expect_equal(logicalOp_subset(c("&", "&"), c(FALSE, TRUE, FALSE)), character())
+    expect_equal(logicalOp_subset(c("&", "&"), c(FALSE, FALSE, TRUE)), character())
+    expect_equal(logicalOp_subset(c("&", "&"), c(TRUE, FALSE, FALSE)), character())
+    expect_equal(logicalOp_subset(c("&", "&"), c(FALSE, FALSE, FALSE)), character())
 
-    expect_equal(logicalOp_subset("|", TRUE), character())
+    expect_equal(logicalOp_subset(c("|", "|"), c(TRUE, TRUE, TRUE)), c("|", "|"))
+    expect_equal(logicalOp_subset(c("|", "|"), c(FALSE, TRUE, TRUE)), "|")
+    expect_equal(logicalOp_subset(c("|", "|"), c(TRUE, TRUE, FALSE)), "|")
+    expect_equal(logicalOp_subset(c("|", "|"), c(TRUE, FALSE, TRUE)), "|")
+    expect_equal(logicalOp_subset(c("|", "|"), c(FALSE, TRUE, FALSE)), character())
+    expect_equal(logicalOp_subset(c("|", "|"), c(FALSE, FALSE, TRUE)), character())
+    expect_equal(logicalOp_subset(c("|", "|"), c(TRUE, FALSE, FALSE)), character())
+    expect_equal(logicalOp_subset(c("|", "|"), c(FALSE, FALSE, FALSE)), character())
+
+    expect_equal(logicalOp_subset(c("&", "|"), c(TRUE, TRUE, TRUE)), c("&", "|"))
+    expect_equal(logicalOp_subset(c("&", "|"), c(FALSE, TRUE, TRUE)), "|")
+    expect_equal(logicalOp_subset(c("|", "&"), c(TRUE, TRUE, FALSE)), "|")
+    expect_equal(logicalOp_subset(c("|", "&"), c(TRUE, FALSE, TRUE)), "&")
+    expect_equal(logicalOp_subset(c("&", "|"), c(FALSE, TRUE, FALSE)), character())
+    expect_equal(logicalOp_subset(c("&", "|"), c(FALSE, FALSE, TRUE)), character())
+    expect_equal(logicalOp_subset(c("|", "&"), c(TRUE, FALSE, FALSE)), character())
+    expect_equal(logicalOp_subset(c("|", "&"), c(FALSE, FALSE, FALSE)), character())
+
+    expect_equal(logicalOp_subset(c("&", "|", "&"), c(TRUE, TRUE, TRUE, TRUE)), c("&", "|", "&"))
+    expect_equal(logicalOp_subset(c("&", "|", "&"), c(FALSE, TRUE, TRUE, TRUE)), c("|", "&"))
+    expect_equal(logicalOp_subset(c("&", "|", "&"), c(TRUE, TRUE, FALSE, TRUE)), c("&", "&"))
+    expect_equal(logicalOp_subset(c("&", "|", "&"), c(TRUE, FALSE, TRUE, FALSE)), "&")
+    expect_equal(logicalOp_subset(c("&", "|", "&"), c(FALSE, TRUE, FALSE, FALSE)), character())
+    expect_equal(logicalOp_subset(c("&", "|", "&"), c(FALSE, FALSE, TRUE, TRUE)), "&")
+    expect_equal(logicalOp_subset(c("&", "|", "&"), c(TRUE, FALSE, FALSE, TRUE)), "&")
+    expect_equal(logicalOp_subset(c("&", "|", "&"), c(FALSE, FALSE, FALSE, FALSE)), character())
 })
