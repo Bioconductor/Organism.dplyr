@@ -46,10 +46,7 @@
 }
 
 .check_filters <- function(filter) {
-    ## FIXME: no-op? vapply(value(filter), class, character(1)) ?
-    ## filters <- vapply(value(filter), function(x) class(x)[1], character(1))
     filters <- vapply(value(filter), class, character(1))
-    ## all(filters %in% supportedFilters()[[2]])
     !any(!(filters %in% supportedFilters()))
 }
 
@@ -106,12 +103,10 @@
 }
 
 .filter_list <- function(filter) {
-    ## `&&`, `||` for scalar logcial operations
-    if (!is.null(filter) & is(filter, "AnnotationFilter"))
+    if (!is.null(filter) && is(filter, "AnnotationFilter"))
         return(AnnotationFilterList(filter))
-    if (!is.null(filter) & is(filter, "list") &
+    if (!is.null(filter) && is(filter, "list") &
         !is(filter, "AnnotationFilterList"))
-        ## FIXME: do.call() necessary?
         return(do.call(AnnotationFilterList, filter))
     filter
 }
@@ -338,16 +333,6 @@ setMethod("cds", "src_organism",
         "gene_chrom", "gene_start", "gene_end", "gene_strand",
         x$schema, .filter_names(filter)))
     do.call(select_, c(list(table), as.list(fields))) %>% arrange_(x$schema)
-}
-
-#' @rdname filter
-#' @export
-GRangesFilter <- function(value) {
-    ## FIXME where is class defined? Re-use constructor from there
-    ## FIXME why here rather than filter.R with other filters?
-    new("GRangesFilter",
-        field="granges",
-        value=value)
 }
 
 setValidity("GRangesFilter", function(object) {

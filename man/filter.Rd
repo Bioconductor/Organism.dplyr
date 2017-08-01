@@ -63,7 +63,8 @@
 \alias{show,IntegerFilter-method}
 \alias{show,BasicFilter-method}
 \alias{supportedFilters}
-\alias{.genes_tbl}
+\alias{GRangesFilter}
+\alias{show,GRangesFilter-method}
 \title{Filtering src_organism objects}
 \usage{
 AccnumFilter(value, condition = "==")
@@ -125,7 +126,9 @@ TxEndFilter(value, condition = "==")
 
 supportedFilters()
 
-.genes_tbl(x, filter = NULL)
+GRangesFilter(value)
+
+\S4method{show}{GRangesFilter}(object)
 }
 \arguments{
 \item{object}{A \code{BasicFilter} or \code{GRangesFilter} object}

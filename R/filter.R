@@ -213,53 +213,6 @@ setValidity("BasicFilter", function(object) {
         "tx_start", "tx_end")
 )
 
-#' @exportClass CharacterFilter
-.CharacterFilter <- setClass(
-    ## FIXME: reuse AnnotationFilter
-    "CharacterFilter",
-    contains = c("VIRTUAL", "AnnotationFilter"),
-    slots = c(value = "character"),
-    prototype = list(
-        value = character()
-    )
-)
-
-setValidity("CharacterFilter", function(object) {
-    if (!is.character(value(object)))
-        return('value must be a character')
-    .valid_condition(.condition(object), "CharacterFilter")
-})
-
-#' @importFrom methods show callNextMethod
-#'
-#' @export
-setMethod("show", "CharacterFilter", function(object) {
-     callNextMethod()
-     cat("value:", object@value, "\n")
- })
-
-#' @exportClass IntegerFilter
-.IntegerFilter <- setClass(
-      "IntegerFilter",
-      contains = c("VIRTUAL", "AnnotationFilter"),
-      slots = c(value = "integer"),
-      prototype = list(
-      value = integer()
-      )
-)
-
-setValidity("IntegerFilter", function(object) {
-    if(!is.numeric(value(object)))
-        return('value must be numeric')
-    .valid_condition(.condition(object), "IntegerFilter")
-})
-
-#' @export
-setMethod("show", "IntegerFilter", function(object) {
-      callNextMethod()
-      cat("value:", object@value, "\n")
-})
-
 .valid_condition <- function(condition, class){
     txt <- character()
 
