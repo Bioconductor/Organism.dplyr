@@ -221,7 +221,6 @@ src_organism <- function(txdb=NULL, dbpath=NULL) {
     }
 }
 
-
 #' @param organism organism or common name
 #'
 #' @param genome genome name
