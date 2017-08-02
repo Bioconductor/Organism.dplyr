@@ -1,4 +1,4 @@
-#' @importFrom AnnotationFilter AnnotationFilter AnnotationFilterList field
+#' @importFrom AnnotationFilter AnnotationFilter AnnotationFilterList field condition value
 .tbl_join <- function(x, table, tbls, filter) {
     if (is.null(filter))
         return(table)
@@ -18,7 +18,7 @@
         stop(
             paste0(
                 "'", .filter_subset(filter, !(fields %in% columns(x))), "'",
-                collapse = ","
+                collapse = ", "
             ), " filter not available"
         )
 
@@ -47,7 +47,7 @@
 
 .check_filters <- function(filter) {
     filters <- vapply(value(filter), class, character(1))
-    !any(!(filters %in% supportedFilters()))
+    all(filters %in% as.character(.supportedFilters()[,1]))
 }
 
 .keep <- function(filter, fields, fields_remove) {
@@ -83,11 +83,14 @@
     isOther <- !(isFirst | isLast)
     isDifferent <- c(FALSE, op[first] != op[second[-length(second)]])
 
-    keepOp[ second[isOther & !fields_subset & c(FALSE, op[first] == "&")] ] <- FALSE
-    keepOp[  first[isOther & !fields_subset & c(FALSE, op[first] != "&")] ] <- FALSE
+    keepOp[ second[isOther & !fields_subset & c(FALSE, op[first] == "&")] ] <-
+			FALSE
+    keepOp[  first[isOther & !fields_subset & c(FALSE, op[first] != "&")] ] <-
+			FALSE
     keepOp[ second[isOther & isDifferent] ] <- FALSE
 
-	if(!any(fields_subset[-1]) || !any(head(fields_subset, -1)))   ## Catch an edge case
+	## Catch an edge case
+	if(!any(fields_subset[-1]) || !any(head(fields_subset, -1)))   
 		keepOp <- rep(FALSE, length(op))
 
 	if(length(fields_subset) >= 4 &&
@@ -117,12 +120,9 @@
 
 .filter <- function(filter, keep) {
     fields <- .fields(filter)
-    ops <- logicOp(filter)
-    filter <- lapply(.filter_subset(filter, fields %in% keep), .convertFilter)
-    ##paste0(filter, collapse=" & ")
-    paste(c(
-        sprintf("%s %s ", head(filter, -1), ops), tail(filter, 1)
-    ), collapse="")
+	subset_filter <- .filter_subset(filter, fields %in% keep)
+    filter <- lapply(subset_filter, .convertFilter)
+	unlist(c(rbind(filter, logicOp(subset_filter))))
 }
 
 .return_tbl <- function(table, filter) {
@@ -154,7 +154,7 @@
     if ("granges" %in% .fields(filter)) {
         gr <- subsetByOverlaps(
             gr,
-            .value(.filter_subset(filter, "granges")[[1]])
+            value(.filter_subset(filter, "granges")[[1]])
         )
     }
     .updateSeqinfo(x, gr)
@@ -336,7 +336,7 @@ setMethod("cds", "src_organism",
 }
 
 setValidity("GRangesFilter", function(object) {
-    value <- .value(object)
+    value <- value(object)
     txt <- character()
     if (!is(value, "GRanges"))
         txt <- c(txt, "'value' must be 'GRanges' object")
@@ -350,7 +350,7 @@ setMethod("show", "GRangesFilter",
 {
     cat("class:", class(object),
         "\nvalue:\n")
-    print(.value(object))
+    print(value(object))
 })
 
 #' @rdname extractors

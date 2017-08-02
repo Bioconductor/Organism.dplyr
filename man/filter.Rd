@@ -62,8 +62,7 @@
 \alias{show,CharacterFilter-method}
 \alias{show,IntegerFilter-method}
 \alias{show,BasicFilter-method}
-\alias{supportedFilters}
-\alias{GRangesFilter}
+\alias{supportedFilters,src_organism-method}
 \alias{show,GRangesFilter-method}
 \title{Filtering src_organism objects}
 \usage{
@@ -124,9 +123,7 @@ TxEndFilter(value, condition = "==")
 
 \S4method{show}{BasicFilter}(object)
 
-supportedFilters()
-
-GRangesFilter(value)
+\S4method{supportedFilters}{src_organism}(object)
 
 \S4method{show}{GRangesFilter}(object)
 }

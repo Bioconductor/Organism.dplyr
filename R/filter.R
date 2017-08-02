@@ -158,9 +158,13 @@ setClass("BasicFilter",
          )
 )
 
+setMethod("initialize", "BasicFilter", function(.Object) {
+	.Deprecated("AnnotationFilter")
+})
+
 setValidity("BasicFilter", function(object) {
-    value <- .value(object)
-    condition <- .condition(object)
+    value <- value(object)
+    condition <- condition(object)
     isCharacter <- .isCharacter(object)
     txt <- character()
     if (length(condition) != 1L)
@@ -257,7 +261,7 @@ setValidity("BasicFilter", function(object) {
 local({
     makeClass <- function(contains){
         fields <- .FIELD[[contains]]
-        supported <- as.character(AnnotationFilter::supportedFilters()[,2])
+        supported <- as.character(supportedFilters()[,1])
         fields <- fields[!(fields %in% supported)]
         classes <- .fieldToClass(fields)
         for (i in seq_along(fields)) {
@@ -273,13 +277,6 @@ local({
         makeClass(contains)
 })
 
-## FIXME: import from AnnotationFilter
-.field <- function(object) AnnotationFilter::field(object)
-
-.condition <- function(object) AnnotationFilter::condition(object)
-
-.value <- function(object) AnnotationFilter::value(object)
-
 #' @param object A \code{BasicFilter} or \code{GRangesFilter} object
 #'
 #' @importFrom methods show
@@ -289,18 +286,18 @@ setMethod("show", "BasicFilter",
     function(object)
 {
     cat("class:", class(object),
-        "\ncondition:", .condition(object),
-        "\nvalue:", .value(object), "\n")
+        "\ncondition:", condition(object),
+        "\nvalue:", value(object), "\n")
 })
 
 .fields <- function(object) {
-    vapply(object, .field, character(1))
+    vapply(object, field, character(1))
 }
 
 .convertFilter <- function(object) {
-    field <- .field(object)
-    value <- .value(object)
-    condition <- .condition(object)
+    field <- field(object)
+    value <- value(object)
+    condition <- condition(object)
 
     op <- switch(
         condition,
@@ -328,16 +325,16 @@ setMethod("show", "BasicFilter",
     }
 }
 
-#' @rdname filter
-#' @export
-supportedFilters <- function() {
-    ## FIXME: method on AnnotationFilter::supportedFilters
-    ## FIXME: same format (data.frame()) as AnnotationFilter::supportedFilters
-    sort(c(.fieldToClass(unlist(.FIELD, use.names=FALSE)), "GRangesFilter"))
+.supportedFilters <- function() {
+    df <- data.frame(
+		filter = c(.fieldToClass(unlist(.FIELD, use.names=FALSE)), "GRangesFilter"),
+		field = c(unlist(.FIELD, use.names=FALSE), "granges")
+	)
+	df[order(df[,1]),]
 }
 
 ##' @rdname filter
 ##' @export
-#setMethod("supportedFilters", "missing", function(object){
-#   .supportedFilters()
-#})
+setMethod("supportedFilters", "src_organism", function(object){
+    .supportedFilters()
+})
