@@ -291,13 +291,20 @@ setMethod("show", "BasicFilter",
 })
 
 .fields <- function(object) {
-    vapply(object, field, character(1))
+    res <- lapply(object, function(x) {
+			if(is(x, "AnnotationFilter"))
+				field(x)
+			else
+				.fields(x)
+		})
+	unlist(res)
 }
 
 .convertFilter <- function(object) {
     field <- field(object)
     value <- value(object)
     condition <- condition(object)
+	not <- not(object)
 
     op <- switch(
         condition,
@@ -307,21 +314,24 @@ setMethod("show", "BasicFilter",
         "endsWith" = "%like%"
     )
 
+	not_val <- ifelse(not, '!', '')
+
     if (condition %in% c("==", "!="))
         value <- paste0("'", value, "'", collapse=", ")
 
     if (!is.null(op) && op %in% c("==", "!="))
-        sprintf("%s %s %s", field, op, value)
+        sprintf("%s%s %s %s", not_val, field, op, value)
     else if ((condition == "==") && op == "%in%")
-        sprintf("%s %s c(%s)", field, op, value)
+        sprintf("%s%s %s c(%s)", not_val, field, op, value)
     else if ((condition == "!=") && op == "%in%")
-        sprintf("!%s %s c(%s)", field, op, value)
+		if(not) sprintf("%s %s c(%s)", field, op, value)
+		else sprintf("!%s%s %s c(%s)", not_val, field, op, value)
     else if (condition == "startsWith")
-        sprintf("%s %s '%s%%'", field, op, value)
+        sprintf("%s%s %s '%s%%'", not_val, field, op, value)
     else if (condition == "endsWith")
-        sprintf("%s %s '%%%s'", field, op, value)
+        sprintf("%s%s %s '%%%s'", not_val, field, op, value)
     else if (condition %in% c(">", "<", ">=", "<=")) {
-        sprintf("%s %s %s", field, condition, as.integer(value))
+        sprintf("%s%s %s %s", not_val, field, condition, as.integer(value))
     }
 }
 
