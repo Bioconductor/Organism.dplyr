@@ -159,7 +159,7 @@ setClass("BasicFilter",
 )
 
 setMethod("initialize", "BasicFilter", function(.Object) {
-	.Deprecated("AnnotationFilter")
+    .Deprecated("AnnotationFilter")
 })
 
 setValidity("BasicFilter", function(object) {
@@ -292,19 +292,19 @@ setMethod("show", "BasicFilter",
 
 .fields <- function(object) {
     res <- lapply(object, function(x) {
-			if(is(x, "AnnotationFilter"))
-				field(x)
-			else
-				.fields(x)
-		})
-	unlist(res)
+            if(is(x, "AnnotationFilter"))
+                field(x)
+            else
+                .fields(x)
+        })
+    unlist(res)
 }
 
 .convertFilter <- function(object) {
     field <- field(object)
     value <- value(object)
     condition <- condition(object)
-	not <- not(object)
+    not <- not(object)
 
     op <- switch(
         condition,
@@ -314,7 +314,7 @@ setMethod("show", "BasicFilter",
         "endsWith" = "%like%"
     )
 
-	not_val <- ifelse(not, '!', '')
+    not_val <- ifelse(not, '!', '')
 
     if (condition %in% c("==", "!="))
         value <- paste0("'", value, "'", collapse=", ")
@@ -324,8 +324,8 @@ setMethod("show", "BasicFilter",
     else if ((condition == "==") && op == "%in%")
         sprintf("%s%s %s c(%s)", not_val, field, op, value)
     else if ((condition == "!=") && op == "%in%")
-		if(not) sprintf("%s %s c(%s)", field, op, value)
-		else sprintf("!%s%s %s c(%s)", not_val, field, op, value)
+        if(not) sprintf("%s %s c(%s)", field, op, value)
+        else sprintf("!%s%s %s c(%s)", not_val, field, op, value)
     else if (condition == "startsWith")
         sprintf("%s%s %s '%s%%'", not_val, field, op, value)
     else if (condition == "endsWith")
@@ -337,10 +337,10 @@ setMethod("show", "BasicFilter",
 
 .supportedFilters <- function() {
     df <- data.frame(
-		filter = c(.fieldToClass(unlist(.FIELD, use.names=FALSE)), "GRangesFilter"),
-		field = c(unlist(.FIELD, use.names=FALSE), "granges")
-	)
-	df[order(df[,1]),]
+        filter = c(.fieldToClass(unlist(.FIELD, use.names=FALSE)), "GRangesFilter"),
+        field = c(unlist(.FIELD, use.names=FALSE), "granges")
+    )
+    df[order(df[,1]),]
 }
 
 ##' @rdname filter
