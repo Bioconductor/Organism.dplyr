@@ -35,7 +35,7 @@
 											value(i),
 											type=condition(i)
 									)
-					.getAllTableValues(x, as_tibble(table_granges), table_names)
+					.getAllTableValues(x, table_granges, table_names)
 				}
 				else {
 					dplyr_filter <- .convertFilter(i)
@@ -51,14 +51,14 @@
 		})
 
 	ops <- logicOp(filter)
-	table <- as_tibble(main_table)
-   	table <- inner_join(table, as_tibble(res[[1]]))
+	table <- main_table
+   	table <- inner_join(table, res[[1]])
 	res <- res[-1]
 	for(i in seq_len(length(res))) {
 		if(ops[[i]] == '&')
-			table <- inner_join(table, as_tibble(res[[i]])) %>% distinct()
+			table <- inner_join(table, res[[i]]) %>% distinct()
 		else
-			table <- full_join(table, as_tibble(res[[i]]))
+			table <- full_join(table, res[[i]])
 	}
 
     table %>% distinct()
@@ -73,13 +73,13 @@
 }
 
 .getAllTableValues <- function(x, table, table_names) {
-	table <- as_tibble(table)
+	table <- table
 	for(i in names(table_names)) {
 		tmp <- tbl(x, i)
 		less_table <- do.call(dplyr::select, c(list(tmp), table_names[[i]]))
 		if(!all(colnames(less_table) %in% 'entrez')) {#!all(colnames(less_table) %in% table_names[[1]]))
 		less_table <- less_table %>% distinct()
-		table <- left_join(table, as_tibble(less_table))
+		table <- left_join(table, less_table)
 		}
 	}
 	table
