@@ -1,5 +1,5 @@
 #' @importFrom AnnotationFilter AnnotationFilter AnnotationFilterList field
-#' @condition value
+#'      value
 #' @importFrom AnnotationDbi columns
 #' @importFrom dplyr %>% as_tibble inner_join full_join filter_
 .tbl_join <- function(x, filter, main_table, table_names) {
@@ -21,8 +21,6 @@
                 selected_table <-
                     names(selected_table_logical[selected_table_logical==TRUE])
                 val <- tbl(x, selected_table[1]) %>% filter_(dplyr_filter)
-#                val <- do.call(dplyr::select,
-#                       c(list(val), table_names[[selected_table]]))
                 .getAllTableValues(x, val, table_names, selected_table_logical)
             }
         })
@@ -44,18 +42,18 @@
 .check_filters <- function(x, filter) {
     filters <- vapply(value(filter), function(i) {
             if(is(i, "AnnotationFilterList")) TRUE
-            else field(i) %in% c(as.character(.supportedFilters()[,2]), 'granges') &&
+            else field(i) %in%
+                 c(as.character(.supportedFilters()[,2]), 'granges') &&
                  field(i) %in% c(columns(x), 'granges')
         }, logical(1))
     if(all(filters)) TRUE
-    else FALSE # stop("Some filters are not avaiable.") #"The filter(s) ", paste0("'", filter[!filters], "'", collapse=" ,"), " is not availiable")
+    else FALSE
 }
 
 .getAllTableValues <- function(x, table, table_names, selected) {
     table_names <- table_names[!selected]
     for(i in names(table_names)) {
         tmp <- tbl(x, i)
-#        less_table <- do.call(dplyr::select, c(list(tmp), table_names[[i]]))
         table <- left_join(table, tmp)
     }
     table
@@ -204,6 +202,9 @@ transcripts_tbl <- function(x, filter = NULL) {
 
 #' @importFrom GenomicRanges GRanges
 #'
+#' @param granges A \code{GRangesFilter} object to subset the resulting
+#'     \code{GRanges} object by.  Is \code{NULL} if missing.
+#'
 #' @examples
 #' ## transcript coordinates with filter in granges format
 #' filters <- list(GRangesFilter(GenomicRanges::GRanges("chr15:1-25070000")))
@@ -336,6 +337,8 @@ setMethod("genes", "src_organism", function(x, filter = NULL, granges = NULL) {
         distinct()
 }
 
+#' @param upstream For \code{promoters()}: An integer(1) value indicating
+#' the number of bases upstream from the transcription start site.
 #'
 #' @param downstream For \code{promoters()}: An integer(1) value indicating
 #' the number of bases downstream from the transcription start site.

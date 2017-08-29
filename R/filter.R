@@ -141,7 +141,8 @@
 #' @export TxTypeFilter UnigeneFilter WormbaseFilter ZfinFilter
 #' @rdname filter
 #' @importFrom methods new setClass slot setMethod setValidity
-#' @importFrom AnnotationFilter AnnotationFilter GRangesFilter field value condition
+#' @importFrom AnnotationFilter AnnotationFilter GRangesFilter field value
+#'      condition
 #' @export
 setClass("BasicFilter",
          representation(
@@ -337,7 +338,8 @@ setMethod("show", "BasicFilter",
 
 .supportedFilters <- function() {
     df <- data.frame(
-        filter = c(.fieldToClass(unlist(.FIELD, use.names=FALSE)), "GRangesFilter"),
+        filter = c(.fieldToClass(unlist(.FIELD, use.names=FALSE)),
+            "GRangesFilter"),
         field = c(unlist(.FIELD, use.names=FALSE), "granges")
     )
     df[order(df[,1]),]

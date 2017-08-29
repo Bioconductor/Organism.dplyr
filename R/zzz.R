@@ -1,3 +1,4 @@
+#' @importFrom AnnotationFilter supportedFilters
 .onLoad <-
     function(...)
 {

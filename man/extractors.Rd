@@ -81,6 +81,12 @@ threeUTRsByTranscript_tbl(x, filter = NULL)
 restrict the output. Filter can also be a \code{\link{GRanges}} object
 using "GRangesFilter" (see examples).}
 
+\item{granges}{A \code{GRangesFilter} object to subset the resulting
+\code{GRanges} object by.  Is \code{NULL} if missing.}
+
+\item{upstream}{For \code{promoters()}: An integer(1) value indicating
+the number of bases upstream from the transcription start site.}
+
 \item{downstream}{For \code{promoters()}: An integer(1) value indicating
 the number of bases downstream from the transcription start site.}
 
