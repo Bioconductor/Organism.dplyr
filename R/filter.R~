@@ -258,7 +258,7 @@ setValidity("BasicFilter", function(object) {
 }
 
 ## create filter functions not already implemented in AnnotationFilter
-.filter_init <- function() {
+local({
     makeClass <- function(contains){
         fields <- .FIELD[[contains]]
         supported <- as.character(supportedFilters()[,1])
@@ -275,7 +275,7 @@ setValidity("BasicFilter", function(object) {
     }
     for (contains in names(.FIELD))
         makeClass(contains)
-}
+})
 
 #' @param object A \code{BasicFilter} or \code{GRangesFilter} object
 #'
