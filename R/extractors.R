@@ -126,7 +126,7 @@
 .xscripts <- function(x, main_ranges, filter = NULL) {
     table <- tbl(x, main_ranges)
     table_names <- .tableNames(x, filter, main_ranges)
-    table <- .tbl_join(x, filter, table, table_names)
+    table <- suppressMessages(.tbl_join(x, filter, table, table_names))
 }
 
 .transcripts_tbl <- function(x, filter = NULL) {
@@ -196,7 +196,7 @@
 #' @export
 transcripts_tbl <- function(x, filter = NULL) {
     filter <- .parseFilterInput(filter)
-    suppressMessages(.return_tbl(.transcripts_tbl(x, filter), filter))
+    .return_tbl(.transcripts_tbl(x, filter), filter)
 }
 
 

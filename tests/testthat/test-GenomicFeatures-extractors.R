@@ -48,6 +48,17 @@ src <- src_organism(dbpath=hg38light)
     expect_equal(length(src), length(txdb))
     expect_true(all.equal(seqinfo(src), seqinfo(txdb)))
     expect_true(setequal(mcols(src)[[subset]], mcols(txdb)[[subset]]))
+
+    ## *Expression
+    src <- fun(src0, filter=~entrez_filter == egid)
+    expect_equal(length(src), length(txdb))
+    expect_true(all.equal(seqinfo(src), seqinfo(txdb)))
+    expect_true(setequal(mcols(src)[[subset]], mcols(txdb)[[subset]]))
+
+    ## AnnotationFilter Negation
+    src1 <- fun(src0, filter=~symbol == "ADA")
+    src2 <- fun(src0, filter=~!symbol != "ADA")
+    expect_true(all.equal(seqinfo(src1), seqinfo(src2)))
 }
 
 .test_extractorBy <- function(src, txdb, funBy) {
@@ -85,6 +96,22 @@ src <- src_organism(dbpath=hg38light)
     expect_equal(length(src), length(txdb))
     expect_true(all.equal(seqinfo(src), seqinfo(txdb)))
     expect_true(setequal(src$tx_id, txdb$tx_id))
+
+    ## *Expression
+    src <- funBy(src0, filter=~tx_id == txid)
+    expect_equal(length(src), length(txdb))
+    expect_true(all.equal(seqinfo(src), seqinfo(txdb)))
+    expect_true(setequal(src$tx_id, txdb$tx_id))
+
+    ## AnnotationFilter Negation
+    src1 <- funBy(src0, filter=~symbol == "ADA")
+    src2 <- funBy(src0, filter=~!symbol != "ADA")
+    expect_true(all.equal(seqinfo(src1), seqinfo(src2)))
+
+    ## AnnotationFilterList Negation
+    src1 <- funBy(src0, filter=~symbol == ADA & tx_id == 169786) 
+    src2 <- funBy(src0, filter=~!(symbol != ADA) & txid != 169786)
+    expect_true(all.equal(seqinfo(src1), seqinfo(src2)))
 }
 
 test_that("validate-filter", {
@@ -117,10 +144,8 @@ test_that("promoters-extractor", {
 test_that("transcriptsBy-extractor", {
     txdb <- suppressWarnings(transcriptsBy(txdb))
     .test_extractorBy(src, txdb, transcriptsBy)
-    ## .test_extractorBy_txfilter(src, txdb, transcriptsBy)
+    .test_extractorBy_txfilter(src, txdb, transcriptsBy)
     
-    ## filters
-    ## FIXME TxIdFilter does not work correctly here
     egid <- c("10", "100")
     tx_src <- unlist(transcriptsBy(src, filter=AnnotationFilterList(EntrezFilter(egid))))
     tx_txdb <- unlist(txdb[egid])
