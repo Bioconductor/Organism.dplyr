@@ -1,58 +1,57 @@
 #' @importFrom AnnotationFilter AnnotationFilter AnnotationFilterList field
-#'      value
+#'      value convertFilter
 #' @importFrom AnnotationDbi columns
 #' @importFrom dplyr %>% as_tibble inner_join full_join filter_
 .tbl_join <- function(x, filter, main_table, table_names) {
     if (is.null(filter))
         return(main_table)
 
-    if(!.check_filters(x, filter)) stop("Some filters are not avaiable.")
+    if (!.check_filters(x, filter))
+        stop("Some filters are not avaiable.")
 
     res <- lapply(filter, function(i) {
-            if(is(i, "AnnotationFilterList"))
-                .tbl_join(x, i, main_table, table_names)
-            else{
-                f_field <- field(i)
-                if(f_field == "granges") return(main_table)
-                dplyr_filter <- .convertFilter(i)
-                selected_table_logical <-
-                    vapply(table_names, function(i)
-                                             any(i %in% f_field), logical(1))
-                selected_table <-
-                    names(selected_table_logical[selected_table_logical==TRUE])
+        if (is(i, "AnnotationFilterList"))
+            .tbl_join(x, i, main_table, table_names)
+        else{
+            f_field <- field(i)
+                if (f_field == "granges") return(main_table)
+                dplyr_filter <- convertFilter(i)
+                selected <-
+                    vapply(table_names, function(j) f_field %in% j, logical(1))
+                selected_table <- names(selected)[selected]
                 val <- tbl(x, selected_table[1]) %>% filter_(dplyr_filter)
-                .getAllTableValues(x, val, table_names, selected_table_logical)
+                .getAllTableValues(x, val, table_names, selected)
             }
-        })
+        }
+    )
 
     ops <- logicOp(filter)
-    table <- main_table
-    table <- .innerJoin(table, res[[1]])
+    main_table <- .innerJoin(main_table, res[[1]])
     res <- res[-1]
-    for(i in seq_along(res)) {
+    for (i in seq_along(res)) {
         if(ops[[i]] == '&')
-            table <- .innerJoin(table, res[[i]])
+            main_table <- .innerJoin(main_table, res[[i]])
         else
-            table <- .fullJoin(table, res[[i]])
+            main_table <- .fullJoin(main_table, res[[i]])
     }
-
-    table
+    main_table
 }
 
 .check_filters <- function(x, filter) {
+    fields <- c(as.character(.supportedFilters()[,2]), 'granges')
+    columns <- c(columns(x), 'granges')
+    columns <- intersect(columns, fields)
     filters <- vapply(value(filter), function(i) {
-            if(is(i, "AnnotationFilterList")) TRUE
-            else field(i) %in%
-                 c(as.character(.supportedFilters()[,2]), 'granges') &&
-                 field(i) %in% c(columns(x), 'granges')
-        }, logical(1))
-    if(all(filters)) TRUE
-    else FALSE
+        is(i, "AnnotationFilterList") || field(i) %in% columns
+        },
+        logical(1)
+    )
+    all(filters)
 }
 
 .getAllTableValues <- function(x, table, table_names, selected) {
     table_names <- table_names[!selected]
-    for(i in names(table_names)) {
+    for (i in names(table_names)) {
         tmp <- tbl(x, i)
         table <- left_join(table, tmp)
     }
@@ -89,10 +88,6 @@
 }
 
 .return_tbl <- function(table, filter) {
-#    filter <- .filter_list(filter)
-#    if ("granges" %in% .fields(filter))
-#        message("filter by 'granges' only supported by methods returning ",
-#                "GRanges or GRangesList")
     table
 }
 
@@ -105,11 +100,14 @@
 
 #' @importFrom IRanges subsetByOverlaps
 .toGRanges <- function(x, table, filter, granges = NULL) {
-    if(length(granges) == 0) {
-        granges <- lapply(filter,
-                function(i) if(is(i, "AnnotationFilter")) field(i)) == "granges"
-        if(any(granges)) granges <- filter[granges][[1]]
-        else granges <- NULL
+    if (length(granges) == 0) {
+        granges <- lapply(filter, function(i)
+            if (is(i, "AnnotationFilter"))
+                field(i)) == "granges"
+        if (any(granges))
+            granges <- filter[granges][[1]]
+        else
+            granges <- NULL
     }
 
     gr <- table %>% collect(n=Inf) %>% as("GRanges")
@@ -139,10 +137,10 @@
 }
 
 .parseFilterInput <- function(filter) {
-    if(is.language(filter))
+    if (is.language(filter))
         filter <- AnnotationFilter(filter)
     filter <- .filter_list(filter)
-    if(is(filter, "AnnotationFilterList"))
+    if (is(filter, "AnnotationFilterList"))
         filter <- distributeNegation(filter)
     filter
 }
