@@ -110,6 +110,9 @@
             granges <- NULL
     }
 
+    ## Filter out any rows that contain NA in chrom, start, end, or strand
+    table <- table %>% filter_at(vars(c(1, 2, 3, 4)), all_vars(!is.na(.)))
+
     gr <- table %>% collect(n=Inf) %>% as("GRanges")
     if (!is.null(granges)) {
         gr <- subsetByOverlaps(
@@ -119,6 +122,15 @@
         )
     }
     .updateSeqinfo(x, gr)
+}
+
+.checkCompatibleStartEnds <- function(type, filter) {
+    fields <- .fields(filter)
+    starts <- fields[grep("start", fields)]
+    ends <- fields[grep("end", fields)]
+    starts <- grepl(type, starts)
+    ends <- grepl(type, ends)
+    all(starts) && all(ends)
 }
 
 .xscripts <- function(x, main_ranges, filter = NULL) {
@@ -215,6 +227,9 @@ transcripts_tbl <- function(x, filter = NULL) {
 setMethod("transcripts", "src_organism",
     function(x, filter = NULL, granges = NULL) {
         filter <- .parseFilterInput(filter)
+        if(!.checkCompatibleStartEnds("tx", filter))
+            stop("Only TxStartFilter and TxEndFilters can be used as start and 
+                end filters for transcripts method")
         .toGRanges(x, .transcripts_tbl(x, filter), filter, granges)
 })
 
@@ -244,6 +259,9 @@ exons_tbl <- function(x, filter = NULL) {
 #' @exportMethod exons
 setMethod("exons", "src_organism", function(x, filter = NULL, granges = NULL) {
     filter <- .parseFilterInput(filter)
+    if(!.checkCompatibleStartEnds("exon", filter))
+        stop("Only ExonStartFilter and ExonEndFilters can be used as start and 
+            end filters for exons method")
     .toGRanges(x, .exons_tbl(x, filter), filter, granges)
 })
 
@@ -272,6 +290,9 @@ cds_tbl <- function(x, filter = NULL) {
 #' @exportMethod cds
 setMethod("cds", "src_organism", function(x, filter = NULL, granges = NULL) {
     filter <- .parseFilterInput(filter)
+    if(!.checkCompatibleStartEnds("cds", filter))
+        stop("Only CdsStartFilter and CdsEndFilters can be used as start and 
+            end filters for cds method")
     .toGRanges(x, .cds_tbl(x, filter), filter, granges)
 })
 
@@ -297,6 +318,9 @@ genes_tbl <- function(x, filter = NULL) {
 #' @exportMethod genes
 setMethod("genes", "src_organism", function(x, filter = NULL, granges = NULL) {
     filter <- .parseFilterInput(filter)
+    if(!.checkCompatibleStartEnds("gene", filter))
+        stop("Only GeneStartFilter and GeneEndFilters can be used as start and 
+            end filters for genes method")
     .toGRanges(x, .genes_tbl(x, filter), filter, granges)
 })
 
