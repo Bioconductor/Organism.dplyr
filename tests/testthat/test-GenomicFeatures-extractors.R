@@ -67,8 +67,8 @@ src <- src_organism(dbpath=hg38light)
 
     ## Grouping
     src1 <- fun(src0, filter=~symbol == "ADA" & tx_id == 169786 |
-        tx_end == 243843236)
-    src2 <- fun(src0, filter=~tx_end == 243843236 |
+        symbol %startsWith% "SNORD")
+    src2 <- fun(src0, filter=~symbol %startsWith% "SNORD" |
         (symbol == "ADA" & tx_id != 169786))
     expect_true(all.equal(seqinfo(src1), seqinfo(src2)))
 }
@@ -127,8 +127,8 @@ src <- src_organism(dbpath=hg38light)
 
     ## Grouping
 #    src1 <- funBy(src0, filter=~symbol == "ADA" & tx_id == 169786 |
-#        tx_end == 243843236)
-#    src2 <- funBy(src0, filter=~tx_end == 243843236 |
+#        symbol %startsWith% "SNORD")
+#    src2 <- funBy(src0, filter=~symbol %startsWith% "SNORD" |
 #        (symbol == "ADA" & tx_id != 169786))
 #    expect_true(all.equal(seqinfo(src1), seqinfo(src2)))
 }
