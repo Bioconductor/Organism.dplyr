@@ -12,23 +12,43 @@
     res <- lapply(filter, function(i) {
         if (is(i, "AnnotationFilterList"))
             .tbl_join(x, i, main_table, table_names)
-        else{
+        else {
             f_field <- field(i)
-                if (f_field == "granges") return(main_table)
-                dplyr_filter <- convertFilter(i)
-                selected <-
-                    vapply(table_names, function(j) f_field %in% j, logical(1))
-                selected_table <- names(selected)[selected]
-                val <- tbl(x, selected_table[1]) %>% filter_(dplyr_filter)
-                .getAllTableValues(x, val, table_names, selected)
+                if (f_field == "granges") {
+                    gr <- main_table %>% collect(n=Inf) %>% as("GRanges")
+                    if (!is.null(i)) {
+                        gr <- subsetByOverlaps(
+                            gr,
+                            value(i),
+                            type=condition(i)
+                        )
+                    }
+                    #.updateSeqinfo(x, gr)
+                    gr <- as_tibble(gr)
+                    gr <- gr[, setdiff(colnames(gr), "width")]
+                    colnames(gr)[1:4] <- colnames(main_table)[c(1, 3, 4, 2)]
+                    name <- .getNewTableName()
+                    dbWriteTable(x$db, name, gr)
+                    tbl(x$db, name)
+                }
+                else {
+                    dplyr_filter <- convertFilter(i)
+                    selected <-
+                        vapply(table_names, function(j) f_field %in% j, logical(1))
+                    selected_table <- names(selected)[selected]
+                    main_table <- .iterTable(x, main_table)
+                    val <- tbl(x$db, selected_table[1]) %>% filter_(dplyr_filter)
+                    .getAllTableValues(x, val, table_names, selected)
+                }
             }
         }
     )
-
     ops <- logicOp(filter)
+    table <- .iterTable(x, main_table)
     main_table <- .innerJoin(main_table, res[[1]])
     res <- res[-1]
     for (i in seq_along(res)) {
+        main_table <- .iterTable(x, main_table)
         if(ops[[i]] == '&')
             main_table <- .innerJoin(main_table, res[[i]])
         else
@@ -38,11 +58,9 @@
 }
 
 .check_filters <- function(x, filter) {
-    fields <- c(as.character(.supportedFilters()[,2]), 'granges')
-    columns <- c(columns(x), 'granges')
-    columns <- intersect(columns, fields)
+    fields <- c(as.character(.supportedFilters()[,2]))
     filters <- vapply(value(filter), function(i) {
-        is(i, "AnnotationFilterList") || field(i) %in% columns
+        is(i, "AnnotationFilterList") || field(i) %in% fields
         },
         logical(1)
     )
@@ -52,7 +70,8 @@
 .getAllTableValues <- function(x, table, table_names, selected) {
     table_names <- table_names[!selected]
     for (i in names(table_names)) {
-        tmp <- tbl(x, i)
+        tmp <- tbl(x$db, i)
+        table <- .iterTable(x, table)
         table <- left_join(table, tmp)
     }
     table
@@ -75,14 +94,14 @@
     all_select_values <- unique(.fields(filter))
     tbls <- setdiff(src_tbls(x), main_ranges)
     names(tbls) <- tbls
-    colnames <- lapply(tbls, function(tbl) colnames(tbl(x, tbl)))
+    colnames <- lapply(tbls, function(tbl) colnames(tbl(x, tbl, .load_tbl_only=TRUE)))
     mapped <- Map(
         function(nms, value) nms[nms %in% value],
         colnames,
         MoreArgs=list(c(x$schema, all_select_values))
     )
     mapped <- mapped[lengths(mapped) > 1]
-    main_map <- list(colnames(tbl(x, main_ranges)))
+    main_map <- list(colnames(tbl(x, main_ranges, .load_tbl_only=TRUE)))
     names(main_map) <- main_ranges
     c(main_map, mapped)
 }
@@ -99,29 +118,12 @@
 }
 
 #' @importFrom IRanges subsetByOverlaps
-.toGRanges <- function(x, table, filter, granges = NULL) {
-    if (length(granges) == 0) {
-        granges <- lapply(filter, function(i)
-            if (is(i, "AnnotationFilter"))
-                field(i)) == "granges"
-        if (any(granges))
-            granges <- filter[granges][[1]]
-        else
-            granges <- NULL
-    }
-
+.toGRanges <- function(x, table, filter) {
     ## Filter out any rows that contain NA in chrom, start, end, or strand
     table <- table %>% filter_at(vars(c(1, 2, 3, 4)), all_vars(!is.na(.)))
 
     gr <- table %>% collect(n=Inf) %>% as("GRanges")
-    if (!is.null(granges)) {
-        gr <- subsetByOverlaps(
-            gr,
-            value(granges),
-            type=condition(granges)
-        )
-    }
-    .updateSeqinfo(x, gr)
+#    .updateSeqinfo(x, gr)
 }
 
 .checkCompatibleStartEnds <- function(type, filter) {
@@ -133,10 +135,45 @@
     all(starts) && all(ends)
 }
 
+.checkDepth <- function(table) {
+    max <- 85
+    output <- capture.output(table %>% show_query(), type="message")
+    output <- tail(output, -1)
+    max < length(output)
+}
+
+.iterTable <- function(x, table) {
+    if (.checkDepth(table)) {
+        table <- table %>% collect(n=Inf)
+        nam <- .getNewTableName()
+        dbWriteTable(x$db, nam, table)
+        res <- tbl(x$db, nam)
+        #class(res) <- c("tbl_organism", class(res))
+        res
+    }
+    else
+        table
+}
+
+.getNewTableName <- local({
+    id <- 0L
+    function() {
+        id <<- id + 1
+        paste0("table", id)
+    }
+})
+
 .xscripts <- function(x, main_ranges, filter = NULL) {
-    table <- tbl(x, main_ranges)
     table_names <- .tableNames(x, filter, main_ranges)
-    table <- suppressMessages(.tbl_join(x, filter, table, table_names))
+    add_tables <- setdiff(names(table_names), dbListTables(x$db))
+    for (i in add_tables) {
+        table <- tbl(x, i, .load_tbl_only=TRUE) %>% collect(n=Inf)
+        dbWriteTable(x$db, i, table)
+    }
+    #db <- src_dbi(db)
+    table <- tbl(x$db, main_ranges)
+    table <- .tbl_join(x, filter, table, table_names)
+    table
 }
 
 .transcripts_tbl <- function(x, filter = NULL) {
@@ -144,6 +181,7 @@
     fields <- unique(c(
         "tx_chrom", "tx_start", "tx_end", "tx_strand",
         "tx_id", "tx_name", .filter_names(filter)))
+    table <- .iterTable(x, table)
     do.call(dplyr::select, c(list(table), as.list(fields))) %>%
         arrange_(~ tx_id) %>% distinct()
 }
@@ -156,7 +194,6 @@
         filter <- distributeNegation(filter)
     filter
 }
-
 
 #' Extract genomic features from src_organism objects
 #'
@@ -206,7 +243,7 @@
 #' @export
 transcripts_tbl <- function(x, filter = NULL) {
     filter <- .parseFilterInput(filter)
-    .return_tbl(.transcripts_tbl(x, filter), filter)
+    .transcripts_tbl(x, filter)
 }
 
 
@@ -225,12 +262,12 @@ transcripts_tbl <- function(x, filter = NULL) {
 #' @rdname extractors
 #' @exportMethod transcripts
 setMethod("transcripts", "src_organism",
-    function(x, filter = NULL, granges = NULL) {
+    function(x, filter = NULL) {
         filter <- .parseFilterInput(filter)
         if(!.checkCompatibleStartEnds("tx", filter))
             stop("Only TxStartFilter and TxEndFilters can be used as start and 
                 end filters for transcripts method")
-        .toGRanges(x, .transcripts_tbl(x, filter), filter, granges)
+        .toGRanges(x, .transcripts_tbl(x, filter), filter)
 })
 
 .exons_tbl <- function(x, filter = NULL) {
@@ -242,6 +279,7 @@ setMethod("transcripts", "src_organism",
         .filter_names(filter)))
     fields_remove <- c(x$schema, "tx_id", "exon_name", "exon_rank")
     fields <- setdiff(fields, fields_remove)
+    table <- .iterTable(x, table)
     do.call(select_, c(list(table), as.list(fields))) %>%
         arrange_(~ exon_id) %>% distinct()
 }
@@ -274,6 +312,7 @@ setMethod("exons", "src_organism", function(x, filter = NULL, granges = NULL) {
         .filter_names(filter)))
     fields_remove <- c(x$schema, "tx_id", "cds_name", "exon_rank")
     fields <- setdiff(fields, fields_remove)
+    table <- .iterTable(x, table)
     do.call(select_, c(list(table), as.list(fields))) %>% arrange_(~ cds_id) %>%
         distinct()
 }
@@ -302,6 +341,7 @@ setMethod("cds", "src_organism", function(x, filter = NULL, granges = NULL) {
     fields <- unique(c(
         "gene_chrom", "gene_start", "gene_end", "gene_strand",
         x$schema, .filter_names(filter)))
+    table <- .iterTable(x, table)
     do.call(select_, c(list(table), as.list(fields))) %>% arrange_(x$schema) %>%
         distinct()
 }
@@ -355,6 +395,7 @@ setMethod("genes", "src_organism", function(x, filter = NULL, granges = NULL) {
     fields <- unique(
         c("chrom", "start", "end", "strand", "tx_id", "tx_name",
           .filter_names(filter)))
+    table <- .iterTable(x, table)
     do.call(select_, c(list(table), as.list(fields))) %>% arrange_(~ tx_id) %>%
         distinct()
 }

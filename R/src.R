@@ -157,6 +157,7 @@ src_organism <- function(txdb=NULL, dbpath=NULL) {
             "entrez"
         } else "ensembl"
     class(src) <- c("src_organism", class(src))
+    src$db <- dbConnect(RSQLite::SQLite(), "")
     src
 }
 
@@ -372,9 +373,17 @@ src_tbls.src_organism <- function(x) {
 #' colnames(tbl(src, "id"))
 #'
 #' @rdname src
+#' @importFrom DBI dbListTables dbWriteTable
 #' @export
-tbl.src_organism <- function(src, ...) {
-    tbl <- NextMethod(src, ...)
+tbl.src_organism <- function(src, table, .load_tbl_only = FALSE) {
+    tbl <- NextMethod(src, table)
+    if (!.load_tbl_only) {
+        if (!(table %in% dbListTables(src$db))) {
+            tbl <- tbl %>% collect(n=Inf)
+            dbWriteTable(src$db, table, tbl)
+        }
+        tbl <- tbl(src$db, table)
+    }
     class(tbl) <- c("tbl_organism", class(tbl))
     tbl
 }
