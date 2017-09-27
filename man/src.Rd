@@ -22,7 +22,7 @@ supportedOrganisms()
 
 \method{src_tbls}{src_organism}(x)
 
-\method{tbl}{src_organism}(src, ...)
+\method{tbl}{src_organism}(src, table, .load_tbl_only = FALSE)
 
 \S4method{seqinfo}{src_organism}(x)
 }

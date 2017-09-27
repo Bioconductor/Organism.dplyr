@@ -1,6 +1,7 @@
 #' @importFrom AnnotationFilter AnnotationFilter AnnotationFilterList field
 #'      value convertFilter
 #' @importFrom AnnotationDbi columns
+#' @importFrom DBI dbListTables dbRemoveTable dbWriteTable
 #' @importFrom dplyr %>% as_tibble inner_join full_join filter_
 .tbl_join <- function(x, filter, main_table, table_names) {
     if (is.null(filter))
@@ -163,6 +164,14 @@
     }
 })
 
+.getNewOutputName <- local({
+    id <- 0L
+    function() {
+        id <<- id + 1
+        paste0("output", id)
+    }
+})
+
 .xscripts <- function(x, main_ranges, filter = NULL) {
     table_names <- .tableNames(x, filter, main_ranges)
     add_tables <- setdiff(names(table_names), dbListTables(x$db))
@@ -182,6 +191,7 @@
         "tx_chrom", "tx_start", "tx_end", "tx_strand",
         "tx_id", "tx_name", .filter_names(filter)))
     table <- .iterTable(x, table)
+    table <- .cleanOutput(x, table)
     do.call(dplyr::select, c(list(table), as.list(fields))) %>%
         arrange_(~ tx_id) %>% distinct()
 }
@@ -193,6 +203,21 @@
     if (is(filter, "AnnotationFilterList"))
         filter <- distributeNegation(filter)
     filter
+}
+
+.cleanOutput <- function(x, table) {
+    table <- table %>% collect(n=Inf)
+    name <- .getNewOutputName()
+    dbWriteTable(x$db, name, table)
+    .deleteTempTables(x)
+    table
+}
+
+.deleteTempTables <- function(x) {
+    tables <- dbListTables(x$db)
+    tables <- tables[grep('table', tables)]
+    for (i in tables)
+        dbRemoveTable(x$db, i)
 }
 
 #' Extract genomic features from src_organism objects

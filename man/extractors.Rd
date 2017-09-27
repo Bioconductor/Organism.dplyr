@@ -28,7 +28,7 @@
 \usage{
 transcripts_tbl(x, filter = NULL)
 
-\S4method{transcripts}{src_organism}(x, filter = NULL, granges = NULL)
+\S4method{transcripts}{src_organism}(x, filter = NULL)
 
 exons_tbl(x, filter = NULL)
 
