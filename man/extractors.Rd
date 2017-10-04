@@ -28,36 +28,39 @@
 \usage{
 transcripts_tbl(x, filter = NULL)
 
-\S4method{transcripts}{src_organism}(x, filter = NULL)
+\S4method{transcripts}{src_organism}(x, filter = NULL, granges = NULL)
 
 exons_tbl(x, filter = NULL)
 
-\S4method{exons}{src_organism}(x, filter = NULL)
+\S4method{exons}{src_organism}(x, filter = NULL, granges = NULL)
 
 cds_tbl(x, filter = NULL)
 
-\S4method{cds}{src_organism}(x, filter = NULL)
+\S4method{cds}{src_organism}(x, filter = NULL, granges = NULL)
 
 genes_tbl(x, filter = NULL)
 
-\S4method{genes}{src_organism}(x, filter = NULL)
+\S4method{genes}{src_organism}(x, filter = NULL, granges = NULL)
 
 promoters_tbl(x, upstream, downstream, filter = NULL)
 
-\S4method{promoters}{src_organism}(x, upstream, downstream, filter = NULL)
+\S4method{promoters}{src_organism}(x, upstream, downstream, filter = NULL,
+  granges = NULL)
 
 transcriptsBy_tbl(x, by = c("gene", "exon", "cds"), filter = NULL)
 
 \S4method{transcriptsBy}{src_organism}(x, by = c("gene", "exon", "cds"),
-  filter = NULL)
+  filter = NULL, granges = NULL)
 
 exonsBy_tbl(x, by = c("tx", "gene"), filter = NULL)
 
-\S4method{exonsBy}{src_organism}(x, by = c("tx", "gene"), filter = NULL)
+\S4method{exonsBy}{src_organism}(x, by = c("tx", "gene"), filter = NULL,
+  granges = NULL)
 
 cdsBy_tbl(x, by = c("tx", "gene"), filter = NULL)
 
-\S4method{cdsBy}{src_organism}(x, by = c("tx", "gene"), filter = NULL)
+\S4method{cdsBy}{src_organism}(x, by = c("tx", "gene"), filter = NULL,
+  granges = NULL)
 
 intronsByTranscript_tbl(x, filter = NULL)
 
@@ -77,6 +80,9 @@ threeUTRsByTranscript_tbl(x, filter = NULL)
 \item{filter}{Either NULL or a named list of vectors to be used to
 restrict the output. Filter can also be a \code{\link{GRanges}} object
 using "GRangesFilter" (see examples).}
+
+\item{granges}{A \code{GRangesFilter} object to subset the resulting
+\code{GRanges} object by.  Is \code{NULL} if missing.}
 
 \item{upstream}{For \code{promoters()}: An integer(1) value indicating
 the number of bases upstream from the transcription start site.}

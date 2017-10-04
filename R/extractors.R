@@ -1,108 +1,62 @@
-#' @importFrom AnnotationFilter AnnotationFilter AnnotationFilterList field condition value
-.tbl_join <- function(x, table, tbls, filter) {
+#' @importFrom AnnotationFilter AnnotationFilter AnnotationFilterList field
+#'      value
+#' @importFrom AnnotationDbi columns
+#' @importFrom dplyr %>% as_tibble inner_join full_join filter_
+.tbl_join <- function(x, filter, main_table, table_names) {
     if (is.null(filter))
-        return(table)
+        return(main_table)
 
-    stopifnot(.check_filters(filter))
+    if(!.check_filters(x, filter)) stop("Some filters are not avaiable.")
 
-    fields <- .fields(filter)
-    if ("granges" %in% fields)
-        filter <- .filter_subset(filter, !(fields %in% "granges"))
+    res <- lapply(filter, function(i) {
+            if(is(i, "AnnotationFilterList"))
+                .tbl_join(x, i, main_table, table_names)
+            else{
+                f_field <- field(i)
+                if(f_field == "granges") return(main_table)
+                dplyr_filter <- .convertFilter(i)
+                selected_table_logical <-
+                    vapply(table_names, function(i)
+                                             any(i %in% f_field), logical(1))
+                selected_table <-
+                    names(selected_table_logical[selected_table_logical==TRUE])
+                val <- tbl(x, selected_table[1]) %>% filter_(dplyr_filter)
+                .getAllTableValues(x, val, table_names, selected_table_logical)
+            }
+        })
 
-    for (i in filter)
-        stopifnot(is(i, "AnnotationFilter"))
-
-    fields <- .fields(filter)
-
-    if (!all(fields %in% columns(x)))
-        stop(
-            paste0(
-                "'", .filter_subset(filter, !(fields %in% columns(x))), "'",
-                collapse = ", "
-            ), " filter not available"
-        )
-
-    ## filter by fields from main table
-    keep <- unique(fields[fields %in% colnames(table)])
-    if (length(keep) != 0) {
-        filters <- .filter(filter, keep)
-        table <- table %>% filter_(filters)
-        filter <- .filter_subset(filter, setdiff(fields, keep))
+    ops <- logicOp(filter)
+    table <- main_table
+    table <- .innerJoin(table, res[[1]])
+    res <- res[-1]
+    for(i in seq_along(res)) {
+        if(ops[[i]] == '&')
+            table <- .innerJoin(table, res[[i]])
+        else
+            table <- .fullJoin(table, res[[i]])
     }
 
-    ## filter by fields from other tables
-    fields <- .filter_names(filter)
-    for (i in tbls) {
-        keep <- fields[fields %in% colnames(tbl(x, i))]
-        if (is.null(keep) || length(keep) == 0)
-            next
-
-        filters <- .filter(filter, keep)
-
-        table <- inner_join(table, tbl(x, i)) %>% filter_(filters)
-        fields <- setdiff(fields, keep)
-    }
     table
 }
 
-.check_filters <- function(filter) {
-    filters <- vapply(value(filter), class, character(1))
-    all(filters %in% as.character(.supportedFilters()[,1]))
+.check_filters <- function(x, filter) {
+    filters <- vapply(value(filter), function(i) {
+            if(is(i, "AnnotationFilterList")) TRUE
+            else field(i) %in%
+                 c(as.character(.supportedFilters()[,2]), 'granges') &&
+                 field(i) %in% c(columns(x), 'granges')
+        }, logical(1))
+    if(all(filters)) TRUE
+    else FALSE
 }
 
-.keep <- function(filter, fields, fields_remove) {
-    drop <- setdiff(fields_remove, .filter_names(filter))
-    keep <- fields[!(fields %in% drop)]
-}
-
-.filter_subset <- function(filter, fields_subset) {
-    if (is.null(filter))
-        return(NULL)
-    if (is.character(fields_subset))
-        fields_subset <- .fields(filter) %in% fields_subset
-    if (is.numeric(fields_subset))
-        fields_subset <- seq_len(length(filter)) %in% fields_subset
-    res <- value(filter)
-    names(res) <- .fields(filter)
-    ops <- .logicOp_subset(logicOp(filter), fields_subset)
-    do.call(AnnotationFilterList, c(res[fields_subset], list(logicOp=ops)))
-}
-
-.logicOp_subset <- function(op, fields_subset) {
-    keepOp <- rep(TRUE, length(op))
-
-    first <- seq_along(fields_subset) - 1L
-    second <- seq_along(fields_subset)
-
-    isFirst <- first == 0L
-    keepOp[ which(!fields_subset & isFirst)  ] <- FALSE
-
-    isLast <- second == length(fields_subset)
-    keepOp[ which(!fields_subset & isLast) - 1 ] <- FALSE
-
-    isOther <- !(isFirst | isLast)
-    isDifferent <- c(FALSE, op[first] != op[second[-length(second)]])
-
-    keepOp[ second[isOther & !fields_subset & c(FALSE, op[first] == "&")] ] <-
-			FALSE
-    keepOp[  first[isOther & !fields_subset & c(FALSE, op[first] != "&")] ] <-
-			FALSE
-    keepOp[ second[isOther & isDifferent] ] <- FALSE
-
-	## Catch an edge case
-	if(!any(fields_subset[-1]) || !any(head(fields_subset, -1)))   
-		keepOp <- rep(FALSE, length(op))
-
-	if(length(fields_subset) >= 4 &&
-	   		!any(fields_subset[2:(length(fields_subset)-1)]) &&
-	   		fields_subset[1] == TRUE && fields_subset[length(fields_subset)]) {
-		if(any(op[c(1, length(op))] == c('|', '|')))
-			return('|')
-		else
-			return('&')
-	}
-
-    op[keepOp]
+.getAllTableValues <- function(x, table, table_names, selected) {
+    table_names <- table_names[!selected]
+    for(i in names(table_names)) {
+        tmp <- tbl(x, i)
+        table <- left_join(table, tmp)
+    }
+    table
 }
 
 .filter_list <- function(filter) {
@@ -118,18 +72,27 @@
     setdiff(.fields(filter), "granges")
 }
 
-.filter <- function(filter, keep) {
-    fields <- .fields(filter)
-	subset_filter <- .filter_subset(filter, fields %in% keep)
-    filter <- lapply(subset_filter, .convertFilter)
-	unlist(c(rbind(filter, logicOp(subset_filter))))
+.tableNames <- function(x, filter, main_ranges) {
+    all_select_values <- unique(.fields(filter))
+    tbls <- setdiff(src_tbls(x), main_ranges)
+    names(tbls) <- tbls
+    colnames <- lapply(tbls, function(tbl) colnames(tbl(x, tbl)))
+    mapped <- Map(
+        function(nms, value) nms[nms %in% value],
+        colnames,
+        MoreArgs=list(c(x$schema, all_select_values))
+    )
+    mapped <- mapped[lengths(mapped) > 1]
+    main_map <- list(colnames(tbl(x, main_ranges)))
+    names(main_map) <- main_ranges
+    c(main_map, mapped)
 }
 
 .return_tbl <- function(table, filter) {
-    filter <- .filter_list(filter)
-    if ("granges" %in% .fields(filter))
-        message("filter by 'granges' only supported by methods returning ",
-                "GRanges or GRangesList")
+#    filter <- .filter_list(filter)
+#    if ("granges" %in% .fields(filter))
+#        message("filter by 'granges' only supported by methods returning ",
+#                "GRanges or GRangesList")
     table
 }
 
@@ -141,39 +104,47 @@
 }
 
 #' @importFrom IRanges subsetByOverlaps
-.toGRanges <- function(x, table, filter) {
-    if (!is.null(filter)) {
-        filter <- .filter_list(filter)
-        fields <- .fields(filter)
-        condition <- endsWith(fields, "start") | endsWith(fields, "end")
-        if (any(condition) && !fields[condition] %in% table)
-            stop("use GRanges as filter instead of ", fields[condition])
+.toGRanges <- function(x, table, filter, granges = NULL) {
+    if(length(granges) == 0) {
+        granges <- lapply(filter,
+                function(i) if(is(i, "AnnotationFilter")) field(i)) == "granges"
+        if(any(granges)) granges <- filter[granges][[1]]
+        else granges <- NULL
     }
 
     gr <- table %>% collect(n=Inf) %>% as("GRanges")
-    if ("granges" %in% .fields(filter)) {
+    if (!is.null(granges)) {
         gr <- subsetByOverlaps(
             gr,
-            value(.filter_subset(filter, "granges")[[1]])
+            value(granges),
+            type=condition(granges)
         )
     }
     .updateSeqinfo(x, gr)
 }
 
-.transcripts <- function(x, filter = NULL) {
-    table <- tbl(x, "ranges_tx")
-    tbls <- setdiff(src_tbls(x), "ranges_tx")
-    table <- .tbl_join(x, table, tbls, filter)
+.xscripts <- function(x, main_ranges, filter = NULL) {
+    table <- tbl(x, main_ranges)
+    table_names <- .tableNames(x, filter, main_ranges)
+    table <- .tbl_join(x, filter, table, table_names)
 }
 
 .transcripts_tbl <- function(x, filter = NULL) {
-    filter <- .filter_list(filter)
-    table <- .transcripts(x, filter)
+    table <- .xscripts(x, "ranges_tx", filter)
     fields <- unique(c(
         "tx_chrom", "tx_start", "tx_end", "tx_strand",
         "tx_id", "tx_name", .filter_names(filter)))
-    do.call(select_, c(list(table), as.list(fields))) %>%
-        arrange_(~ tx_id)
+    do.call(dplyr::select, c(list(table), as.list(fields))) %>%
+        arrange_(~ tx_id) %>% distinct()
+}
+
+.parseFilterInput <- function(filter) {
+    if(is.language(filter))
+        filter <- AnnotationFilter(filter)
+    filter <- .filter_list(filter)
+    if(is(filter, "AnnotationFilterList"))
+        filter <- distributeNegation(filter)
+    filter
 }
 
 
@@ -224,11 +195,15 @@
 #' ))
 #' @export
 transcripts_tbl <- function(x, filter = NULL) {
-    .return_tbl(.transcripts_tbl(x, filter), filter)
+    filter <- .parseFilterInput(filter)
+    suppressMessages(.return_tbl(.transcripts_tbl(x, filter), filter))
 }
 
 
 #' @importFrom GenomicRanges GRanges
+#'
+#' @param granges A \code{GRangesFilter} object to subset the resulting
+#'     \code{GRanges} object by.  Is \code{NULL} if missing.
 #'
 #' @examples
 #' ## transcript coordinates with filter in granges format
@@ -240,34 +215,28 @@ transcripts_tbl <- function(x, filter = NULL) {
 #' @rdname extractors
 #' @exportMethod transcripts
 setMethod("transcripts", "src_organism",
-    function(x, filter = NULL)
-{
-    .toGRanges(x, .transcripts_tbl(x, filter), filter)
+    function(x, filter = NULL, granges = NULL) {
+        filter <- .parseFilterInput(filter)
+        .toGRanges(x, .transcripts_tbl(x, filter), filter, granges)
 })
-
-
-.exons <- function(x, filter = NULL) {
-    table <- tbl(x, "ranges_exon")
-    tbls <- setdiff(src_tbls(x), "ranges_exon")
-    table <- .tbl_join(x, table, tbls, filter)
-}
 
 .exons_tbl <- function(x, filter = NULL) {
     filter <- .filter_list(filter)
-    fields_remove <- c(x$schema, "tx_id", "exon_name", "exon_rank")
+    table <- .xscripts(x, "ranges_exon", filter)
     fields <- unique(c(
         "exon_chrom", "exon_start", "exon_end", "exon_strand",
         x$schema, "tx_id", "exon_id", "exon_name", "exon_rank",
         .filter_names(filter)))
-    keep <- .keep(filter, fields, fields_remove)
-
-    table <- .exons(x, filter)
-    do.call(select_, c(list(table), as.list(keep))) %>% arrange_(~ exon_id)
+    fields_remove <- c(x$schema, "tx_id", "exon_name", "exon_rank")
+    fields <- setdiff(fields, fields_remove)
+    do.call(select_, c(list(table), as.list(fields))) %>%
+        arrange_(~ exon_id) %>% distinct()
 }
 
 #' @rdname extractors
 #' @export
 exons_tbl <- function(x, filter = NULL) {
+    filter <- .parseFilterInput(filter)
     .return_tbl(.exons_tbl(x, filter), filter)
 }
 
@@ -275,97 +244,62 @@ exons_tbl <- function(x, filter = NULL) {
 #' @rdname extractors
 #' @importFrom GenomicFeatures exons
 #' @exportMethod exons
-setMethod("exons", "src_organism",
-    function(x, filter = NULL)
-{
-    .toGRanges(x, .exons_tbl(x, filter), filter)
+setMethod("exons", "src_organism", function(x, filter = NULL, granges = NULL) {
+    filter <- .parseFilterInput(filter)
+    .toGRanges(x, .exons_tbl(x, filter), filter, granges)
 })
-
-
-.cds <- function(x, filter = NULL) {
-    table <- tbl(x, "ranges_cds")
-    tbls <- setdiff(src_tbls(x), "ranges_cds")
-    table <- .tbl_join(x, table, tbls, filter)
-}
 
 .cds_tbl <- function(x, filter = NULL) {
     filter <- .filter_list(filter)
-    fields_remove <- c(x$schema, "tx_id", "cds_name", "exon_rank")
+    table <- .xscripts(x, "ranges_cds", filter)
     fields <- unique(c(
         "cds_chrom", "cds_start", "cds_end", "cds_strand",
         x$schema, "tx_id", "cds_id", "cds_name", "exon_rank",
         .filter_names(filter)))
-    keep <- .keep(filter, fields, fields_remove)
-
-    table <- .cds(x, filter)
-    do.call(select_, c(list(table), as.list(keep))) %>% arrange_(~ cds_id)
+    fields_remove <- c(x$schema, "tx_id", "cds_name", "exon_rank")
+    fields <- setdiff(fields, fields_remove)
+    do.call(select_, c(list(table), as.list(fields))) %>% arrange_(~ cds_id) %>%
+        distinct()
 }
 
 #' @rdname extractors
 #' @export
 cds_tbl <- function(x, filter = NULL) {
+    filter <- .parseFilterInput(filter)
     .return_tbl(.cds_tbl(x, filter), filter)
 }
 
 #' @rdname extractors
 #' @importFrom GenomicFeatures cds
 #' @exportMethod cds
-setMethod("cds", "src_organism",
-    function(x, filter = NULL)
-{
-    .toGRanges(x, .cds_tbl(x, filter), filter)
+setMethod("cds", "src_organism", function(x, filter = NULL, granges = NULL) {
+    filter <- .parseFilterInput(filter)
+    .toGRanges(x, .cds_tbl(x, filter), filter, granges)
 })
 
 .genes_tbl <- function(x, filter = NULL) {
     filter <- .filter_list(filter)
-    table <- tbl(x, "ranges_gene")
-    # genes() from GenomicFeatures
-    # table <- dbGetQuery(
-    #     x$con,
-    #     "SELECT * FROM ranges_gene
-    #      WHERE entrez NOT IN
-    #          (SELECT entrez FROM ranges_gene
-    #           GROUP BY entrez
-    #           HAVING count(*) > 1)")
-    tbls <- setdiff(src_tbls(x), "ranges_gene")
-    table <- .tbl_join(x, table, tbls, filter)
+    table <- .xscripts(x, "ranges_gene", filter)
     fields <- unique(c(
         "gene_chrom", "gene_start", "gene_end", "gene_strand",
         x$schema, .filter_names(filter)))
-    do.call(select_, c(list(table), as.list(fields))) %>% arrange_(x$schema)
+    do.call(select_, c(list(table), as.list(fields))) %>% arrange_(x$schema) %>%
+        distinct()
 }
-
-setValidity("GRangesFilter", function(object) {
-    value <- value(object)
-    txt <- character()
-    if (!is(value, "GRanges"))
-        txt <- c(txt, "'value' must be 'GRanges' object")
-    if (length(txt)) txt else TRUE
-})
-
-#' @rdname filter
-#' @exportMethod show
-setMethod("show", "GRangesFilter",
-    function(object)
-{
-    cat("class:", class(object),
-        "\nvalue:\n")
-    print(value(object))
-})
 
 #' @rdname extractors
 #' @export
 genes_tbl <- function(x, filter = NULL) {
+    filter <- .parseFilterInput(filter)
     .return_tbl(.genes_tbl(x, filter), filter)
 }
 
 #' @rdname extractors
 #' @importFrom GenomicFeatures genes
 #' @exportMethod genes
-setMethod("genes", "src_organism",
-    function(x, filter = NULL)
-{
-    .toGRanges(x, .genes_tbl(x, filter), filter)
+setMethod("genes", "src_organism", function(x, filter = NULL, granges = NULL) {
+    filter <- .parseFilterInput(filter)
+    .toGRanges(x, .genes_tbl(x, filter), filter, granges)
 })
 
 .promoters_tbl <- function(x, upstream, downstream, filter = NULL) {
@@ -399,7 +333,8 @@ setMethod("genes", "src_organism",
     fields <- unique(
         c("chrom", "start", "end", "strand", "tx_id", "tx_name",
           .filter_names(filter)))
-    do.call(select_, c(list(table), as.list(fields))) %>% arrange_(~ tx_id)
+    do.call(select_, c(list(table), as.list(fields))) %>% arrange_(~ tx_id) %>%
+        distinct()
 }
 
 #' @param upstream For \code{promoters()}: An integer(1) value indicating
@@ -411,6 +346,7 @@ setMethod("genes", "src_organism",
 #' @rdname extractors
 #' @export
 promoters_tbl <- function(x, upstream, downstream, filter = NULL) {
+    filter <- .parseFilterInput(filter)
     .return_tbl(.promoters_tbl(x, upstream, downstream, filter), filter)
 }
 
@@ -424,13 +360,14 @@ promoters_tbl <- function(x, upstream, downstream, filter = NULL) {
 #' @importFrom S4Vectors isSingleNumber
 #' @exportMethod promoters
 setMethod("promoters", "src_organism",
-    function(x, upstream, downstream, filter = NULL)
-{
-    .toGRanges(x, .promoters_tbl(x, upstream, downstream, filter), filter)
+    function(x, upstream, downstream, filter = NULL, granges = NULL) {
+        filter <- .parseFilterInput(filter)
+        .toGRanges(x, .promoters_tbl(x, upstream, downstream, filter), filter,
+            granges)
 })
 
 
-.toGRangesList <- function(x, type, by, filter = NULL) {
+.toGRangesList <- function(x, type, by, filter = NULL, granges = NULL) {
     fun <- switch (type, transcripts = .transcriptsBy_tbl,
                    exons = .exonsBy_tbl,
                    cds = .cdsBy_tbl,
@@ -438,9 +375,9 @@ setMethod("promoters", "src_organism",
                    threeUTRs = .threeUTRsByTranscript_tbl)
 
     if (type %in% c("transcripts", "exons", "cds"))
-        table <- .toGRanges(x, fun(x, by, filter), filter)
+        table <- .toGRanges(x, fun(x, by, filter), filter, granges)
     else
-        table <- .toGRanges(x, fun(x, filter), filter)
+        table <- .toGRanges(x, fun(x, filter), filter, granges)
 
     f <- switch(by, gene=x$schema, exon="exon_id", cds="cds_id", tx="tx_id")
     grp <- mcols(table)[[f]]
@@ -451,7 +388,7 @@ setMethod("promoters", "src_organism",
 
 .transcriptsBy_tbl <- function(x, by, filter = NULL) {
     filter <- .filter_list(filter)
-    tx <- .transcripts(x, filter = filter)
+    tx <- .xscripts(x, "ranges_tx", filter = filter)
 
     if (by == "gene") {
         table <- inner_join(tx, tbl(x, "ranges_gene"))
@@ -459,7 +396,7 @@ setMethod("promoters", "src_organism",
             c("tx_chrom", "tx_start", "tx_end", "tx_strand",
               x$schema, "tx_id", "tx_name", .filter_names(filter)))
         do.call(select_, c(list(table), as.list(fields))) %>%
-            arrange_(x$schema)
+            arrange_(x$schema) %>% distinct()
     }
     else if (by == "exon") {
         table <- left_join(tx, tbl(x, "ranges_exon"))
@@ -468,7 +405,7 @@ setMethod("promoters", "src_organism",
               "exon_id", "tx_id", "tx_name", "exon_rank",
               .filter_names(filter)))
         do.call(select_, c(list(table), as.list(fields))) %>%
-            arrange_(~ exon_id)
+            arrange_(~ exon_id) %>% distinct()
     }
     else if (by == "cds") {
         table <- left_join(tx, tbl(x, "ranges_cds"))
@@ -477,14 +414,14 @@ setMethod("promoters", "src_organism",
               "cds_id", "tx_id", "tx_name", "exon_rank",
               .filter_names(filter)))
         do.call(select_, c(list(table), as.list(fields))) %>%
-            arrange_(~ cds_id)
+            arrange_(~ cds_id) %>% distinct()
     }
 }
 
 #' @rdname extractors
 #' @export
-transcriptsBy_tbl <- function(x, by = c("gene", "exon", "cds"), filter = NULL)
-{
+transcriptsBy_tbl <- function(x, by = c("gene", "exon", "cds"), filter = NULL) {
+    filter <- .parseFilterInput(filter)
     by <- match.arg(by)
     .return_tbl(.transcriptsBy_tbl(x, by, filter), filter)
 }
@@ -499,15 +436,15 @@ transcriptsBy_tbl <- function(x, by = c("gene", "exon", "cds"), filter = NULL)
 #' @importFrom GenomicFeatures transcriptsBy
 #' @exportMethod transcriptsBy
 setMethod("transcriptsBy", "src_organism",
-    function(x, by = c("gene", "exon", "cds"), filter = NULL)
-{
-    by <- match.arg(by)
-    .toGRangesList(x, "transcripts", by, filter)
+    function(x, by = c("gene", "exon", "cds"), filter = NULL, granges = NULL) {
+        filter <- .parseFilterInput(filter)
+        by <- match.arg(by)
+        .toGRangesList(x, "transcripts", by, filter, granges)
 })
 
 .exonsBy_tbl <- function(x, by, filter = NULL) {
     filter <- .filter_list(filter)
-    exons <- .exons(x, filter = filter)
+    exons <- .xscripts(x, "ranges_exon", filter = filter)
 
     if (by == "tx") {
         table <- left_join(exons, tbl(x, "ranges_tx"))
@@ -516,7 +453,7 @@ setMethod("transcriptsBy", "src_organism",
               "tx_id", "exon_id", "exon_name", "exon_rank",
               .filter_names(filter)))
         do.call(select_, c(list(table), as.list(fields))) %>%
-            arrange_(~ tx_id)
+            arrange_(~ tx_id) %>% distinct()
     }
     else if (by == "gene") {
         table <- inner_join(exons, tbl(x, "ranges_gene"))
@@ -524,13 +461,14 @@ setMethod("transcriptsBy", "src_organism",
             c("exon_chrom", "exon_start", "exon_end", "exon_strand",
               x$schema, "exon_id", "exon_name", .filter_names(filter)))
         do.call(select_, c(list(table), as.list(fields))) %>%
-            arrange_(x$schema)
+            arrange_(x$schema) %>% distinct()
     }
 }
 
 #' @rdname extractors
 #' @export
 exonsBy_tbl <- function(x, by = c("tx", "gene"), filter = NULL) {
+    filter <- .parseFilterInput(filter)
     by <- match.arg(by)
     .return_tbl(.exonsBy_tbl(x, by, filter), filter)
 }
@@ -543,15 +481,15 @@ exonsBy_tbl <- function(x, by = c("tx", "gene"), filter = NULL) {
 #' @importFrom GenomicFeatures exonsBy
 #' @exportMethod exonsBy
 setMethod("exonsBy", "src_organism",
-    function(x, by = c("tx", "gene"), filter = NULL)
-{
-    by <- match.arg(by)
-    .toGRangesList(x, "exons", by, filter)
+    function(x, by = c("tx", "gene"), filter = NULL, granges = NULL) {
+        filter <- .parseFilterInput(filter)
+        by <- match.arg(by)
+        .toGRangesList(x, "exons", by, filter, granges)
 })
 
 .cdsBy_tbl <- function(x, by, filter = NULL) {
     filter <- .filter_list(filter)
-    cds <- .cds(x, filter = filter)
+    cds <- .xscripts(x, "ranges_cds", filter = filter)
 
     if (by == "tx") {
         table <- left_join(cds, tbl(x, "ranges_tx"))
@@ -560,7 +498,7 @@ setMethod("exonsBy", "src_organism",
               "tx_id", "cds_id", "cds_name", "exon_rank",
               .filter_names(filter)))
         do.call(select_, c(list(table), as.list(fields))) %>%
-            arrange_(~ tx_id)
+            arrange_(~ tx_id) %>% distinct()
     }
     else if (by == "gene") {
         table <- inner_join(cds, tbl(x, "ranges_gene"))
@@ -568,13 +506,14 @@ setMethod("exonsBy", "src_organism",
             c("cds_chrom", "cds_start", "cds_end", "cds_strand",
               x$schema, "cds_id", "cds_name", .filter_names(filter)))
         do.call(select_, c(list(table), as.list(fields))) %>%
-            arrange_(x$schema)
+            arrange_(x$schema) %>% distinct()
     }
 }
 
 #' @rdname extractors
 #' @export
 cdsBy_tbl <- function(x, by = c("tx", "gene"), filter = NULL) {
+    filter <- .parseFilterInput(filter)
     by <- match.arg(by)
     .return_tbl(.cdsBy_tbl(x, by, filter), filter)
 }
@@ -584,26 +523,26 @@ cdsBy_tbl <- function(x, by = c("tx", "gene"), filter = NULL) {
 #' @importFrom GenomicFeatures cdsBy
 #' @exportMethod cdsBy
 setMethod("cdsBy", "src_organism",
-    function(x, by = c("tx", "gene"), filter = NULL)
-{
-    by <- match.arg(by)
-    .toGRangesList(x, "cds", by, filter)
+    function(x, by = c("tx", "gene"), filter = NULL, granges = NULL) {
+        filter <- .parseFilterInput(filter)
+        by <- match.arg(by)
+        .toGRangesList(x, "cds", by, filter, granges)
 })
 
 
 #' @rdname extractors
 #' @export
 intronsByTranscript_tbl <-
-    function(x, filter = NULL)
-{
-    ans <- unlist(intronsByTranscript(x, filter))
-    mcols(ans)[, "tx_id"] <- names(ans)
-    unname(unlist(ans)) %>% as.data.frame %>% tbl_df %>%
-        dplyr::select_(.dots = c('tx_id',
-                          intron_chrom = 'seqnames',
-                          intron_start = 'start',
-                          intron_end = 'end',
-                          intron_strand = 'strand'))
+    function(x, filter = NULL) {
+        filter <- .parseFilterInput(filter)
+        ans <- unlist(intronsByTranscript(x, filter))
+        mcols(ans)[, "tx_id"] <- names(ans)
+        unname(unlist(ans)) %>% as.data.frame %>% tbl_df %>%
+            dplyr::select_(.dots = c('tx_id',
+                              intron_chrom = 'seqnames',
+                              intron_start = 'start',
+                              intron_end = 'end',
+                              intron_strand = 'strand'))
 }
 
 #' @examples
@@ -616,40 +555,39 @@ intronsByTranscript_tbl <-
 #' @importFrom IRanges psetdiff
 #' @exportMethod intronsByTranscript
 setMethod("intronsByTranscript", "src_organism",
-    function(x, filter=NULL)
-{
-    filter <- .filter_list(filter)
-    tx <- .transcripts(x, filter=filter)
-    exn <- .exonsBy_tbl(x, by="tx", filter=filter)
+    function(x, filter=NULL) {
+        filter <- .parseFilterInput(filter)
+        filter <- .filter_list(filter)
+        tx <- .xscripts(x, "ranges_tx", filter=filter)
+        exn <- .exonsBy_tbl(x, by="tx", filter=filter)
 
-    table <- tx %>% collect(n=Inf)
+        table <- tx %>% collect(n=Inf)
 
-    fields <- unique(
-        c("tx_id", "tx_chrom", "tx_start", "tx_end", "tx_strand",
-          .filter_names(filter)))
-    tx_gr <- do.call(select_, c(list(table), as.list(fields))) %>%
-        as("GRanges")
+        fields <- unique(
+            c("tx_id", "tx_chrom", "tx_start", "tx_end", "tx_strand",
+              .filter_names(filter)))
+        tx_gr <- do.call(select_, c(list(table), as.list(fields))) %>%
+            as("GRanges")
 
-    tx_gr <- .updateSeqinfo(x, tx_gr)
+        tx_gr <- .updateSeqinfo(x, tx_gr)
 
-    table <- exn %>% collect(n=Inf)
+        table <- exn %>% collect(n=Inf)
 
-    fields <- unique(
-        c("exon_chrom", "exon_start", "exon_end", "exon_strand", "tx_id",
-          "exon_id", .filter_names(filter)))
-    exn_grl <- do.call(select_, c(list(table), as.list(fields))) %>%
-        as("GRanges")
-    exn_grl <- split(exn_grl, exn_grl$tx_id)
+        fields <- unique(
+            c("exon_chrom", "exon_start", "exon_end", "exon_strand", "tx_id",
+             "exon_id", .filter_names(filter)))
+        exn_grl <- do.call(select_, c(list(table), as.list(fields))) %>%
+            as("GRanges")
+        exn_grl <- split(exn_grl, exn_grl$tx_id)
 
-    tx_gr<- tx_gr[match(names(exn_grl), mcols(tx_gr)[, "tx_id"])]
-    ans <- psetdiff(tx_gr, exn_grl)
-    ans
+        tx_gr<- tx_gr[match(names(exn_grl), mcols(tx_gr)[, "tx_id"])]
+        ans <- psetdiff(tx_gr, exn_grl)
+        ans
 })
 
-
 .getSplicings <- function(x, filter=NULL) {
-    exon <- .exons(x, filter=filter)
-    cds <- .cds(x, filter=filter)
+    exon <- .xscripts(x, "ranges_exon", filter=filter)
+    cds <- .xscripts(x, "ranges_cds", filter=filter)
 
     exon_txid <- exon %>% dplyr::select_(~ tx_id) %>% collect(n = Inf)
     exon_txid <- exon_txid[["tx_id"]]
@@ -702,7 +640,7 @@ setMethod("intronsByTranscript", "src_organism",
         c("chrom", "start", "end", "strand", "tx_id", "exon_id", "exon_name",
           "exon_rank", .filter_names(filter)))
     do.call(select_, c(list(table), as.list(fields))) %>%
-        arrange_(~ tx_id, ~ exon_rank)
+        arrange_(~ tx_id, ~ exon_rank) %>% distinct()
 }
 
 .fiveUTRsByTranscript_tbl <- function(x, filter = NULL) {
@@ -713,6 +651,7 @@ setMethod("intronsByTranscript", "src_organism",
 #' @rdname extractors
 #' @export
 fiveUTRsByTranscript_tbl <- function(x, filter = NULL) {
+    filter <- .parseFilterInput(filter)
     .return_tbl(.fiveUTRsByTranscript_tbl(x, filter), filter)
 }
 
@@ -723,9 +662,8 @@ fiveUTRsByTranscript_tbl <- function(x, filter = NULL) {
 #' @rdname extractors
 #' @importFrom GenomicFeatures fiveUTRsByTranscript
 #' @exportMethod fiveUTRsByTranscript
-setMethod("fiveUTRsByTranscript", "src_organism",
-    function(x, filter=NULL)
-{
+setMethod("fiveUTRsByTranscript", "src_organism", function(x, filter=NULL) {
+    filter <- .parseFilterInput(filter)
     .toGRangesList(x, "fiveUTRs", "tx", filter)
 })
 
@@ -737,14 +675,14 @@ setMethod("fiveUTRsByTranscript", "src_organism",
 #' @rdname extractors
 #' @export
 threeUTRsByTranscript_tbl <- function(x, filter = NULL) {
+    filter <- .parseFilterInput(filter)
     .return_tbl(.threeUTRsByTranscript_tbl(x, filter), filter)
 }
 
 #' @rdname extractors
 #' @importFrom GenomicFeatures threeUTRsByTranscript
 #' @exportMethod threeUTRsByTranscript
-setMethod("threeUTRsByTranscript", "src_organism",
-    function(x, filter=NULL)
-{
+setMethod("threeUTRsByTranscript", "src_organism", function(x, filter=NULL) {
+    filter <- .parseFilterInput(filter)
     .toGRangesList(x, "threeUTRs", "tx", filter)
 })

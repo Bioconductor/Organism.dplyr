@@ -141,7 +141,8 @@
 #' @export TxTypeFilter UnigeneFilter WormbaseFilter ZfinFilter
 #' @rdname filter
 #' @importFrom methods new setClass slot setMethod setValidity
-#' @importFrom AnnotationFilter AnnotationFilter GRangesFilter field value condition
+#' @importFrom AnnotationFilter AnnotationFilter GRangesFilter field value
+#'      condition
 #' @export
 setClass("BasicFilter",
          representation(
@@ -159,7 +160,7 @@ setClass("BasicFilter",
 )
 
 setMethod("initialize", "BasicFilter", function(.Object) {
-	.Deprecated("AnnotationFilter")
+    .Deprecated("AnnotationFilter")
 })
 
 setValidity("BasicFilter", function(object) {
@@ -258,7 +259,7 @@ setValidity("BasicFilter", function(object) {
 }
 
 ## create filter functions not already implemented in AnnotationFilter
-local({
+.filter_init <- function() {
     makeClass <- function(contains){
         fields <- .FIELD[[contains]]
         supported <- as.character(supportedFilters()[,1])
@@ -275,7 +276,7 @@ local({
     }
     for (contains in names(.FIELD))
         makeClass(contains)
-})
+}
 
 #' @param object A \code{BasicFilter} or \code{GRangesFilter} object
 #'
@@ -291,13 +292,20 @@ setMethod("show", "BasicFilter",
 })
 
 .fields <- function(object) {
-    vapply(object, field, character(1))
+    res <- lapply(object, function(x) {
+            if(is(x, "AnnotationFilter"))
+                field(x)
+            else
+                .fields(x)
+        })
+    unlist(res)
 }
 
 .convertFilter <- function(object) {
     field <- field(object)
     value <- value(object)
     condition <- condition(object)
+    not <- not(object)
 
     op <- switch(
         condition,
@@ -307,30 +315,34 @@ setMethod("show", "BasicFilter",
         "endsWith" = "%like%"
     )
 
+    not_val <- ifelse(not, '!', '')
+
     if (condition %in% c("==", "!="))
         value <- paste0("'", value, "'", collapse=", ")
 
     if (!is.null(op) && op %in% c("==", "!="))
-        sprintf("%s %s %s", field, op, value)
+        sprintf("%s%s %s %s", not_val, field, op, value)
     else if ((condition == "==") && op == "%in%")
-        sprintf("%s %s c(%s)", field, op, value)
+        sprintf("%s%s %s c(%s)", not_val, field, op, value)
     else if ((condition == "!=") && op == "%in%")
-        sprintf("!%s %s c(%s)", field, op, value)
+        if(not) sprintf("%s %s c(%s)", field, op, value)
+        else sprintf("!%s%s %s c(%s)", not_val, field, op, value)
     else if (condition == "startsWith")
-        sprintf("%s %s '%s%%'", field, op, value)
+        sprintf("%s%s %s '%s%%'", not_val, field, op, value)
     else if (condition == "endsWith")
-        sprintf("%s %s '%%%s'", field, op, value)
+        sprintf("%s%s %s '%%%s'", not_val, field, op, value)
     else if (condition %in% c(">", "<", ">=", "<=")) {
-        sprintf("%s %s %s", field, condition, as.integer(value))
+        sprintf("%s%s %s %s", not_val, field, condition, as.integer(value))
     }
 }
 
 .supportedFilters <- function() {
     df <- data.frame(
-		filter = c(.fieldToClass(unlist(.FIELD, use.names=FALSE)), "GRangesFilter"),
-		field = c(unlist(.FIELD, use.names=FALSE), "granges")
-	)
-	df[order(df[,1]),]
+        filter = c(.fieldToClass(unlist(.FIELD, use.names=FALSE)),
+            "GRangesFilter"),
+        field = c(unlist(.FIELD, use.names=FALSE), "granges")
+    )
+    df[order(df[,1]),]
 }
 
 ##' @rdname filter

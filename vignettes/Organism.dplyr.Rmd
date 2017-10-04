@@ -216,7 +216,7 @@ mapIds(src, keys, column = "tx_name", keytype)
 mapIds(src, keys, column = "tx_name", keytype, multiVals="CharacterList")
 ```
 
-# The "GRanges" interface
+# Genomic Coordinates Extractor Interfaces
 
 Eleven genomic coordinates extractor methods are available in this
 package: `transcripts()`, `exons()`, `cds()`, `genes()`,
@@ -226,12 +226,13 @@ package: `transcripts()`, `exons()`, `cds()`, `genes()`,
 instance _tibble_ (`transcripts_tbl()`) and _GRanges_ or _GRangesList_
 (`transcripts()`).
 
-Filters can be applied to all extractor functions. A named list of
-vectors can be used to restrict the output, valid filters can be
-retrieved by `supportedFilters()`.
+Filters can be applied to all extractor functions. The output can be resctricted
+by an `AnnotationFilter`, an `AnnotationFilterList`, or an expression that can
+be tranlated into an `AnnotationFilterList`. Valid filters can be retrieved by
+`supportedFilters(src)`.
 
 ```{r}
-supportedFilters()
+supportedFilters(src)
 ```
 
 All filters take two parameters: value and condition, condition could
@@ -243,27 +244,60 @@ EnsemblFilter("ENSG00000196839")
 SymbolFilter("SNORD", "startsWith")
 ```
 
-A `GRangesFilter()` can also be used as filter for the methods with
+The following illustrates several ways of inputting filters to an extractor
+function.
+
+```{r}
+smbl <- SymbolFilter("SNORD", "startsWith")
+transcripts_tbl(src, filter=smbl)
+filter <- AnnotationFilterList(smbl)
+transcripts_tbl(src, filter=filter)
+transcripts_tbl(src, filter=~smbl) 
+```
+
+A `GRangesFilter()` can also be used as a filter for the methods with
 result displaying as _GRanges_ or _GRangesList_.
 
 ```{r}
-filters <- list(SymbolFilter("SNORD", "startsWith"))
-transcripts_tbl(src, filter=filters)
-filters <- list(
-    SymbolFilter("SNORD", "startsWith"),
-    GRangesFilter(GenomicRanges::GRanges("chr15:25062333-25065121"))
-)
-transcripts(src, filter=filters)
+gr <- GRangesFilter(GenomicRanges::GRanges("chr15:25062333-25065121"))
+transcripts(src, filter=smbl, granges=gr)
 ```
 
-Transcript coordinates of gene symbol equal to "ADA" and transcript
-start position between 87863438 and 87933487.
+Filters in extractor functions support `&`, `|`, `!`(negation), and
+`()`(grouping). Transcript coordinates of gene symbol equal to "ADA" and
+transcript start position less than 44619810.
 
 ```{r}
-transcripts_tbl(src, filter = list(
+transcripts_tbl(src, filter = AnnotationFilterList(
     SymbolFilter("ADA"),
-    TxStartFilter(44619810,"<")
-))
+    TxStartFilter(44619810,"<"),
+    logicOp="&")
+)
+## Equivalent to
+transcripts_tbl(src, filter = ~symbol == "ADA" & tx_start < 44619810)
+```
+
+Transcripts coordinates of gene symbol equal to "ADA" or transcript end
+position equal to 243843236.
+```{r}
+txend <- TxEndFilter(243843236, '==')
+transcripts_tbl(src, filter = ~symbol == "ADA" | txend)
+```
+
+Using negation to find transcript coordinates of gene symbol equal to "ADA" and
+transcript start positions NOT less than 44619810.
+
+```{r}
+transcripts_tbl(src, filter = ~symbol == "ADA" & !tx_start < 44618910)
+```
+
+Using grouping to find transcript coordinates of a long filter statement.
+
+```{r}
+transcripts_tbl(src,
+    filter = ~(symbol == 'ADA' & !(tx_start >= 44619810 | tx_end < 44651742)) | 
+              (smbl & !tx_end > 25056954)
+)
 ```
 
 
