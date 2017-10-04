@@ -345,8 +345,9 @@ setMethod("show", "BasicFilter",
     df[order(df[,1]),]
 }
 
-##' @rdname filter
-##' @export
+#' @rdname filter
+#' @importFrom AnnotationFilter supportedFilters
+#' @export
 setMethod("supportedFilters", "src_organism", function(object){
     .supportedFilters()
 })

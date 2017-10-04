@@ -1,5 +1,5 @@
 #' @importFrom AnnotationFilter AnnotationFilter AnnotationFilterList field
-#'      value
+#'      value logicOp
 #' @importFrom AnnotationDbi columns
 #' @importFrom dplyr %>% as_tibble inner_join full_join filter_
 .tbl_join <- function(x, filter, main_table, table_names) {
@@ -104,6 +104,7 @@
 }
 
 #' @importFrom IRanges subsetByOverlaps
+#' @importFrom AnnotationFilter distributeNegation
 .toGRanges <- function(x, table, filter, granges = NULL) {
     if(length(granges) == 0) {
         granges <- lapply(filter,
