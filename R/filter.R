@@ -311,6 +311,7 @@ setMethod("show", "BasicFilter",
 }
 
 #' @rdname filter
+#' @importFrom AnnotationFilter supportedFilters
 #' @export
 setMethod("supportedFilters", "src_organism", function(object){
     .supportedFilters()
