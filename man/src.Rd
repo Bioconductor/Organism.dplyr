@@ -22,7 +22,7 @@ supportedOrganisms()
 
 \method{src_tbls}{src_organism}(x)
 
-\method{tbl}{src_organism}(src, ...)
+\method{tbl}{src_organism}(src, ..., .load_tbl_only = FALSE)
 
 \S4method{seqinfo}{src_organism}(x)
 }
@@ -51,11 +51,18 @@ variables; use negative values to drop variables.}
 
 \item{x}{A src_organism object}
 
-\item{src}{A src_organism object}
+\item{src}{An src_organism object}
+
+\item{.load_tbl_only}{a logic(1) that indicates whether only to load
+the table instead of also loading the pacakge in the temporary database.
+Default value is FALSE.}
 }
 \value{
 \code{src_organism()} and \code{src_ucsc()} returns a dplyr
     \code{src_dbi} instance representing the data tables.
+
+A tbl_df of the requested table coming from the temporary database
+ of the src_organism object.
 }
 \description{
 The database provides a convenient way to map between gene, transcript,

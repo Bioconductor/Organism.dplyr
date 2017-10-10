@@ -90,7 +90,10 @@ importFrom(AnnotationFilter,AnnotationFilter)
 importFrom(AnnotationFilter,AnnotationFilterList)
 importFrom(AnnotationFilter,GRangesFilter)
 importFrom(AnnotationFilter,condition)
+<<<<<<< HEAD
+=======
 importFrom(AnnotationFilter,convertFilter)
+>>>>>>> function_factory
 importFrom(AnnotationFilter,distributeNegation)
 importFrom(AnnotationFilter,field)
 importFrom(AnnotationFilter,logicOp)

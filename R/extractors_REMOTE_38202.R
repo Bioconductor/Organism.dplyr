@@ -5,11 +5,7 @@
 ########################################################
 
 #' @importFrom AnnotationFilter AnnotationFilter AnnotationFilterList field
-<<<<<<< HEAD
-#'      value logicOp
-=======
 #'      value convertFilter logicOp
->>>>>>> function_factory
 #' @importFrom AnnotationDbi columns
 #' @importFrom DBI dbListTables dbRemoveTable dbWriteTable
 #' @importFrom dplyr %>% as_tibble inner_join full_join filter_
@@ -124,36 +120,6 @@
     gr
 }
 
-<<<<<<< HEAD
-#' @importFrom IRanges subsetByOverlaps
-#' @importFrom AnnotationFilter distributeNegation
-.toGRanges <- function(x, table, filter, granges = NULL) {
-    if (length(granges) == 0) {
-        granges <- lapply(filter, function(i)
-            if (is(i, "AnnotationFilter"))
-                field(i)) == "granges"
-        if (any(granges))
-            granges <- filter[granges][[1]]
-        else
-            granges <- NULL
-    }
-
-    ## Filter out any rows that contain NA in chrom, start, end, or strand
-    table <- table %>% filter_at(vars(c(1, 2, 3, 4)), all_vars(!is.na(.)))
-
-    gr <- table %>% collect(n=Inf) %>% as("GRanges")
-    if (!is.null(granges)) {
-        gr <- subsetByOverlaps(
-            gr,
-            value(granges),
-            type=condition(granges)
-        )
-    }
-    .updateSeqinfo(x, gr)
-}
-
-=======
->>>>>>> function_factory
 .checkCompatibleStartEnds <- function(type, filter) {
     fields <- .fields(filter)
     starts <- fields[grep("start", fields)]

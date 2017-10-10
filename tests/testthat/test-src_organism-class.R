@@ -11,7 +11,7 @@ test_that("src_organism_constructor", {
         src <- src_organism(dbpath=hg38light())
     }
     expect_equal(is(src, "src_organism"), TRUE)
-    expect_equal(length(src), 3)
+    expect_equal(length(src), 4)
     expect_equal(is(src$con, "SQLiteConnection"), TRUE)
     expect_equal(class(src$schema), "character")
     
