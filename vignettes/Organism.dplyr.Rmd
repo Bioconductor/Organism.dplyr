@@ -260,7 +260,7 @@ result displaying as _GRanges_ or _GRangesList_.
 
 ```{r}
 gr <- GRangesFilter(GenomicRanges::GRanges("chr15:25062333-25065121"))
-transcripts(src, filter=smbl, granges=gr)
+transcripts(src, filter=~smbl & gr)
 ```
 
 Filters in extractor functions support `&`, `|`, `!`(negation), and

@@ -363,7 +363,14 @@ src_tbls.src_organism <- function(x) {
     dbGetQuery(x$con, sql)$name
 }
 
-#' @param src A src_organism object
+#' @param src An src_organism object
+#' 
+#' @param .load_tbl_only a logic(1) that indicates whether only to load
+#'  the table instead of also loading the pacakge in the temporary database.
+#'  Default value is FALSE.
+#'
+#' @return A tbl_df of the requested table coming from the temporary database
+#'  of the src_organism object.
 #'
 #' @examples
 #' ## Look at data in table "id"
@@ -375,8 +382,12 @@ src_tbls.src_organism <- function(x) {
 #' @rdname src
 #' @importFrom DBI dbListTables dbWriteTable
 #' @export
-tbl.src_organism <- function(src, table, .load_tbl_only = FALSE) {
-    tbl <- NextMethod(src, table)
+tbl.src_organism <- function(src, ..., .load_tbl_only = FALSE) {
+    args <- list(...)
+    if (length(args) == 0)
+        stop("tbl name required.")
+    table <- args[[1]]
+    tbl <- NextMethod(src, ...)
     if (!.load_tbl_only) {
         if (!(table %in% dbListTables(src$db))) {
             tbl <- tbl %>% collect(n=Inf)
