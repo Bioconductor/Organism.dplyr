@@ -8,6 +8,7 @@
 \alias{select_.tbl_organism}
 \alias{src_tbls.src_organism}
 \alias{tbl.src_organism}
+\alias{as.character.src_organism}
 \alias{seqinfo,src_organism-method}
 \title{Create a sqlite database from TxDb and corresponding Org packages}
 \usage{
@@ -23,6 +24,8 @@ supportedOrganisms()
 \method{src_tbls}{src_organism}(x)
 
 \method{tbl}{src_organism}(src, ..., .load_tbl_only = FALSE)
+
+\method{as.character}{src_organism}(x, ...)
 
 \S4method{seqinfo}{src_organism}(x)
 }

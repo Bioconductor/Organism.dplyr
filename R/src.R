@@ -399,6 +399,15 @@ tbl.src_organism <- function(src, ..., .load_tbl_only = FALSE) {
     tbl
 }
 
+#' @rdname src
+#' @importFrom dplyr pull
+#' @export
+as.character.src_organism <- function(x, ...) {
+    org <- tbl(x, "metadata_txdb") %>% filter(name == "Organism") %>%
+        pull(value)
+    supportedOrganisms() %>% filter(organism == org) %>% pull(OrgDb) %>% unique()
+}
+
 setOldClass("src_organism")
 
 .getSeqinfo <- function(x) {
