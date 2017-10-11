@@ -48,11 +48,11 @@
     dbWriteTable(x$db, name, table)
     .deleteTempTables(x)
     e <- new.env()
-    attr(e, "src") <- x
-    attr(e, "name") <- name
+    e[["src"]] <- x
+    e[["name"]] <- name
     attr(table, "finalizer") <- e
     reg.finalizer(attr(table, "finalizer"), function(object) {
-        dbRemoveTable(attr(object, "src")$db, attr(object, "name"))
+        DBI::dbRemoveTable(object[["src"]]$db, object[["name"]])
     })
     table
 }
