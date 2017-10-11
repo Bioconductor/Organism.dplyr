@@ -8,7 +8,7 @@
 \alias{select_.tbl_organism}
 \alias{src_tbls.src_organism}
 \alias{tbl.src_organism}
-\alias{as.character.src_organism}
+\alias{orgPackageName,src_organism-method}
 \alias{seqinfo,src_organism-method}
 \title{Create a sqlite database from TxDb and corresponding Org packages}
 \usage{
@@ -25,7 +25,7 @@ supportedOrganisms()
 
 \method{tbl}{src_organism}(src, ..., .load_tbl_only = FALSE)
 
-\method{as.character}{src_organism}(x, ...)
+\S4method{orgPackageName}{src_organism}(x)
 
 \S4method{seqinfo}{src_organism}(x)
 }
@@ -108,6 +108,9 @@ tbl(src, "id")
 
 ## Look at fields of one table
 colnames(tbl(src, "id"))
+
+## name of org package of src_organism object
+orgPackageName(src)
 
 ## seqinfo of src_organism object
 seqinfo(src)

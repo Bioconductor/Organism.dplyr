@@ -399,14 +399,6 @@ tbl.src_organism <- function(src, ..., .load_tbl_only = FALSE) {
     tbl
 }
 
-#' @rdname src
-#' @importFrom dplyr pull
-#' @export
-as.character.src_organism <- function(x, ...) {
-    org <- tbl(x, "metadata_txdb") %>% filter(name == "Organism") %>%
-        pull(value)
-    supportedOrganisms() %>% filter(organism == org) %>% pull(OrgDb) %>% unique()
-}
 
 setOldClass("src_organism")
 
@@ -419,6 +411,22 @@ setOldClass("src_organism")
     Seqinfo(seqnames=seqinfo[['seqnames']], seqlengths=seqinfo[['seqlengths']],
             isCircular=seqinfo[['isCircular']], genome=seqinfo[['genome']])
 }
+
+#' @examples
+#' ## name of org package of src_organism object
+#' orgPackageName(src)
+#'
+#' @importFrom AnnotationDbi orgPackageName
+#' @importFrom dplyr pull
+#' @rdname src
+#' @exportMethod orgPackageName
+setMethod("orgPackageName", "src_organism",
+    function(x)
+{
+    org <- tbl(x, "metadata_txdb") %>% filter(name == "Organism") %>%
+        pull(value)
+    supportedOrganisms() %>% filter(organism == org) %>% pull(OrgDb) %>% unique()
+})
 
 #' @examples
 #' ## seqinfo of src_organism object
