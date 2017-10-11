@@ -1,6 +1,6 @@
 Package: Organism.dplyr
 Title: dplyr-based Access to Bioconductor Annotation Resources
-Version: 1.2.1
+Version: 1.2.2
 Authors@R: c( person("Martin", "Morgan", email =
         "martin.morgan@roswellpark.org", role = c("aut", "cre")),
         person("Yubo", "Cheng", email="yubo.cheng@roswellpark.org",
@@ -13,7 +13,7 @@ Description: This package provides an alternative interface to
 Depends: R (>= 3.4), dplyr (>= 0.7.0)
 Imports: RSQLite, S4Vectors, GenomeInfoDb, IRanges, GenomicRanges,
         GenomicFeatures, AnnotationDbi, methods, tools, utils,
-        BiocFileCache, dbplyr
+        BiocFileCache, dbplyr, DBI
 Suggests: org.Hs.eg.db, TxDb.Hsapiens.UCSC.hg38.knownGene,
         org.Mm.eg.db, TxDb.Mmusculus.UCSC.mm10.ensGene, testthat,
         knitr, rmarkdown, BiocStyle, ggplot2
