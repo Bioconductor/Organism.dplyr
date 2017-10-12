@@ -52,7 +52,7 @@
     e[["name"]] <- name
     attr(table, "finalizer") <- e
     reg.finalizer(attr(table, "finalizer"), function(object) {
-        DBI::dbRemoveTable(object[["src"]]$db, object[["name"]])
+        dbRemoveTable(object[["src"]]$db, object[["name"]])
     })
     table
 }
