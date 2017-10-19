@@ -1,7 +1,7 @@
 .getFields <-
     function(x)
 {
-    fields <- lapply(src_tbls(x), function(table) colnames(tbl(x, table)))
+    fields <- lapply(src_tbls(x), function(table) colnames(tbl(x, table, .load_tbl_only=TRUE)))
     unique(unlist(fields, use.names=FALSE))
 }
 
