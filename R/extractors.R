@@ -13,6 +13,11 @@
     if (is.null(filter))
         return(main_table)
 
+    ## Catch AnnotatioFilterList consisting of column filters.
+    ## These filters do not need to be evaluated.
+    if (.is_columns_afl(filter))
+        return(.getAllTableValues(x, main_table, table_names, FALSE))
+
     if (!.check_filters(x, filter))
         stop("Some filters are not avaiable.")
 
@@ -72,6 +77,20 @@
         logical(1)
     )
     all(filters)
+}
+
+.is_columns_afl <- function(filter) {
+    truth_vec <- vapply(filter, function(i) {
+        if (!is(i, "AnnotationFilter"))
+            FALSE
+        else{
+            if(condition(i) == "!=" && length(value(i)) == 0L)
+                TRUE
+            else
+                FALSE
+        }
+    }, logical(1))
+    all(truth_vec)
 }
 
 .getAllTableValues <- function(x, table, table_names, selected) {

@@ -28,22 +28,22 @@
 #'  exons(x, ...)
 #'  genes(x, ...)
 #'  transcripts(x, ...)
-#'  cds_tbl(x, filter=NULL)
-#'  exons_tbl(x, filter=NULL)
-#'  genes_tbl(x, filter=NULL)
-#'  transcripts_tbl(x, filter=NULL)
+#'  cds_tbl(x, filter=NULL, columns=NULL)
+#'  exons_tbl(x, filter=NULL, columns=NULL)
+#'  genes_tbl(x, filter=NULL, columns=NULL)
+#'  transcripts_tbl(x, filter=NULL, columns=NULL)
 #'  cdsBy(x, by=c("tx", "gene"), ...)
 #'  exonsBy(x, by=c("tx", "gene"), ...)
 #'  transcriptsBy(x, by=c("gene", "exon", "cds"), ...)
-#'  cdsBy_tbl(x, by=c("tx", "gene"), filter=NULL)
-#'  exonsBy_tbl(x, by=c("tx", "gene"), filter=NULL)
-#'  transcriptsBy_tbl(x, by=c("gene", "exon", "cds"), filter=NULL)
-#'  promoters_tbl(x, upstream, downstream, filter=NULL)
-#'  intronsByTranscript_tbl(x, filter=NULL)
+#'  cdsBy_tbl(x, by=c("tx", "gene"), filter=NULL, columns=NULL)
+#'  exonsBy_tbl(x, by=c("tx", "gene"), filter=NULL, columns=NULL)
+#'  transcriptsBy_tbl(x, by=c("gene", "exon", "cds"), filter=NULL, columns=NULL)
+#'  promoters_tbl(x, upstream, downstream, filter=NULL, columns=NULL)
+#'  intronsByTranscript_tbl(x, filter=NULL, columns=NULL)
 #'  fiveUTRsByTranscript(x, ...)
-#'  fiveUTRsByTranscript_tbl(x, filter=NULL)
+#'  fiveUTRsByTranscript_tbl(x, filter=NULL, columns=NULL)
 #'  threeUTRsByTranscript(x, ...)
-#'  threeUTRsByTranscript_tbl(x, filter=NULL)
+#'  threeUTRsByTranscript_tbl(x, filter=NULL, columns=NULL)
 #'
 #' @param x A \code{src_organism} object
 #'
@@ -51,6 +51,9 @@
 #'      \code{AnnotationFilterList} to be used to restrict the output. Filters
 #'      consists of \code{AnnotationFilter}s and can be a \code{\link{GRanges}}
 #'      object using "GRangesFilter" (see examples).
+#'
+#' @param columns A character vector indicating columns to be included in output
+#'  \code{GRanges} object or \code{tbl}.
 #'
 #' @param upstream For \code{promoters()}: An integer(1) value indicating
 #'  the number of bases upstream from the transcription start site.
@@ -132,8 +135,8 @@ NULL
 
     for (i in seq_along(tbl_names)) {
         eval(substitute({
-            f <- function(x, filter = NULL) {
-                filter <- .parseFilterInput(filter)
+            f <- function(x, filter = NULL, columns=NULL) {
+                filter <- .parseFilterInput(filter, columns)
                 table <- .xscripts_tbl(x, RANGES, filter)
                 class(table) <- c("tbl_organism", class(table))
                 table
@@ -141,28 +144,28 @@ NULL
             name <- paste0(TBL, "_tbl")
             assign(name, f, WHERE)
             setMethod(TBL, "src_organism", where=WHERE,
-                function(x, filter=NULL) {
-                    filter <- .parseFilterInput(filter)
+                function(x, filter=NULL, columns=NULL) {
+                    filter <- .parseFilterInput(filter, columns)
                     .toGRanges(x, .xscripts_tbl(x, RANGES, filter), filter)
                 }
             )
             if (TBL != "genes") {
                 f <- function() {
-                    filter <- .parseFilterInput(filter)
+                    filter <- .parseFilterInput(filter, columns)
                     by <- match.arg(by)
                     table <- .xscriptsBy_tbl(x, RANGES, by, filter)
                     class(table) <- c("tbl_organism", class(table))
                     table
                 }
-                formals(f) <- alist(x = , by = BY, filter = NULL)
+                formals(f) <- alist(x = , by = BY, filter = NULL, columns = NULL)
                 name <- paste0(TBL, "By_tbl")
                 assign(name, f, WHERE)
                 f <- function() {
-                    filter <- .parseFilterInput(filter)
+                    filter <- .parseFilterInput(filter, columns)
                     by <- match.arg(by)
                     .toGRangesList(x, type = TBL, by = by, filter = filter)
                 }
-                formals(f) <- alist(x = , by = BY, filter = NULL)
+                formals(f) <- alist(x = , by = BY, filter = NULL, columns = NULL)
                 setMethod(BY_METHOD, "src_organism", where=WHERE, f)
             }
         }, list(TBL = tbl_names[i],
@@ -182,16 +185,16 @@ NULL
 
     for (i in seq_along(tbl_names)) {
         eval(substitute({
-            f <- function(x, filter = NULL) {
-                filter <- .parseFilterInput(filter)
+            f <- function(x, filter = NULL, columns = NULL) {
+                filter <- .parseFilterInput(filter, columns)
                 filter <- .filter_list(filter)
-                .UTRsByTranscript(x, filter, STRAND1, STRAND2)
+                .UTRsByTranscript(x, filter, columns, STRAND1, STRAND2)
             }
             name <- paste0(TBL, "ByTranscript_tbl")
             assign(name, f, WHERE)
             setMethod(METHOD_NAME, "src_organism", where=WHERE,
-                function(x, filter = NULL) {
-                    filter <- .parseFilterInput(filter)
+                function(x, filter = NULL, columns = NULL) {
+                    filter <- .parseFilterInput(filter, columns)
                     .toGRangesList(x, TBL, "tx", filter)
                 }
             )
@@ -203,22 +206,22 @@ NULL
     }
 }
 
-promoters_tbl <- function(x, upstream, downstream, filter = NULL) {
-    filter <- .parseFilterInput(filter)
+promoters_tbl <- function(x, upstream, downstream, filter = NULL, columns = NULL) {
+    filter <- .parseFilterInput(filter, columns)
     .promoters_tbl(x, upstream, downstream, filter)
 }
 
 #' @rdname Genomic-Extractors
 setMethod("promoters", "src_organism",
-    function(x, upstream, downstream, filter = NULL) {
-        filter <- .parseFilterInput(filter)
+    function(x, upstream, downstream, filter = NULL, columns = NULL) {
+        filter <- .parseFilterInput(filter, columns)
         .toGRanges(x, .promoters_tbl(x, upstream, downstream, filter), filter)
 })
 
 #' @importFrom GenomicRanges GRanges mcols<-
 intronsByTranscript_tbl <-
-    function(x, filter = NULL) {
-        filter <- .parseFilterInput(filter)
+    function(x, filter = NULL, columns = NULL) {
+        filter <- .parseFilterInput(filter, columns)
         ans <- unlist(intronsByTranscript(x, filter))
         mcols(ans)[, "tx_id"] <- names(ans)
         unname(unlist(ans)) %>% as.data.frame %>% tbl_df %>%
@@ -234,8 +237,8 @@ intronsByTranscript_tbl <-
 #' @importFrom GenomicRanges mcols split
 #' @importFrom IRanges psetdiff
 setMethod("intronsByTranscript", "src_organism",
-    function(x, filter=NULL) {
-        filter <- .parseFilterInput(filter)
+    function(x, filter=NULL, columns = NULL) {
+        filter <- .parseFilterInput(filter, columns)
         filter <- .filter_list(filter)
         tx <- .xscripts(x, "ranges_tx", filter=filter)
         exn <- .xscriptsBy_tbl(x, "ranges_exon", by="tx", filter=filter)
@@ -264,13 +267,22 @@ setMethod("intronsByTranscript", "src_organism",
         ans
 })
 
-#' @importFrom AnnotationFilter distributeNegation
-.parseFilterInput <- function(filter) {
+#' @importFrom AnnotationFilter condition distributeNegation value
+.parseFilterInput <- function(filter, columns) {
     if (is.language(filter))
         filter <- AnnotationFilter(filter)
     filter <- .filter_list(filter)
     if (is(filter, "AnnotationFilterList"))
         filter <- distributeNegation(filter)
+    if (!is.null(columns) && length(columns) > 1L) {
+        null_filters <- lapply(columns, function(i) {
+            template <- ~filter != NULL
+            template[[2]][[2]] <- as.name(i)
+            AnnotationFilter(template)
+        })
+        null_filters <- do.call("AnnotationFilterList", null_filters)
+        filter <- AnnotationFilterList(filter, null_filters)
+    }
     filter
 }
 

@@ -33,26 +33,28 @@ cds(x, ...)
  exons(x, ...)
  genes(x, ...)
  transcripts(x, ...)
- cds_tbl(x, filter=NULL)
- exons_tbl(x, filter=NULL)
- genes_tbl(x, filter=NULL)
- transcripts_tbl(x, filter=NULL)
+ cds_tbl(x, filter=NULL, columns=NULL)
+ exons_tbl(x, filter=NULL, columns=NULL)
+ genes_tbl(x, filter=NULL, columns=NULL)
+ transcripts_tbl(x, filter=NULL, columns=NULL)
  cdsBy(x, by=c("tx", "gene"), ...)
  exonsBy(x, by=c("tx", "gene"), ...)
  transcriptsBy(x, by=c("gene", "exon", "cds"), ...)
- cdsBy_tbl(x, by=c("tx", "gene"), filter=NULL)
- exonsBy_tbl(x, by=c("tx", "gene"), filter=NULL)
- transcriptsBy_tbl(x, by=c("gene", "exon", "cds"), filter=NULL)
- promoters_tbl(x, upstream, downstream, filter=NULL)
- intronsByTranscript_tbl(x, filter=NULL)
+ cdsBy_tbl(x, by=c("tx", "gene"), filter=NULL, columns=NULL)
+ exonsBy_tbl(x, by=c("tx", "gene"), filter=NULL, columns=NULL)
+ transcriptsBy_tbl(x, by=c("gene", "exon", "cds"), filter=NULL, columns=NULL)
+ promoters_tbl(x, upstream, downstream, filter=NULL, columns=NULL)
+ intronsByTranscript_tbl(x, filter=NULL, columns=NULL)
  fiveUTRsByTranscript(x, ...)
- fiveUTRsByTranscript_tbl(x, filter=NULL)
+ fiveUTRsByTranscript_tbl(x, filter=NULL, columns=NULL)
  threeUTRsByTranscript(x, ...)
- threeUTRsByTranscript_tbl(x, filter=NULL)
+ threeUTRsByTranscript_tbl(x, filter=NULL, columns=NULL)
 
-\S4method{promoters}{src_organism}(x, upstream, downstream, filter = NULL)
+\S4method{promoters}{src_organism}(x, upstream, downstream, filter = NULL,
+  columns = NULL)
 
-\S4method{intronsByTranscript}{src_organism}(x, filter = NULL)
+\S4method{intronsByTranscript}{src_organism}(x, filter = NULL,
+  columns = NULL)
 }
 \arguments{
 \item{x}{A \code{src_organism} object}
@@ -67,6 +69,9 @@ the number of bases downstream from the transcription start site.}
 \code{AnnotationFilterList} to be used to restrict the output. Filters
 consists of \code{AnnotationFilter}s and can be a \code{\link{GRanges}}
 object using "GRangesFilter" (see examples).}
+
+\item{columns}{A character vector indicating columns to be included in output
+\code{GRanges} object or \code{tbl}.}
 
 \item{by}{One of "gene", "exon", "cds" or "tx". Determines the grouping.}
 
