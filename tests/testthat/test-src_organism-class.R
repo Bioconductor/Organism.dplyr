@@ -11,7 +11,7 @@ test_that("src_organism_constructor", {
         src <- src_organism(dbpath=hg38light())
     }
     expect_equal(is(src, "src_organism"), TRUE)
-    expect_equal(length(src), 4)
+    expect_equal(length(src), 5)
     expect_equal(is(src$con, "SQLiteConnection"), TRUE)
     expect_equal(class(src$schema), "character")
     
@@ -29,6 +29,7 @@ test_that("src_organism_constructor", {
     ## test for tables not empty
     for (table in tbls) 
         expect_true(dim(head(tbl(src, table)) %>% collect())[1] > 0)
+    .deleteTempTables(src)
 })
 
 test_that("src_ucsc_constructor", {
@@ -45,6 +46,7 @@ test_that("src_ucsc_constructor", {
 
     ## prevent overwrite
     expect_error(src_ucsc("human", genome = "hg37"))
+    .deleteTempTables(src)
 })
 
 test_that("mouse", {
@@ -55,6 +57,7 @@ test_that("mouse", {
     txdb <- TxDb.Mmusculus.UCSC.mm10.ensGene
     src <- src_organism(dbpath=mm10light())
     expect_true(is(src, "src_organism"))
+    .deleteTempTables(src)
     
     tx_src <- transcriptsBy(src)
     tx_txdb <- transcriptsBy(txdb)[names(tx_src)]
@@ -67,4 +70,6 @@ test_that("mouse", {
     expect_equal(length(unlist(tx_src)), length(unlist(tx_txdb)))
     expect_true(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)))
     expect_equal(tx_src$exon_id, tx_txdb$exon_id)
+    .deleteTempTables(src)
 })
+

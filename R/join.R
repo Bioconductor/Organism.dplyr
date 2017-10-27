@@ -1,8 +1,12 @@
-#' @importFrom dplyr inner_join union
+#' @importFrom dplyr inner_join left_join union
 ## RSQLite safe joins
 .fullJoin <- function(table1, table2) {
     ## just a union() works since all tables should have same columns
-    union(table1, table2)
+    suppressMessages(union(table1, table2))
+}
+
+.leftJoin <- function(table1, table2) {
+    suppressMessages(left_join(table1, table2))
 }
 
 .innerJoin <- function(table1, table2) {
@@ -17,5 +21,5 @@
         nam <- col1[!col1 %in% trouble_makers]
         table1 <- do.call(dplyr::select, c(list(table1), as.list(nam)))
     }
-    inner_join(table1, table2)
+    suppressMessages(inner_join(table1, table2))
 }

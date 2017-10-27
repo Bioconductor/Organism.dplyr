@@ -8,18 +8,18 @@
 #'      value convertFilter logicOp
 #' @importFrom AnnotationDbi columns
 #' @importFrom DBI dbListTables dbRemoveTable dbWriteTable
-#' @importFrom dplyr %>% as_tibble inner_join full_join filter_
+#' @importFrom dplyr %>% as_tibble filter_
 .tbl_join <- function(x, filter, main_table, table_names) {
     if (is.null(filter))
         return(main_table)
+
+    if (!.check_filters(x, filter))
+        stop("Some filters are not avaiable.")
 
     ## Catch AnnotatioFilterList consisting of column filters.
     ## These filters do not need to be evaluated.
     if (.is_columns_afl(filter))
         return(.getAllTableValues(x, main_table, table_names, FALSE))
-
-    if (!.check_filters(x, filter))
-        stop("Some filters are not avaiable.")
 
     res <- lapply(filter, function(i) {
         if (is(i, "AnnotationFilterList"))
@@ -35,7 +35,6 @@
                             type=condition(i)
                         )
                     }
-                    #.updateSeqinfo(x, gr)
                     gr <- as_tibble(gr)
                     gr <- gr[, setdiff(colnames(gr), "width")]
                     colnames(gr)[1:4] <- colnames(main_table)[c(1, 3, 4, 2)]
@@ -80,6 +79,8 @@
 }
 
 .is_columns_afl <- function(filter) {
+    while (is(value(filter)[[1]], "AnnotationFilterList"))
+        filter <- value(filter)[[1]]
     truth_vec <- vapply(filter, function(i) {
         if (!is(i, "AnnotationFilter"))
             FALSE
@@ -98,7 +99,7 @@
     for (i in names(table_names)) {
         tmp <- tbl(x$db, i)
         table <- .iterTable(x, table)
-        table <- left_join(table, tmp)
+        table <- .leftJoin(table, tmp)
     }
     table
 }
@@ -211,7 +212,7 @@
     gr_names <- c("chrom", "start", "end", "strand", "id", "name")
     gr_names <- paste0(name, "_", gr_names)
 
-    joinFun <- left_join
+    joinFun <- .leftJoin
     if (by == "gene")
         joinFun <- .innerJoin
     table <- joinFun(table, tbl(x, other_main))
@@ -343,7 +344,7 @@
     cds_txid <- cds_txid[["tx_id"]]
     exclude <- setdiff(exon_txid, cds_txid)
 
-    table <- left_join(exon, cds)
+    table <- .leftJoin(exon, cds)
                        # by = c("tx_id", "exon_rank", .filter_names(filter)))
 
     fields <- unique(

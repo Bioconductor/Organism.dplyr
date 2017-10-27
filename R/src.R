@@ -157,7 +157,13 @@ src_organism <- function(txdb=NULL, dbpath=NULL) {
             "entrez"
         } else "ensembl"
     class(src) <- c("src_organism", class(src))
-    src$db <- dbConnect(RSQLite::SQLite(), "")
+    ## TODO: Add support for using permanent database for table storage.
+    ## Need to ensure no tables generated are kept inside permanent DB.
+    if (FALSE) #file.access(src$dbpath, mode=2) == 0)
+        src$db <- src$con
+    else
+        src$db <- dbConnect(RSQLite::SQLite(), "")
+    src$dbpath <- src$db@dbname
     src
 }
 
@@ -388,7 +394,7 @@ tbl.src_organism <- function(src, ..., .load_tbl_only = FALSE) {
         stop("tbl name required.")
     table <- args[[1]]
     tbl <- NextMethod(src, ...)
-    if (!.load_tbl_only) {
+    if (!.load_tbl_only && src$dbpath == "") {
         if (!(table %in% dbListTables(src$db))) {
             tbl <- tbl %>% collect(n=Inf)
             dbWriteTable(src$db, table, tbl)

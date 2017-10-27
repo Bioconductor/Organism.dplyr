@@ -188,7 +188,7 @@ NULL
             f <- function(x, filter = NULL, columns = NULL) {
                 filter <- .parseFilterInput(filter, columns)
                 filter <- .filter_list(filter)
-                .UTRsByTranscript(x, filter, columns, STRAND1, STRAND2)
+                .UTRsByTranscript(x, filter, STRAND1, STRAND2)
             }
             name <- paste0(TBL, "ByTranscript_tbl")
             assign(name, f, WHERE)
@@ -274,7 +274,7 @@ setMethod("intronsByTranscript", "src_organism",
     filter <- .filter_list(filter)
     if (is(filter, "AnnotationFilterList"))
         filter <- distributeNegation(filter)
-    if (!is.null(columns) && length(columns) > 1L) {
+    if (!is.null(columns) && length(columns) > 0L) {
         null_filters <- lapply(columns, function(i) {
             template <- ~filter != NULL
             template[[2]][[2]] <- as.name(i)
