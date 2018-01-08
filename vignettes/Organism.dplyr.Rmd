@@ -134,7 +134,7 @@ inner_join(tbl(src, "id"), tbl(src, "id_go")) %>%
 txcount <- inner_join(tbl(src, "id"), tbl(src, "ranges_tx")) %>%
     dplyr::select(symbol, tx_id) %>%
     group_by(symbol) %>%
-    summarise(count = count(symbol)) %>%
+    summarize(count = n()) %>%
     dplyr::select(symbol, count) %>%
     arrange(desc(count)) %>%
     collect(n=Inf)
