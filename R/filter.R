@@ -18,16 +18,14 @@
 #'
 #' @aliases AccnumFilter AliasFilter CdsChromFilter CdsIdFilter
 #'     CdsNameFilter CdsStrandFilter EnsemblFilter EnsemblprotFilter
-#'     EnsembltransFilter EntrezFilter EnzymeFilter EvidenceFilter
-#'     EvidenceallFilter ExonChromFilter ExonIdFilter ExonNameFilter
-#'     ExonRankFilter ExonStrandFilter FlybaseFilter FlybaseCgFilter
-#'     FlybaseProtFilter GeneChromFilter GeneStrandFilter GenenameFilter
+#'     EnsembltransFilter EnzymeFilter EvidenceFilter
+#'     EvidenceallFilter ExonChromFilter
+#'     ExonStrandFilter FlybaseFilter FlybaseCgFilter
+#'     FlybaseProtFilter GeneChromFilter GeneStrandFilter
 #'     GoFilter GoallFilter IpiFilter MapFilter MgiFilter OmimFilter
 #'     OntologyFilter OntologyallFilter PfamFilter PmidFilter PrositeFilter
-#'     RefseqFilter SymbolFilter TxChromFilter TxIdFilter TxNameFilter
-#'     TxStrandFilter TxTypeFilter UnigeneFilter UniprotFilter WormbaseFilter
-#'     ZfinFilter CdsStartFilter CdsEndFilter ExonStartFilter ExonEndFilter
-#'     GeneStartFilter GeneEndFilter TxStartFilter TxEndFilter
+#'     RefseqFilter TxChromFilter TxStrandFilter TxTypeFilter UnigeneFilter
+#'     WormbaseFilter ZfinFilter
 #'     CharacterFilter-class IntegerFilter-class show,CharacterFilter-method
 #'     show,IntegerFilter-method
 #'
@@ -40,21 +38,16 @@
 #' EnsemblFilter(value, condition = "==")
 #' EnsemblprotFilter(value, condition = "==")
 #' EnsembltransFilter(value, condition = "==")
-#' EntrezFilter(value, condition = "==")
 #' EnzymeFilter(value, condition = "==")
 #' EvidenceFilter(value, condition = "==")
 #' EvidenceallFilter(value, condition = "==")
 #' ExonChromFilter(value, condition = "==")
-#' ExonIdFilter(value, condition = "==")
-#' ExonNameFilter(value, condition = "==")
-#' ExonRankFilter(value, condition = "==")
 #' ExonStrandFilter(value, condition = "==")
 #' FlybaseFilter(value, condition = "==")
 #' FlybaseCgFilter(value, condition = "==")
 #' FlybaseProtFilter(value, condition = "==")
 #' GeneChromFilter(value, condition = "==")
 #' GeneStrandFilter(value, condition = "==")
-#' GenenameFilter(value, condition = "==")
 #' GoFilter(value, condition = "==")
 #' GoallFilter(value, condition = "==")
 #' IpiFilter(value, condition = "==")
@@ -67,24 +60,12 @@
 #' PmidFilter(value, condition = "==")
 #' PrositeFilter(value, condition = "==")
 #' RefseqFilter(value, condition = "==")
-#' SymbolFilter(value, condition = "==")
 #' TxChromFilter(value, condition = "==")
-#' TxIdFilter(value, condition = "==")
-#' TxNameFilter(value, condition = "==")
 #' TxStrandFilter(value, condition = "==")
 #' TxTypeFilter(value, condition = "==")
 #' UnigeneFilter(value, condition = "==")
-#' UniprotFilter(value, condition = "==")
 #' WormbaseFilter(value, condition = "==")
 #' ZfinFilter(value, condition = "==")
-#' CdsStartFilter(value, condition = "==")
-#' CdsEndFilter(value, condition = "==")
-#' ExonStartFilter(value, condition = "==")
-#' ExonEndFilter(value, condition = "==")
-#' GeneStartFilter(value, condition = "==")
-#' GeneEndFilter(value, condition = "==")
-#' TxStartFilter(value, condition = "==")
-#' TxEndFilter(value, condition = "==")
 #'
 #' @param value Value of the filter. For \code{GRangesFilter} value should be a
 #'     \code{GRanges} object.

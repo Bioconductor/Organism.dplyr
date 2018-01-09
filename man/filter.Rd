@@ -12,21 +12,16 @@
 \alias{EnsemblFilter}
 \alias{EnsemblprotFilter}
 \alias{EnsembltransFilter}
-\alias{EntrezFilter}
 \alias{EnzymeFilter}
 \alias{EvidenceFilter}
 \alias{EvidenceallFilter}
 \alias{ExonChromFilter}
-\alias{ExonIdFilter}
-\alias{ExonNameFilter}
-\alias{ExonRankFilter}
 \alias{ExonStrandFilter}
 \alias{FlybaseFilter}
 \alias{FlybaseCgFilter}
 \alias{FlybaseProtFilter}
 \alias{GeneChromFilter}
 \alias{GeneStrandFilter}
-\alias{GenenameFilter}
 \alias{GoFilter}
 \alias{GoallFilter}
 \alias{IpiFilter}
@@ -39,24 +34,12 @@
 \alias{PmidFilter}
 \alias{PrositeFilter}
 \alias{RefseqFilter}
-\alias{SymbolFilter}
 \alias{TxChromFilter}
-\alias{TxIdFilter}
-\alias{TxNameFilter}
 \alias{TxStrandFilter}
 \alias{TxTypeFilter}
 \alias{UnigeneFilter}
-\alias{UniprotFilter}
 \alias{WormbaseFilter}
 \alias{ZfinFilter}
-\alias{CdsStartFilter}
-\alias{CdsEndFilter}
-\alias{ExonStartFilter}
-\alias{ExonEndFilter}
-\alias{GeneStartFilter}
-\alias{GeneEndFilter}
-\alias{TxStartFilter}
-\alias{TxEndFilter}
 \alias{CharacterFilter-class}
 \alias{IntegerFilter-class}
 \alias{show,CharacterFilter-method}
@@ -74,21 +57,16 @@ CdsStrandFilter(value, condition = "==")
 EnsemblFilter(value, condition = "==")
 EnsemblprotFilter(value, condition = "==")
 EnsembltransFilter(value, condition = "==")
-EntrezFilter(value, condition = "==")
 EnzymeFilter(value, condition = "==")
 EvidenceFilter(value, condition = "==")
 EvidenceallFilter(value, condition = "==")
 ExonChromFilter(value, condition = "==")
-ExonIdFilter(value, condition = "==")
-ExonNameFilter(value, condition = "==")
-ExonRankFilter(value, condition = "==")
 ExonStrandFilter(value, condition = "==")
 FlybaseFilter(value, condition = "==")
 FlybaseCgFilter(value, condition = "==")
 FlybaseProtFilter(value, condition = "==")
 GeneChromFilter(value, condition = "==")
 GeneStrandFilter(value, condition = "==")
-GenenameFilter(value, condition = "==")
 GoFilter(value, condition = "==")
 GoallFilter(value, condition = "==")
 IpiFilter(value, condition = "==")
@@ -101,24 +79,12 @@ PfamFilter(value, condition = "==")
 PmidFilter(value, condition = "==")
 PrositeFilter(value, condition = "==")
 RefseqFilter(value, condition = "==")
-SymbolFilter(value, condition = "==")
 TxChromFilter(value, condition = "==")
-TxIdFilter(value, condition = "==")
-TxNameFilter(value, condition = "==")
 TxStrandFilter(value, condition = "==")
 TxTypeFilter(value, condition = "==")
 UnigeneFilter(value, condition = "==")
-UniprotFilter(value, condition = "==")
 WormbaseFilter(value, condition = "==")
 ZfinFilter(value, condition = "==")
-CdsStartFilter(value, condition = "==")
-CdsEndFilter(value, condition = "==")
-ExonStartFilter(value, condition = "==")
-ExonEndFilter(value, condition = "==")
-GeneStartFilter(value, condition = "==")
-GeneEndFilter(value, condition = "==")
-TxStartFilter(value, condition = "==")
-TxEndFilter(value, condition = "==")
 
 \S4method{show}{BasicFilter}(object)
 
