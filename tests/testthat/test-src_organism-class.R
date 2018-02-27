@@ -67,7 +67,11 @@ test_that("mouse", {
     ## test ensGene with filter
     tx_src <- unlist(exonsBy(src, filter=AnnotationFilterList(TxIdFilter(2237))))
     tx_txdb <- unlist(exonsBy(txdb)["2237"])
-    expect_equal(length(unlist(tx_src)), length(unlist(tx_txdb)))
+
+    ## Removed `unlist()` from test as of 1.7.3 due to it not modifying the
+    ## GRanges output.
+    expect_equal(length(tx_src), length(tx_txdb))
+
     expect_true(all.equal(seqinfo(tx_src), seqinfo(tx_txdb)))
     expect_equal(tx_src$exon_id, tx_txdb$exon_id)
     .deleteTempTables(src)

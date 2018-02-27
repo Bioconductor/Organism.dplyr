@@ -211,11 +211,14 @@ promoters_tbl <- function(x, upstream, downstream, filter = NULL, columns = NULL
     .promoters_tbl(x, upstream, downstream, filter)
 }
 
+#' @importFrom S4Vectors mcols
 #' @rdname Genomic-Extractors
 setMethod("promoters", "src_organism",
     function(x, upstream, downstream, filter = NULL, columns = NULL) {
         filter <- .parseFilterInput(filter, columns)
-        .toGRanges(x, .promoters_tbl(x, upstream, downstream, filter), filter)
+        gr <- .toGRanges(x, .promoters_tbl(x, upstream, downstream, filter), filter)
+        names(gr) <- mcols(gr)$tx_name
+        gr
 })
 
 #' @importFrom GenomicRanges GRanges mcols<-
