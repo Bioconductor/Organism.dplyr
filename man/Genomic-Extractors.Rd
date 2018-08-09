@@ -50,8 +50,8 @@ cds(x, ...)
  threeUTRsByTranscript(x, ...)
  threeUTRsByTranscript_tbl(x, filter=NULL, columns=NULL)
 
-\S4method{promoters}{src_organism}(x, upstream, downstream, filter = NULL,
-  columns = NULL)
+\S4method{promoters}{src_organism}(x, upstream, downstream,
+  filter = NULL, columns = NULL)
 
 \S4method{intronsByTranscript}{src_organism}(x, filter = NULL,
   columns = NULL)
