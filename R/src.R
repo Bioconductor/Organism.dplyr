@@ -176,15 +176,15 @@ src_organism <- function(txdb=NULL, dbpath=NULL) {
 }
 
 .alter_table <- function(con, tablename, length) {
-    dbGetQuery(con,
-               paste0("ALTER TABLE ", tablename,
-                      " ADD COLUMN ensembl_original CHARACTER"))
-    dbGetQuery(con,
-               paste0("UPDATE ", tablename,
-                      " SET ensembl_original = ensembl"))
-    dbGetQuery(con,
-               paste0("UPDATE ", tablename,
-                      " SET ensembl = SUBSTR(ensembl, 1, ", length, ")"))
+    dbExecute(con,
+              paste0("ALTER TABLE ", tablename,
+                     " ADD COLUMN ensembl_original CHARACTER"))
+    dbExecute(con,
+              paste0("UPDATE ", tablename,
+                     " SET ensembl_original = ensembl"))
+    dbExecute(con,
+              paste0("UPDATE ", tablename,
+                     " SET ensembl = SUBSTR(ensembl, 1, ", length, ")"))
 }
 
 .alter_ensembl_ids <- function(con) {
@@ -213,7 +213,7 @@ src_organism <- function(txdb=NULL, dbpath=NULL) {
     if (tblname %in% tbls)
         return()
     else {
-        dbGetQuery(con, paste0("ATTACH '", dbfile(db), "' AS ", tblname))
+        dbExecute(con, paste0("ATTACH '", dbfile(db), "' AS ", tblname))
 
         fname <- system.file(
             package="Organism.dplyr", "schema", paste0(tblname, ".sql"))
@@ -224,9 +224,9 @@ src_organism <- function(txdb=NULL, dbpath=NULL) {
         grps <- cumsum(!nzchar(schemas)) + 1
         for (schema in split(schemas, grps)) {
             sql <- paste(schema, collapse="\n")
-            dbGetQuery(con, sql)
+            dbExecute(con, sql)
         }
-        dbGetQuery(con, paste0("DETACH '", tblname, "'"))
+        dbExecute(con, paste0("DETACH '", tblname, "'"))
     }
 }
 
@@ -362,7 +362,7 @@ select_.tbl_organism <- function(.data, ...) {
 #' ## Look at all available tables
 #' src_tbls(src)
 #'
-#' @importFrom RSQLite dbGetQuery
+#' @importFrom RSQLite dbGetQuery dbExecute
 #' @rdname src
 #' @export
 src_tbls.src_organism <- function(x) {
