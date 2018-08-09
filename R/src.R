@@ -50,7 +50,7 @@
 #' @importFrom tools file_ext
 #' @importFrom AnnotationDbi dbfile
 #' @importFrom GenomeInfoDb as.data.frame
-#' @importFrom BiocFileCache BiocFileCache bfcrpath bfcnew
+#' @importFrom BiocFileCache BiocFileCache bfcquery bfcrpath bfcnew bfccache
 #'
 #' @examples
 #' ## create human sqlite database with TxDb.Hsapiens.UCSC.hg38.knownGene and
@@ -91,20 +91,18 @@ src_organism <- function(txdb=NULL, dbpath=NULL) {
         ## check dbpath
         if (is.null(dbpath)) {
             bfc <- BiocFileCache()
-            ## current solution
-            dbpath <- tryCatch({
-                suppressWarnings({
-                    bfcrpath(bfc, rnames=txdb_name)
-                })
-            }, error = function(e) {
-                test <- identical(
-                    conditionMessage(e),
-                    "all 'rnames' not found or valid."
+            nrec <- NROW(bfcquery(dbpath, txdb_name, "rname", exact = TRUE))
+            if (nrec == 0L) {
+                dbpath <- bfcnew(dbpath, txdb_name)
+            } else if (nrec == 1L) {
+                dbpath <- bfcrpath(dbpath, txdb_name)
+            } else {
+                stop(
+                    "\n  'bfc' contains duplicate Organism.dplyr record names",
+                    "\n      bfccache(): ", bfccache(dbpath),
+                    "\n      rname: ", txdb_name
                 )
-                if (!test)
-                    stop(e)
-                bfcnew(bfc, txdb_name)
-            })
+            }
         }
 
         ## check metadata of org, txdb match tables in dbpath
