@@ -18,8 +18,11 @@
 #'     \code{TxDb.Hsapiens.UCSC.hg38.knownGene}) or \code{TxDb}
 #'     object instantiating the content of a \code{TxDb.*} pacakge.
 #'
-#' @param dbpath path and file name where SQLite file will be accessed
-#'      or created if not already exists.
+#' @param dbpath character(1) path or BiocFileCache instance
+#'     representing the location where an Organism.dplyr SQLite
+#'     database will be accessed or created. If no path is specified,
+#'     the SQLite file is created in the default BiocFileCache()
+#'     location.
 #'
 #' @return \code{src_organism()} and \code{src_ucsc()} returns a dplyr
 #'     \code{src_dbi} instance representing the data tables.
@@ -88,9 +91,10 @@ src_organism <- function(txdb=NULL, dbpath=NULL) {
         txdb_meta <- metadata(txdb)
         txdb_type <- txdb_meta$value[txdb_meta$name == "Type of Gene ID"]
 
-        ## check dbpath
-        if (is.null(dbpath)) {
-            bfc <- BiocFileCache()
+        if (is.null(dbpath))
+            dbpath <- BiocFileCache()
+        if (is(dbpath, "BiocFileCache")) {
+            ## get dbpath from BiocFileCache
             nrec <- NROW(bfcquery(dbpath, txdb_name, "rname", exact = TRUE))
             if (nrec == 0L) {
                 dbpath <- bfcnew(dbpath, txdb_name)

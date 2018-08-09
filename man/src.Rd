@@ -34,8 +34,11 @@ supportedOrganisms()
 \code{TxDb.Hsapiens.UCSC.hg38.knownGene}) or \code{TxDb}
 object instantiating the content of a \code{TxDb.*} pacakge.}
 
-\item{dbpath}{path and file name where SQLite file will be accessed
-or created if not already exists.}
+\item{dbpath}{character(1) path or BiocFileCache instance
+representing the location where an Organism.dplyr SQLite
+database will be accessed or created. If no path is specified,
+the SQLite file is created in the default BiocFileCache()
+location.}
 
 \item{organism}{organism or common name}
 
