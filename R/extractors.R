@@ -174,7 +174,7 @@
     fields <- unique(c(.TBL_RETURNS[main_ranges], .filter_names(filter)))
     table <- .iterTable(x, table)
     table <- .cleanOutput(x, table)
-    arrange_value <- .TBL_ARRANGE[main_ranges]
+    arrange_value <- .TBL_ARRANGE[[main_ranges]]
     if (is.null(arrange_value))
         arrange_value <- x$schema
     do.call(dplyr::select, c(list(table), as.list(fields))) %>%
@@ -283,7 +283,7 @@
     ranges_tx = "tx_id",
     ranges_exon = "exon_id",
     ranges_cds = "cds_id",
-    ranges_genes = NULL
+    ranges_gene = character()
 )
 
 ########################################################
