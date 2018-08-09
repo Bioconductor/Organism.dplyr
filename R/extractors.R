@@ -174,9 +174,10 @@
     fields <- unique(c(.TBL_RETURNS[main_ranges], .filter_names(filter)))
     table <- .iterTable(x, table)
     table <- .cleanOutput(x, table)
-    arrange_value <- .TBL_ARRANGE[[main_ranges]]
+    arrange_value <- .TBL_ARRANGE[main_ranges]
     if (is.null(arrange_value))
         arrange_value <- x$schema
+    arrange_value <- arrange_value[lengths(arrange_value) != 0L]
     do.call(dplyr::select, c(list(table), as.list(fields))) %>%
         arrange_(.dots=arrange_value) %>% distinct()
 }
