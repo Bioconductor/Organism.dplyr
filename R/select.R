@@ -205,7 +205,8 @@ select_tbl <- function (x, keys, columns, keytype) {
 }
 
 .select <- function (x, keys, columns, keytype) {
-    select_tbl(x, keys, columns, keytype) %>% collect(Inf) %>% as.data.frame
+    res <- select_tbl(x, keys, columns, keytype) %>% collect(Inf) %>% as.data.frame
+    res[order(res[,keytype]),]
 }
  
 #' @importFrom AnnotationDbi select testSelectArgs
