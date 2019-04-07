@@ -262,8 +262,8 @@ src_ucsc <- function(organism, genome = NULL, id = NULL,
     builds <- read.csv(filename, header = TRUE, stringsAsFactors = FALSE)
     idx <- rowSums(builds[,1:2] == tolower(organism)) > 0
     if (!any(idx))
-        stop("could not match organism ", organism,
-             "; see GenomeInfoDb::listSpecies()")
+        stop("could not match organism ", organism, ";",
+             "\n  see 'GenomeInfoDb::listSpecies()'")
     builds <- builds[idx,]
 
     species <- tail(builds$organism, 1L)
@@ -277,7 +277,11 @@ src_ucsc <- function(organism, genome = NULL, id = NULL,
     pkgs <- grep("TxDb", row.names(installed.packages()), value=TRUE)
     pkgs <- grep(binomial, pkgs, value=TRUE)
     if (length(pkgs) == 0)
-        stop("No TxDb package available for organism: ", organism)
+        stop(
+            "no TxDb package installed matching '", binomial,
+            "' for organism '", organism, "'",
+            "\n  see 'BiocManager::available(\"TxDb\")'"
+        )
 
     found <- FALSE
     if (missing(id) & missing(genome)) {
