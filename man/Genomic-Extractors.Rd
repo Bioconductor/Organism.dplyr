@@ -126,9 +126,6 @@ exonsBy(src, filter = SymbolFilter("ADA"))
 ## intronsByTranscript
 intronsByTranscript(src, filter = SymbolFilter("ADA"))
 
-## fiveUTRsByTranscript
-fiveUTRsByTranscript(src, filter = SymbolFilter("ADA"))
-
 }
 \seealso{
 \code{\link{src_organism}} for creating a \code{src_organism}

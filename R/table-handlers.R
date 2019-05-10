@@ -5,11 +5,13 @@
 #################################################################
 
 #' @importFrom utils capture.output
+#' @importFrom dbplyr sql_render
 #' @importFrom dplyr show_query
 .checkDepth <- function(table) {
     max <- 65
-    output <- capture.output(table %>% show_query(), type="message")
-    output <- tail(output, -1)
+    output <- dbplyr::sql_render(table)
+    #output <- tail(output, -1)
+    output <- strsplit(output, "\n")
     max < length(output)
 }
 

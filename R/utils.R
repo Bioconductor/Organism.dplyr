@@ -14,7 +14,7 @@
 #' @export
 hg38light <- function() {
     system.file(
-        package="Organism.dplyr", "extdata", "light.hg38.knownGene.sqlite"
+        package="Organism.dplyr", "extdata","light.hg38.knownGene.sqlite"
     )
 }
 

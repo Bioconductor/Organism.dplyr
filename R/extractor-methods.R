@@ -107,9 +107,6 @@
 #' ## intronsByTranscript
 #' intronsByTranscript(src, filter = SymbolFilter("ADA"))
 #'
-#' ## fiveUTRsByTranscript
-#' fiveUTRsByTranscript(src, filter = SymbolFilter("ADA"))
-#'
 #' @export cds cds_tbl cdsBy cdsBy_tbl exons exons_tbl exonsBy
 #' @export exonsBy_tbl fiveUTRsByTranscript fiveUTRsByTranscript_tbl genes
 #' @export genes_tbl intronsByTranscript intronsByTranscript_tbl
