@@ -1,3 +1,57 @@
+#' @importFrom BiocFileCache BiocFileCache bfcquery bfcrpath bfcnew
+#'     bfccache bfcremove
+
+.src_organism_dbpath <-
+    function(dbpath, txdb_name, txdb_meta, overwrite)
+{
+    bfc <- NULL
+    if (is.null(dbpath))
+        bfc <- BiocFileCache()
+
+    if (is(bfc, "BiocFileCache")) {
+        ## get dbpath from BiocFileCache
+        nrec <- NROW(bfcquery(bfc, txdb_name, "rname", exact = TRUE))
+        if (nrec == 0L) {
+            dbpath <- bfcnew(bfc, txdb_name)
+        } else if (nrec == 1L) {
+            dbpath <- bfcrpath(bfc, txdb_name)
+        } else {
+            stop(
+                "\n  'bfc' contains duplicate Organism.dplyr record names",
+                "\n      bfccache(): '", bfccache(bfc), "'",
+                "\n      rname: '", txdb_name, "'"
+            )
+        }
+    }
+
+    if (!file.exists(dbpath))
+        return(dbpath)
+
+    ## check metadata of org, txdb match tables in dbpath
+    con <- dbConnect(SQLite(), dbpath)
+    src <- src_dbi(con)
+    txdb_md <- tbl(src, "metadata_txdb") %>% collect()
+
+    if (identical(txdb_meta$value, txdb_md$value)) {
+        return(dbpath)
+    } else if (!overwrite) {
+        stop(
+            "\n  'txdb', 'dbpath' sqlite schemas differ",
+            "\n  use `overwrite = TRUE` or a different `dbpath = `"
+        )
+    }
+
+    message("overwriting existing dbpath")
+    if (is(bfc, "BiocFileCache")) {
+        bfcremove(bfc, names(dbpath))
+        dbpath <- bfcnew(bfc, txdb_name)
+    } else {
+        unlink(dbpath)
+    }
+
+    dbpath
+}
+
 #' Create a sqlite database from TxDb and corresponding Org packages
 #'
 #' The database provides a convenient way to map between gene, transcript,
@@ -15,7 +69,7 @@
 #' corresponding OrgDb and TxDb.
 #'
 #' @param txdb character(1) naming a \code{TxDb.*} package (e.g.,
-#'     \code{TxDb.Hsapiens.UCSC.hg38.knownGene}) or \code{TxDb}
+#'     \code{TxDb.Hsapiens.UCSC.hg38.knownGene}) or a \code{TxDb}
 #'     object instantiating the content of a \code{TxDb.*} pacakge.
 #'
 #' @param dbpath character(1) path or BiocFileCache instance
@@ -23,6 +77,10 @@
 #'     database will be accessed or created. If no path is specified,
 #'     the SQLite file is created in the default BiocFileCache()
 #'     location.
+#'
+#' @param overwrite logical(1) overwrite an exisging `dbpath` contains
+#'     an Organism.dplyr SQLite databse different from the version
+#'     implied by `txdb`?
 #'
 #' @return \code{src_organism()} and \code{src_ucsc()} returns a dplyr
 #'     \code{src_dbi} instance representing the data tables.
@@ -53,7 +111,6 @@
 #' @importFrom tools file_ext
 #' @importFrom AnnotationDbi dbfile
 #' @importFrom GenomeInfoDb as.data.frame
-#' @importFrom BiocFileCache BiocFileCache bfcquery bfcrpath bfcnew bfccache
 #'
 #' @examples
 #' ## create human sqlite database with TxDb.Hsapiens.UCSC.hg38.knownGene and
@@ -67,7 +124,7 @@
 #'      dplyr::select(entrez, ensembl, symbol, go, evidence, ontology)
 #'
 #' @export
-src_organism <- function(txdb=NULL, dbpath=NULL) {
+src_organism <- function(txdb=NULL, dbpath=NULL, overwrite=FALSE) {
     if (is.null(txdb)) {
         if (!(!is.null(dbpath) && file.exists(dbpath) &&
             file_ext(dbpath) == "sqlite"))
@@ -76,8 +133,6 @@ src_organism <- function(txdb=NULL, dbpath=NULL) {
         ## check org, txdb
         if (is.character(txdb) && length(txdb) == 1L)
             txdb <- loadNamespace(txdb)[[txdb]]
-        else
-            stop("input one valid 'txdb'")
         stopifnot(is(txdb, "TxDb"))
 
         txdb_name <- paste0("dplyr.", basename(dbfile(txdb)))
@@ -91,32 +146,7 @@ src_organism <- function(txdb=NULL, dbpath=NULL) {
         txdb_meta <- metadata(txdb)
         txdb_type <- txdb_meta$value[txdb_meta$name == "Type of Gene ID"]
 
-        if (is.null(dbpath))
-            dbpath <- BiocFileCache()
-        if (is(dbpath, "BiocFileCache")) {
-            ## get dbpath from BiocFileCache
-            nrec <- NROW(bfcquery(dbpath, txdb_name, "rname", exact = TRUE))
-            if (nrec == 0L) {
-                dbpath <- bfcnew(dbpath, txdb_name)
-            } else if (nrec == 1L) {
-                dbpath <- bfcrpath(dbpath, txdb_name)
-            } else {
-                stop(
-                    "\n  'bfc' contains duplicate Organism.dplyr record names",
-                    "\n      bfccache(): ", bfccache(dbpath),
-                    "\n      rname: ", txdb_name
-                )
-            }
-        }
-
-        ## check metadata of org, txdb match tables in dbpath
-        if ((!is.null(dbpath)) && file.exists(dbpath)) {
-            con <- dbConnect(SQLite(), dbpath)
-            src <- src_dbi(con)
-            txdb_md <- tbl(src, "metadata_txdb") %>% collect()
-            if (!identical(txdb_meta$value, txdb_md$value))
-                stop("'txdb', 'dbpath' sqlite schemas differ; use new dbpath?")
-        }
+        dbpath <- .src_organism_dbpath(dbpath, txdb_name, txdb_meta, overwrite)
 
         if (startsWith(tolower(txdb_type), "entrez")) {
             txdb_schema <- "txdb_entrez"

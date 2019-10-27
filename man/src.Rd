@@ -12,7 +12,7 @@
 \alias{seqinfo,src_organism-method}
 \title{Create a sqlite database from TxDb and corresponding Org packages}
 \usage{
-src_organism(txdb = NULL, dbpath = NULL)
+src_organism(txdb = NULL, dbpath = NULL, overwrite = FALSE)
 
 src_ucsc(organism, genome = NULL, id = NULL, dbpath = NULL,
   verbose = TRUE)
@@ -31,7 +31,7 @@ supportedOrganisms()
 }
 \arguments{
 \item{txdb}{character(1) naming a \code{TxDb.*} package (e.g.,
-\code{TxDb.Hsapiens.UCSC.hg38.knownGene}) or \code{TxDb}
+\code{TxDb.Hsapiens.UCSC.hg38.knownGene}) or a \code{TxDb}
 object instantiating the content of a \code{TxDb.*} pacakge.}
 
 \item{dbpath}{character(1) path or BiocFileCache instance
@@ -39,6 +39,10 @@ representing the location where an Organism.dplyr SQLite
 database will be accessed or created. If no path is specified,
 the SQLite file is created in the default BiocFileCache()
 location.}
+
+\item{overwrite}{logical(1) overwrite an exisging `dbpath` contains
+an Organism.dplyr SQLite databse different from the version
+implied by `txdb`?}
 
 \item{organism}{organism or common name}
 

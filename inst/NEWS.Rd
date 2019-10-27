@@ -1,6 +1,20 @@
 \name{Organism.dplyr-NEWS}
 \title{Organism.dplyr News}
 
+\section{CHANGES IN VERSION 1.14.0}{
+  \subsection{NEW FEATURES}{
+    \itemize{
+
+      \item \code{src_organism()} supports an option
+      \code{overwrite=FALSE} to optionally over-write exisiting (cached)
+      resources created from a previous txdb version.
+
+      \item \code{src_organism()} supports construction from a TxDb object.
+
+    }
+  }
+}
+
 \section{CHANGES IN VERSION 1.0.0}{
 
   \subsection{NEW FEATURES}{
