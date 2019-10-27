@@ -5,9 +5,6 @@ suppressPackageStartupMessages({
 })
 txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
 
-#hg38light <- system.file(
-#    package="Organism.dplyr", "extdata", "light.hg38.knownGene.sqlite"
-#)
 hg38light <- hg38light()
 src <- src_organism(dbpath=hg38light)
 
@@ -29,39 +26,27 @@ test_that("keys", {
 })
 
 test_that("select", {
-#    keys <- c(
-#        "uc001hzz.2", "uc001iab.3", "uc001pde.4", "uc001pdf.5", "uc001xmf.5", 
-#        "uc001yxg.4"
-#    )
-    keys <- c(
-        "ENST00000336199.9", "ENST00000366540.5", "ENST00000263826.9",
-        "ENST00000366539.5", "ENST00000492957.1"
-    )
-
     columns_src <- c("entrez", "tx_id", "tx_name","exon_id")
     keytype_src <- "tx_name"
     columns_txdb <- c("GENEID", "TXID", "TXNAME","EXONID")
     keytype_txdb <- "TXNAME"
-    
+
+    keys <- head(keys(src, keytype_src))
     rs_src <- select(src, keys, columns_src, keytype_src) %>% collect()
     rs_txdb <- select(txdb, keys, columns_txdb, keytype_txdb)
-    
+
     expect_equal(dim(rs_src), dim(rs_txdb))
-    expect_equal(rs_src[order(rs_src[,keytype_src]),]$tx_id, rs_txdb[order(rs_txdb[,keytype_txdb]),]$TXID)
+    expect_equal(
+        rs_src[order(rs_src[,keytype_src]),]$tx_id,
+        rs_txdb[order(rs_txdb[,keytype_txdb]),]$TXID
+    )
 })
 
 test_that("mapIds", {
-#    keys <- c(
-#        "uc001hzz.2", "uc001iab.3", "uc001pde.4", "uc001pdf.5", "uc001xmf.5", 
-#        "uc001yxg.4"
-#    )    
-    keys <- c(
-        "ENST00000336199.9", "ENST00000366540.5", "ENST00000263826.9",
-        "ENST00000366539.5", "ENST00000492957.1"
-    )
+    keys <- head(keys(src, "tx_name"))
 
     rs_src <- mapIds(src, keys, "exon_id", "tx_name")
     rs_txdb <- mapIds(txdb, keys, "EXONID", "TXNAME")
-    
+
     expect_equal(rs_src, rs_txdb)
 })

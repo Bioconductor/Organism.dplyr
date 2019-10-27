@@ -6,7 +6,9 @@ test_that("src_organism_constructor", {
 
     if (interactive()) {
         message("creating expensive 'src_organism'")
-        src <- src_organism("TxDb.Hsapiens.UCSC.hg38.knownGene")
+        src <- src_organism(
+            "TxDb.Hsapiens.UCSC.hg38.knownGene", overwrite = TRUE
+        )
     } else {
         src <- src_organism(dbpath=hg38light())
     }
