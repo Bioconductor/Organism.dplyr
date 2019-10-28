@@ -1,0 +1,10 @@
+To update 'light' databases, create the full version
+
+   library(Organism.dplyr)
+   library(TxDb.Hsapiens.UCSC.hg38.knownGene)
+   src_organism(TxDb.Hsapiens.UCSC.hg38.knownGene, "/tmp/light.hg38.knownGene.sqlite")
+
+then trim using the files in this directory
+
+    sqlite3 /tmp/light.hg38.knownGene.sqlite < make-mini-entrez.sql
+
