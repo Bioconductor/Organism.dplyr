@@ -224,7 +224,7 @@ intronsByTranscript_tbl <-
         filter <- .parseFilterInput(filter, columns)
         ans <- unlist(intronsByTranscript(x, filter))
         mcols(ans)[, "tx_id"] <- names(ans)
-        unname(unlist(ans)) %>% as.data.frame %>% tbl_df %>%
+        unname(unlist(ans)) %>% as.data.frame %>% tibble::as_tibble %>%
             dplyr::select_(.dots = c('tx_id',
                               intron_chrom = 'seqnames',
                               intron_start = 'start',

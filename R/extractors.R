@@ -381,7 +381,7 @@
                    ifelse(!is.na(cds_id) & exon_strand == strand2,
                           cds_start - 1L,
                           exon_end)) %>%
-        filter_(~ start <= end) %>% collect(n=Inf) %>% tbl_df
+        filter_(~ start <= end) %>% collect(n=Inf) %>% tibble::as_tibble()
 
     table <- rename_(table, chrom = ~ exon_chrom)
     table <- rename_(table, strand = ~ exon_strand)

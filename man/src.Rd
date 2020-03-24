@@ -21,7 +21,7 @@ supportedOrganisms()
 
 \method{select_}{tbl_organism}(.data, ...)
 
-\method{src_tbls}{src_organism}(x)
+\method{src_tbls}{src_organism}(x, ...)
 
 \method{tbl}{src_organism}(src, ..., .load_tbl_only = FALSE)
 
@@ -71,7 +71,7 @@ Default value is FALSE.}
 \code{src_organism()} and \code{src_ucsc()} returns a dplyr
     \code{src_dbi} instance representing the data tables.
 
-A tbl_df of the requested table coming from the temporary database
+A tibble of the requested table coming from the temporary database
  of the src_organism object.
 }
 \description{

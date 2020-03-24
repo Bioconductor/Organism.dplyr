@@ -102,12 +102,13 @@
 #'     desc distinct distinct_ filter filter_ full_join group_by group_by_
 #'     inner_join is.tbl left_join mutate mutate_ order_by rename rename_
 #'     right_join select_ src src_tbls summarise summarise_
-#'     summarize summarize_ tbl tbl_df union union_all
+#'     summarize summarize_ tbl union union_all
 #' @importFrom dbplyr build_sql src_sql src_dbi tbl_sql
 #' @importFrom RSQLite dbGetQuery dbConnect dbDisconnect SQLite
 #'     dbWriteTable dbListTables
 #' @importFrom S4Vectors metadata
 #' @importFrom methods is as
+#' @importFrom tibble as_tibble
 #' @importFrom tools file_ext
 #' @importFrom AnnotationDbi dbfile
 #' @importFrom GenomeInfoDb as.data.frame
@@ -374,7 +375,7 @@ supportedOrganisms <- function() {
         package = "Organism.dplyr", "extdata",
         "supportedOrganisms.csv")
     csv <- read.csv(filename, header = TRUE, stringsAsFactors = FALSE)
-    tbl_df(csv)
+    tibble::as_tibble(csv)
 }
 
 #' @param .data A tbl.
@@ -399,7 +400,7 @@ select_.tbl_organism <- function(.data, ...) {
 #' @importFrom RSQLite dbGetQuery dbExecute
 #' @rdname src
 #' @export
-src_tbls.src_organism <- function(x) {
+src_tbls.src_organism <- function(x, ...) {
     sql <- "SELECT name FROM sqlite_master WHERE type IN ('view', 'table')
             AND (SUBSTR(name,1,2) = 'id' OR SUBSTR(name,1,6) = 'ranges')"
     dbGetQuery(x$con, sql)$name
@@ -411,7 +412,7 @@ src_tbls.src_organism <- function(x) {
 #'  the table instead of also loading the pacakge in the temporary database.
 #'  Default value is FALSE.
 #'
-#' @return A tbl_df of the requested table coming from the temporary database
+#' @return A tibble of the requested table coming from the temporary database
 #'  of the src_organism object.
 #'
 #' @examples
