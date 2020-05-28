@@ -158,6 +158,7 @@
 ########################################################
 
 .xscripts <- function(x, main_ranges, filter = NULL) {
+    .removeTables()
     table_names <- .tableNames(x, filter, main_ranges)
     add_tables <- setdiff(names(table_names), dbListTables(x$db))
     for (i in add_tables) {

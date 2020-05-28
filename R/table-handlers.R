@@ -46,6 +46,15 @@
     }
 })
 
+.tablesForRemoval <- new.env(parent = emptyenv())
+
+.removeTables <- function() {
+    for (tbl in names(.tablesForRemoval)) {
+        dbRemoveTable(.tablesForRemoval[[tbl]], tbl)
+        rm(envir = .tablesForRemoval, list = tbl)
+    }
+}
+
 .cleanOutput <- function(x, table) {
     table <- table %>% collect(n=Inf)
     name <- .getNewOutputName()
@@ -58,7 +67,7 @@
     attr(table, "finalizer") <- e
     # onexit <- ifelse(x$dbpath != "", TRUE, FALSE)
     reg.finalizer(attr(table, "finalizer"), function(object) {
-        dbRemoveTable(object[["src"]]$db, object[["name"]])
+        .tablesForRemoval[[object[["name"]] ]] <- object[["src"]]$db
     })
     table
 }

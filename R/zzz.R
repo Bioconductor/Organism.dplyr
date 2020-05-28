@@ -5,3 +5,9 @@
     .filter_init()
 #    .tbl_Functions()
 }
+
+.onUnload <-
+    function(...)
+{
+    .removeTables()
+}
