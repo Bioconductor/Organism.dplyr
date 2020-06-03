@@ -98,7 +98,7 @@ setMethod("columns", "src_organism", .getFields)
     testForValidKeytype(x, keytype)
     
     table <- tbl(x, .findTable(x, keytype))
-    res <- table %>% select_(keytype) %>% filter(!is.na(keytype)) %>% 
+    res <- table %>% dplyr::select(keytype) %>% filter(!is.na(keytype)) %>% 
         collect(n=Inf)
     
     if (length(res) == 0L)
@@ -146,8 +146,8 @@ setMethod("keys", "src_organism",
     keyfields <- fields[fields %in% c(x$schema, "tx_id", "exon_rank")]
     fields <- unique(c(keyfields, cnames[cnames %in% fields]))
     
-    table <- table %>% filter_(filter) 
-    do.call(select_, c(list(table), as.list(fields)))
+    table <- table %>% filter(filter) 
+    table %>% dplyr::select(fields)
 }
 
 .selectColumns <- function(x, table, keytype, cnames) {
@@ -176,12 +176,12 @@ setMethod("keys", "src_organism",
             table <- left_join(table, tbl(x, i))
         }
         if ("entrez.x" %in% colnames(table))
-            table <- rename_(table, entrez = ~ entrez.x)
+            table <- rename(table, entrez = .data$entrez.x)
         else if ("ensembl.x" %in% colnames(table))
-            table <- rename_(table, ensembl = ~ ensembl.x)
+            table <- rename(table, ensembl = .data$ensembl.x)
         fields <- setdiff(fields, keep)
     }
-    do.call(select_, c(list(table), as.list(cnames)))
+    table %>% dplyr::select(cnames)
 }
 
 #' @rdname select

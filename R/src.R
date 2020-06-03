@@ -98,11 +98,9 @@
 #'
 #' @rdname src
 #'
-#' @importFrom  dplyr %>% arrange arrange_ as.tbl collect compute
-#'     desc distinct distinct_ filter filter_ full_join group_by group_by_
-#'     inner_join is.tbl left_join mutate mutate_ order_by rename rename_
-#'     right_join select_ src src_tbls summarise summarise_
-#'     summarize summarize_ tbl union union_all
+#' @importFrom  dplyr %>% arrange as.tbl collect compute desc distinct filter 
+#'     full_join inner_join is.tbl left_join mutate order_by rename right_join
+#'     select_ src src_tbls summarise summarize tbl union union_all
 #' @importFrom dbplyr build_sql src_sql src_dbi tbl_sql
 #' @importFrom RSQLite dbGetQuery dbConnect dbDisconnect SQLite
 #'     dbWriteTable dbListTables
@@ -380,6 +378,8 @@ supportedOrganisms <- function() {
 
 #' @param .data A tbl.
 #'
+#' @description DEPRECATED: Please use equivalent select() method.
+#'
 #' @param ... Comma separated list of unquoted expressions. You can treat
 #' variable names like they are positions. Use positive values to select
 #' variables; use negative values to drop variables.
@@ -387,8 +387,9 @@ supportedOrganisms <- function() {
 #' @rdname src
 #' @export
 select_.tbl_organism <- function(.data, ...) {
+    .Deprecated("select")
     .data = NextMethod(.data, ...)
-    dplyr::distinct_(.data, ...)
+    dplyr::distinct(.data, ...)
 }
 
 #' @param x A src_organism object
@@ -446,11 +447,11 @@ tbl.src_organism <- function(src, ..., .load_tbl_only = FALSE) {
 setOldClass("src_organism")
 
 .getSeqinfo <- function(x) {
-    seqinfo <- mutate_(tbl(x, "seqinfo") %>% collect(n=Inf),
-                       seqnames = ~ as.character(seqnames),
-                       seqlengths = ~ as.integer(seqlengths),
-                       isCircular = ~ as.logical(isCircular),
-                       genome = ~ as.character(genome))
+    seqinfo <- mutate(tbl(x, "seqinfo") %>% collect(n=Inf),
+                      seqnames = as.character(.data$seqnames),
+                      seqlengths = as.integer(.data$seqlengths),
+                      isCircular = as.logical(.data$isCircular),
+                      genome = as.character(.data$genome))
     Seqinfo(seqnames=seqinfo[['seqnames']], seqlengths=seqinfo[['seqlengths']],
             isCircular=seqinfo[['isCircular']], genome=seqinfo[['genome']])
 }

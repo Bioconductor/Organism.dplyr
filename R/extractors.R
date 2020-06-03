@@ -8,7 +8,8 @@
 #'      value convertFilter logicOp
 #' @importFrom AnnotationDbi columns
 #' @importFrom DBI dbListTables dbRemoveTable dbWriteTable
-#' @importFrom dplyr %>% as_tibble filter_
+#' @importFrom dplyr %>% as_tibble
+#' @importFrom rlang .data
 .tbl_join <- function(x, filter, main_table, table_names) {
     if (is.null(filter))
         return(main_table)
@@ -48,7 +49,7 @@
                         vapply(table_names, function(j) f_field %in% j, logical(1))
                     selected_table <- names(selected)[selected]
                     main_table <- .iterTable(x, main_table)
-                    val <- tbl(x$db, selected_table[1]) %>% filter_(dplyr_filter)
+                    val <- tbl(x$db, selected_table[1]) %>% filter(dplyr_filter)
                     .getAllTableValues(x, val, table_names, selected)
                 }
             }
@@ -172,15 +173,14 @@
 
 .xscripts_tbl <- function(x, main_ranges, filter = NULL) {
     table <- .xscripts(x, main_ranges, filter)
-    fields <- unique(c(.TBL_RETURNS[main_ranges], .filter_names(filter)))
+    fields <- unique(unlist(c(.TBL_RETURNS[main_ranges],.filter_names(filter))))
     table <- .iterTable(x, table)
     table <- .cleanOutput(x, table)
     arrange_value <- .TBL_ARRANGE[main_ranges]
     if (is.null(arrange_value))
         arrange_value <- x$schema
-    arrange_value <- arrange_value[lengths(arrange_value) != 0L]
-    do.call(dplyr::select, c(list(table), as.list(fields))) %>%
-        arrange_(.dots=arrange_value) %>% distinct()
+    arrange_value <- unlist(arrange_value[lengths(arrange_value) != 0L])
+    table %>% dplyr::select(fields) %>% arrange(!!arrange_value) %>% distinct()
 }
 
 .xscriptsBy_tbl <- function(x, main_ranges, by, filter = NULL) {
@@ -220,8 +220,8 @@
     table <- joinFun(table, tbl(x, other_main))
     fields <- unique(
         unlist(c(gr_names, .SPECIAL_FIELDS[by], .filter_names(filter))))
-    do.call(select_, c(list(table), as.list(fields))) %>%
-        arrange_(.dots=.SPECIAL_FIELDS[by][[1]]) %>% distinct()
+    table %>% dplyr::select(fields) %>% arrange(!!.SPECIAL_FIELDS[by][[1]]) %>%
+        distinct()
 }
 
 ########################################################
@@ -249,12 +249,10 @@
 
     if (type == "fiveUTRs") {
         table <- .UTRsByTranscript(x, filter, "-", "+")
-        #table <- .iterTable(x, table, doit=TRUE)
         table <- .toGRanges(x, table, filter)
     }
     else if (type == "threeUTRs") {
         table <- .UTRsByTranscript(x, filter, "+", "-")
-        #table <- .iterTable(x, table, doit=TRUE)
         table <- .toGRanges(x, table, filter)
     } else {
         table <- .xscriptsBy_tbl(x, main_ranges, by, filter)
@@ -312,23 +310,21 @@
 
     filter <- .filter_list(filter)
     table <- .xscripts_tbl(x, "ranges_tx", filter = filter) %>%
-        mutate_(start = ~ ifelse(tx_strand == "-",
-                              tx_end - downstream + 1,
-                              tx_start - upstream),
-               end = ~ ifelse(tx_strand == "-",
-                            tx_end + upstream,
-                            tx_start + downstream - 1)) %>% collect(n=Inf)
+        mutate(start = ifelse(.data$tx_strand == "-",
+                              .data$tx_end - downstream + 1,
+                              .data$tx_start - upstream),
+               end = ~ ifelse(.data$tx_strand == "-",
+                            .data$tx_end + upstream,
+                            .data$tx_start + downstream - 1)) %>% collect(n=Inf)
 
-    table <- rename_(table, chrom = ~ tx_chrom)
-    table <- rename_(table, strand = ~ tx_strand)
+    table <- rename(table, chrom = .data$tx_chrom)
+    table <- rename(table, strand = ~ .data$tx_strand)
 
     fields <- unique(
         c("chrom", "start", "end", "strand", "tx_id", "tx_name",
           .filter_names(filter)))
-    # table <- .iterTable(x, table)
     table <- .cleanOutput(x, table)
-    do.call(select_, c(list(table), as.list(fields))) %>% arrange_(~ tx_id) %>%
-        distinct()
+    table %>% dplyr::select(fields) %>% arrange(!!.data$tx_id) %>% distinct()
 }
 
 ########################################################
@@ -340,9 +336,9 @@
     exon <- .xscripts(x, "ranges_exon", filter=filter)
     cds <- .xscripts(x, "ranges_cds", filter=filter)
 
-    exon_txid <- exon %>% dplyr::select_(~ tx_id) %>% collect(n = Inf)
+    exon_txid <- exon %>% dplyr::select(.data$tx_id) %>% collect(n = Inf)
     exon_txid <- exon_txid[["tx_id"]]
-    cds_txid <- cds %>% dplyr::select_(~ tx_id) %>% collect(n = Inf)
+    cds_txid <- cds %>% dplyr::select(.data$tx_id) %>% collect(n = Inf)
     cds_txid <- cds_txid[["tx_id"]]
     exclude <- setdiff(exon_txid, cds_txid)
 
@@ -353,11 +349,10 @@
         c("tx_id", "exon_rank", "exon_id", "exon_name", "exon_chrom",
           "exon_strand", "exon_start", "exon_end", "cds_id", "cds_start",
           "cds_end", .filter_names(filter)))
-    splicings <- do.call(select_, c(list(table), as.list(fields))) %>%
-        collect(n=Inf)
+    splicings <- table %>% dplyr::select(fields) %>% collect(n=Inf)
 
     if(length(exclude) != 0)
-        splicings <- splicings %>% filter_(~ !tx_id %in% exclude)
+        splicings <- splicings %>% filter(!.data$tx_id %in% exclude)
     splicings
 }
 
@@ -374,22 +369,22 @@
     splicings <- S4Vectors:::extract_data_frame_rows(splicings, idx)
 
     table <- splicings %>%
-        mutate_(start = ~
-                   ifelse(!is.na(cds_id) & exon_strand == strand1,
-                          cds_end + 1L,
-                          exon_start),
-               end = ~
-                   ifelse(!is.na(cds_id) & exon_strand == strand2,
-                          cds_start - 1L,
-                          exon_end)) %>%
-        filter_(~ start <= end) %>% collect(n=Inf) %>% tibble::as_tibble()
+        mutate(start =
+                   ifelse(!is.na(.data$cds_id) & .data$exon_strand == strand1,
+                          .data$cds_end + 1L,
+                          .data$exon_start),
+               end =
+                   ifelse(!is.na(.data$cds_id) & .data$exon_strand == strand2,
+                          .data$cds_start - 1L,
+                          .data$exon_end)) %>%
+        filter(.data$start <= .data$end) %>% collect(n=Inf) %>% tibble::as_tibble()
 
-    table <- rename_(table, chrom = ~ exon_chrom)
-    table <- rename_(table, strand = ~ exon_strand)
+    table <- rename(table, chrom = .data$exon_chrom)
+    table <- rename(table, strand = .data$exon_strand)
 
     fields <- unique(
         c("chrom", "start", "end", "strand", "tx_id", "exon_id", "exon_name",
           "exon_rank", .filter_names(filter)))
-    do.call(select_, c(list(table), as.list(fields))) %>%
-        arrange_(~ tx_id, ~ exon_rank) %>% distinct()
+    table %>% dplyr::select(fields) %>%
+        arrange(.data$tx_id, .data$exon_rank) %>% distinct()
 }

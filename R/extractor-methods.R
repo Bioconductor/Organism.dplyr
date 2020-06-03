@@ -225,11 +225,11 @@ intronsByTranscript_tbl <-
         ans <- unlist(intronsByTranscript(x, filter))
         mcols(ans)[, "tx_id"] <- names(ans)
         unname(unlist(ans)) %>% as.data.frame %>% tibble::as_tibble %>%
-            dplyr::select_(.dots = c('tx_id',
-                              intron_chrom = 'seqnames',
-                              intron_start = 'start',
-                              intron_end = 'end',
-                              intron_strand = 'strand'))
+            dplyr::select(c('tx_id',
+                            intron_chrom = 'seqnames',
+                            intron_start = 'start',
+                            intron_end = 'end',
+                            intron_strand = 'strand'))
 }
 
 #' @rdname Genomic-Extractors
@@ -248,7 +248,7 @@ setMethod("intronsByTranscript", "src_organism",
         fields <- unique(
             c("tx_id", "tx_chrom", "tx_start", "tx_end", "tx_strand",
               .filter_names(filter)))
-        tx_gr <- do.call(select_, c(list(table), as.list(fields))) %>%
+        tx_gr <- table %>% dplyr::select(fields) %>%
             filter_at(vars(c(1,2,3,4)), all_vars(!is.na(.))) %>% as("GRanges")
 
         tx_gr <- .updateSeqinfo(x, tx_gr)
@@ -258,7 +258,7 @@ setMethod("intronsByTranscript", "src_organism",
         fields <- unique(
             c("exon_chrom", "exon_start", "exon_end", "exon_strand", "tx_id",
              "exon_id", .filter_names(filter)))
-        exn_grl <- do.call(select_, c(list(table), as.list(fields))) %>%
+        exn_grl <- table %>% dplyr::select(fields) %>%
             filter_at(vars(c(1,2,3,4)), all_vars(!is.na(.))) %>% as("GRanges")
         exn_grl <- split(exn_grl, exn_grl$tx_id)
 
