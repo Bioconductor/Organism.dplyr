@@ -467,9 +467,14 @@ setOldClass("src_organism")
 setMethod("orgPackageName", "src_organism",
     function(x)
 {
-    org <- tbl(x, "metadata_txdb") %>% filter(name == "Organism") %>%
-        pull(value)
-    supportedOrganisms() %>% filter(organism == org) %>% pull(OrgDb) %>% unique()
+    org <-
+        tbl(x, "metadata_txdb") %>%
+        filter(.data$name == "Organism") %>%
+        pull("value")
+    supportedOrganisms() %>%
+        filter(.data$organism == org) %>%
+        pull("OrgDb") %>%
+        unique()
 })
 
 #' @examples

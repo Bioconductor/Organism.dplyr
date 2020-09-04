@@ -145,8 +145,9 @@ setMethod("keys", "src_organism",
     fields <- colnames(table) 
     keyfields <- fields[fields %in% c(x$schema, "tx_id", "exon_rank")]
     fields <- unique(c(keyfields, cnames[cnames %in% fields]))
-    
-    table <- table %>% filter(filter) 
+
+    expr <- parse_expr(filter)
+    table <- table %>% filter(expr)
     table %>% dplyr::select(fields)
 }
 

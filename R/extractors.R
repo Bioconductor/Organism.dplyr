@@ -8,8 +8,8 @@
 #'      value convertFilter logicOp
 #' @importFrom AnnotationDbi columns
 #' @importFrom DBI dbListTables dbRemoveTable dbWriteTable
-#' @importFrom dplyr %>% as_tibble
-#' @importFrom rlang .data
+#' @importFrom dplyr "%>%" as_tibble arrange_at
+#' @importFrom rlang .data parse_expr
 .tbl_join <- function(x, filter, main_table, table_names) {
     if (is.null(filter))
         return(main_table)
@@ -49,7 +49,10 @@
                         vapply(table_names, function(j) f_field %in% j, logical(1))
                     selected_table <- names(selected)[selected]
                     main_table <- .iterTable(x, main_table)
-                    val <- tbl(x$db, selected_table[1]) %>% filter(dplyr_filter)
+                    expr <- parse_expr(dplyr_filter)
+                    val <-
+                        tbl(x$db, selected_table[1]) %>%
+                        filter(expr)
                     .getAllTableValues(x, val, table_names, selected)
                 }
             }
@@ -180,7 +183,10 @@
     if (is.null(arrange_value))
         arrange_value <- x$schema
     arrange_value <- unlist(arrange_value[lengths(arrange_value) != 0L])
-    table %>% dplyr::select(fields) %>% arrange(!!arrange_value) %>% distinct()
+    table %>%
+        dplyr::select(fields) %>%
+        arrange_at(vars(arrange_value)) %>%
+        distinct()
 }
 
 .xscriptsBy_tbl <- function(x, main_ranges, by, filter = NULL) {
@@ -220,7 +226,9 @@
     table <- joinFun(table, tbl(x, other_main))
     fields <- unique(
         unlist(c(gr_names, .SPECIAL_FIELDS[by], .filter_names(filter))))
-    table %>% dplyr::select(fields) %>% arrange(!!.SPECIAL_FIELDS[by][[1]]) %>%
+    table %>%
+        dplyr::select(fields) %>%
+        arrange_at(vars(.SPECIAL_FIELDS[by][[1]])) %>%
         distinct()
 }
 
@@ -234,7 +242,9 @@
 #' @importFrom IRanges subsetByOverlaps
 .toGRanges <- function(x, table, filter) {
     ## Filter out any rows that contain NA in chrom, start, end, or strand
-    table <- table %>% filter_at(vars(c(1, 2, 3, 4)), all_vars(!is.na(.)))
+    table <-
+        table %>%
+        filter_at(vars(1:4), all_vars(!is.na(.)))
 
     gr <- table %>% collect(n=Inf) %>% as("GRanges")
     .updateSeqinfo(x, gr)
@@ -309,22 +319,32 @@
         downstream = 2200
 
     filter <- .filter_list(filter)
-    table <- .xscripts_tbl(x, "ranges_tx", filter = filter) %>%
-        mutate(start = ifelse(.data$tx_strand == "-",
-                              .data$tx_end - downstream + 1,
-                              .data$tx_start - upstream),
-               end = ~ ifelse(.data$tx_strand == "-",
-                            .data$tx_end + upstream,
-                            .data$tx_start + downstream - 1)) %>% collect(n=Inf)
+    table <-
+        .xscripts_tbl(x, "ranges_tx", filter = filter) %>%
+        mutate(
+            start = ifelse(
+                .data$tx_strand == "-",
+                .data$tx_end - downstream + 1,
+                .data$tx_start - upstream),
+            end = ifelse(
+                .data$tx_strand == "-",
+                .data$tx_end + upstream,
+                .data$tx_start + downstream - 1)
+        ) %>%
+        collect(n=Inf)
 
-    table <- rename(table, chrom = .data$tx_chrom)
-    table <- rename(table, strand = ~ .data$tx_strand)
+    table <-
+        table %>%
+        rename(chrom = .data$tx_chrom, strand = .data$tx_strand)
 
     fields <- unique(
         c("chrom", "start", "end", "strand", "tx_id", "tx_name",
           .filter_names(filter)))
     table <- .cleanOutput(x, table)
-    table %>% dplyr::select(fields) %>% arrange(!!.data$tx_id) %>% distinct()
+    table %>%
+        dplyr::select(fields) %>%
+        arrange(.data$tx_id) %>%
+        distinct()
 }
 
 ########################################################
@@ -336,9 +356,9 @@
     exon <- .xscripts(x, "ranges_exon", filter=filter)
     cds <- .xscripts(x, "ranges_cds", filter=filter)
 
-    exon_txid <- exon %>% dplyr::select(.data$tx_id) %>% collect(n = Inf)
+    exon_txid <- exon %>% dplyr::select("tx_id") %>% collect(n = Inf)
     exon_txid <- exon_txid[["tx_id"]]
-    cds_txid <- cds %>% dplyr::select(.data$tx_id) %>% collect(n = Inf)
+    cds_txid <- cds %>% dplyr::select("tx_id") %>% collect(n = Inf)
     cds_txid <- cds_txid[["tx_id"]]
     exclude <- setdiff(exon_txid, cds_txid)
 

@@ -248,8 +248,11 @@ setMethod("intronsByTranscript", "src_organism",
         fields <- unique(
             c("tx_id", "tx_chrom", "tx_start", "tx_end", "tx_strand",
               .filter_names(filter)))
-        tx_gr <- table %>% dplyr::select(fields) %>%
-            filter_at(vars(c(1,2,3,4)), all_vars(!is.na(.))) %>% as("GRanges")
+        tx_gr <-
+            table %>%
+            dplyr::select(fields) %>%
+            filter_at(vars(1:4), all_vars(!is.na(.))) %>%
+            as("GRanges")
 
         tx_gr <- .updateSeqinfo(x, tx_gr)
 
@@ -258,8 +261,11 @@ setMethod("intronsByTranscript", "src_organism",
         fields <- unique(
             c("exon_chrom", "exon_start", "exon_end", "exon_strand", "tx_id",
              "exon_id", .filter_names(filter)))
-        exn_grl <- table %>% dplyr::select(fields) %>%
-            filter_at(vars(c(1,2,3,4)), all_vars(!is.na(.))) %>% as("GRanges")
+        exn_grl <-
+            table %>%
+            dplyr::select(fields) %>%
+            filter_at(vars(1:4), all_vars(!is.na(.))) %>%
+            as("GRanges")
         exn_grl <- split(exn_grl, exn_grl$tx_id)
 
         tx_gr<- tx_gr[match(names(exn_grl), mcols(tx_gr)[, "tx_id"])]

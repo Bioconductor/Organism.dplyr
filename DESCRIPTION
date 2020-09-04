@@ -1,6 +1,6 @@
 Package: Organism.dplyr
 Title: dplyr-based Access to Bioconductor Annotation Resources
-Version: 1.17.1
+Version: 1.17.2
 Authors@R: c( person("Martin", "Morgan", email =
         "martin.morgan@roswellpark.org", role = c("aut", "cre")),
         person("Yubo", "Cheng", email="yubo.cheng@roswellpark.org",
@@ -20,7 +20,7 @@ Suggests: org.Hs.eg.db, TxDb.Hsapiens.UCSC.hg38.knownGene,
 License: Artistic-2.0
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
 Collate: src.R filter.R table-handlers.R extractors.R extractor-methods.R select.R utils.R join.R zzz.R
 VignetteBuilder: knitr
 biocViews: Annotation, Sequencing, GenomeAnnotation
