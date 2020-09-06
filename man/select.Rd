@@ -133,9 +133,8 @@ mapIds(src, keys, column = "tx_name", keytype)
     \code{\link{src_organism}} for creating a \code{src_organism}
     object.
     
-    \code{\link[Organism.dplyr]{transcripts_tbl}} for generic
-    functions to extract genomic features from a
-    \code{src_organism} object.
+    \code{\link{transcripts_tbl}} for generic functions to extract
+    genomic features from a \code{src_organism} object.
 }
 \author{
 Yubo Cheng.
