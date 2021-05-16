@@ -29,6 +29,7 @@
 
     ## check metadata of org, txdb match tables in dbpath
     con <- dbConnect(SQLite(), dbpath)
+    on.exit(dbDisconnect(con))
     src <- src_dbi(con)
     txdb_md <- tbl(src, "metadata_txdb") %>% collect()
 

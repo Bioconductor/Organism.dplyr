@@ -185,8 +185,9 @@
     arrange_value <- unlist(arrange_value[lengths(arrange_value) != 0L])
     table %>%
         dplyr::select(fields) %>%
-        arrange_at(vars(arrange_value)) %>%
-        distinct()
+        distinct() %>%
+        collect(n = Inf) %>%
+        arrange_at(vars(arrange_value))
 }
 
 .xscriptsBy_tbl <- function(x, main_ranges, by, filter = NULL) {
@@ -242,11 +243,11 @@
 #' @importFrom IRanges subsetByOverlaps
 .toGRanges <- function(x, table, filter) {
     ## Filter out any rows that contain NA in chrom, start, end, or strand
-    table <-
+    gr <-
         table %>%
-        filter_at(vars(1:4), all_vars(!is.na(.)))
-
-    gr <- table %>% collect(n=Inf) %>% as("GRanges")
+        collect(n=Inf) %>%
+        filter_at(vars(1:4), all_vars(!is.na(.))) %>%
+        as("GRanges")
     .updateSeqinfo(x, gr)
 }
 
@@ -343,8 +344,8 @@
     table <- .cleanOutput(x, table)
     table %>%
         dplyr::select(fields) %>%
-        arrange(.data$tx_id) %>%
-        distinct()
+        distinct() %>%
+        arrange(.data$tx_id)
 }
 
 ########################################################
