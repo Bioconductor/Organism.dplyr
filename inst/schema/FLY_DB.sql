@@ -9,7 +9,7 @@ JOIN accessions ON genes._id = accessions._id
 LEFT OUTER JOIN refseq ON genes._id = refseq._id
     AND refseq.accession = accessions.accession
 LEFT OUTER JOIN ensembl ON genes._id = ensembl._id;
-    
+
 CREATE INDEX IF NOT EXISTS entrez_accession ON id_accession (entrez);
 
 CREATE INDEX IF NOT EXISTS ensembl_accession ON id_accession (ensembl);
@@ -18,11 +18,9 @@ CREATE TABLE IF NOT EXISTS id_transcript AS
 SELECT DISTINCT
     genes.gene_id AS entrez,
     ensembl.ensembl_id AS ensembl,
-    unigene.unigene_id AS unigene,
     ensembl_trans.trans_id AS ensembltrans
 FROM genes
 LEFT OUTER JOIN ensembl ON genes._id = ensembl._id
-LEFT OUTER JOIN unigene ON genes._id = unigene._id
 LEFT OUTER JOIN ensembl_trans ON genes._id = ensembl_trans._id;
 
 CREATE INDEX IF NOT EXISTS entrez_transcript ON id_transcript (entrez);
@@ -56,7 +54,7 @@ SELECT DISTINCT
     flybase.flybase_id AS flybase,
     flybase_cg.flybase_cg_id AS flybase_cg,
     flybase_prot.prot_id AS flybase_prot
-FROM genes 
+FROM genes
 LEFT OUTER JOIN ensembl ON genes._id = ensembl._id
 LEFT OUTER JOIN flybase ON genes._id = flybase._id
 LEFT OUTER JOIN flybase_cg ON genes._id = flybase_cg._id
@@ -95,7 +93,7 @@ LEFT OUTER JOIN ensembl ON genes._id = ensembl._id
 LEFT OUTER JOIN ec ON genes._id = ec._id
 LEFT OUTER JOIN uniprot ON genes._id = uniprot._id
 LEFT OUTER JOIN ensembl_prot ON genes._id = ensembl_prot._id;
-    
+
 CREATE INDEX IF NOT EXISTS entrez_protein ON id_protein (entrez);
 
 CREATE INDEX IF NOT EXISTS ensembl_protein ON id_protein (ensembl);

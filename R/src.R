@@ -249,7 +249,7 @@ src_organism <- function(txdb=NULL, dbpath=NULL, overwrite=FALSE) {
         if (!file.exists(fname))
             stop(sQuote(tblname), " schema not unsupported")
 
-        schemas <- readLines(fname)
+        schemas <- trimws(readLines(fname))
         grps <- cumsum(!nzchar(schemas)) + 1
         for (schema in split(schemas, grps)) {
             sql <- paste(schema, collapse="\n")

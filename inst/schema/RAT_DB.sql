@@ -18,11 +18,9 @@ CREATE TABLE IF NOT EXISTS id_transcript AS
 SELECT DISTINCT
     genes.gene_id AS entrez,
     ensembl.ensembl_id AS ensembl,
-    unigene.unigene_id AS unigene,
     ensembl_trans.trans_id AS ensembltrans
 FROM genes
 LEFT OUTER JOIN ensembl ON genes._id = ensembl._id
-LEFT OUTER JOIN unigene ON genes._id = unigene._id
 LEFT OUTER JOIN ensembl_trans ON genes._id = ensembl_trans._id;
 
 CREATE INDEX IF NOT EXISTS entrez_transcript ON id_transcript (entrez);

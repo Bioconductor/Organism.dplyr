@@ -7,7 +7,7 @@ FROM genes
 JOIN accessions ON genes._id = accessions._id
 LEFT OUTER JOIN refseq ON genes._id = refseq._id
     AND refseq.accession = accessions.accession;
-    
+
 CREATE INDEX IF NOT EXISTS entrez_accession ON id_accession (entrez);
 
 CREATE TABLE IF NOT EXISTS id_transcript AS
@@ -56,7 +56,7 @@ FROM genes
 LEFT OUTER JOIN ec ON genes._id = ec._id
 LEFT OUTER JOIN uniprot ON genes._id = uniprot._id
 LEFT OUTER JOIN ensembl_prot ON genes._id = ensembl_prot._id;
-    
+
 CREATE INDEX IF NOT EXISTS entrez_protein ON id_protein (entrez);
 
 CREATE TABLE IF NOT EXISTS id_go AS
