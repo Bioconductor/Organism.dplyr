@@ -37,7 +37,6 @@
 \alias{TxChromFilter}
 \alias{TxStrandFilter}
 \alias{TxTypeFilter}
-\alias{UnigeneFilter}
 \alias{WormbaseFilter}
 \alias{ZfinFilter}
 \alias{CharacterFilter-class}
@@ -82,7 +81,6 @@ RefseqFilter(value, condition = "==")
 TxChromFilter(value, condition = "==")
 TxStrandFilter(value, condition = "==")
 TxTypeFilter(value, condition = "==")
-UnigeneFilter(value, condition = "==")
 WormbaseFilter(value, condition = "==")
 ZfinFilter(value, condition = "==")
 

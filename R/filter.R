@@ -24,7 +24,7 @@
 #'     FlybaseProtFilter GeneChromFilter GeneStrandFilter
 #'     GoFilter GoallFilter IpiFilter MapFilter MgiFilter OmimFilter
 #'     OntologyFilter OntologyallFilter PfamFilter PmidFilter PrositeFilter
-#'     RefseqFilter TxChromFilter TxStrandFilter TxTypeFilter UnigeneFilter
+#'     RefseqFilter TxChromFilter TxStrandFilter TxTypeFilter
 #'     WormbaseFilter ZfinFilter
 #'     CharacterFilter-class IntegerFilter-class show,CharacterFilter-method
 #'     show,IntegerFilter-method
@@ -63,7 +63,6 @@
 #' TxChromFilter(value, condition = "==")
 #' TxStrandFilter(value, condition = "==")
 #' TxTypeFilter(value, condition = "==")
-#' UnigeneFilter(value, condition = "==")
 #' WormbaseFilter(value, condition = "==")
 #' ZfinFilter(value, condition = "==")
 #'
@@ -119,7 +118,7 @@
 #' @export GoallFilter IpiFilter MapFilter MgiFilter OmimFilter OntologyFilter
 #' @export OntologyallFilter PfamFilter PmidFilter PrositeFilter RefseqFilter
 #' @export TxChromFilter TxStrandFilter
-#' @export TxTypeFilter UnigeneFilter WormbaseFilter ZfinFilter
+#' @export TxTypeFilter WormbaseFilter ZfinFilter
 #' @rdname filter
 #' @importFrom methods new setClass slot setMethod setValidity
 #' @importFrom AnnotationFilter AnnotationFilter GRangesFilter field value
@@ -192,7 +191,7 @@ setValidity("BasicFilter", function(object) {
         "gene_chrom", "gene_strand", "genename", "go", "goall", "ipi",
         "map", "mgi", "omim", "ontology", "ontologyall", "pfam", "pmid",
         "prosite", "refseq", "symbol", "tx_chrom", "tx_name", "tx_strand",
-        "tx_type", "unigene", "uniprot", "wormbase", "zfin"),
+        "tx_type", "uniprot", "wormbase", "zfin"),
     IntegerFilter = c(
         "cds_id", "cds_start", "cds_end", "exon_id", "exon_start",
         "exon_end", "exon_rank", "gene_start", "gene_end", "tx_id",
