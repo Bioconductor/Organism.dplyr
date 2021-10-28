@@ -239,14 +239,14 @@
 ##  -- returns GRanges or GRangesList to extractors    #
 ########################################################
 
-#' @importFrom dplyr filter_at vars all_vars
+#' @importFrom dplyr across vars
 #' @importFrom IRanges subsetByOverlaps
 .toGRanges <- function(x, table, filter) {
     ## Filter out any rows that contain NA in chrom, start, end, or strand
     gr <-
         table %>%
         collect(n=Inf) %>%
-        filter_at(vars(1:4), all_vars(!is.na(.))) %>%
+        filter(across(1:4, ~ !is.na(.x))) %>%
         as("GRanges")
     .updateSeqinfo(x, gr)
 }
