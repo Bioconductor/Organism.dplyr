@@ -8,3 +8,10 @@ then trim using the files in this directory
 
     sqlite3 /tmp/light.hg38.knownGene.sqlite < make-mini-entrez.sql
 
+
+and similarly
+
+    library(TxDb.Mmusculus.UCSC.mm10.ensGene)
+    src_organism(TxDb.Mmusculus.UCSC.mm10.ensGene, "inst/extdata/light.mm10.ensGene.sqlite")
+
+    sqlite3 ../extdata/light.mm10.ensGene.sqlite < make-mini-ensembl.sql
