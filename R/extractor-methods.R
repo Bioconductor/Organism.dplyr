@@ -251,7 +251,7 @@ setMethod("intronsByTranscript", "src_organism",
         tx_gr <-
             table %>%
             dplyr::select(fields) %>%
-            filter(across(1:4, ~ !is.na(.x))) %>%
+            filter(if_all(1:4, ~ !is.na(.x))) %>%
             as("GRanges")
 
         tx_gr <- .updateSeqinfo(x, tx_gr)
@@ -264,7 +264,7 @@ setMethod("intronsByTranscript", "src_organism",
         exn_grl <-
             table %>%
             dplyr::select(fields) %>%
-            filter(across(1:4, ~ !is.na(.x))) %>%
+            filter(if_all(1:4, ~ !is.na(.x))) %>%
             as("GRanges")
         exn_grl <- split(exn_grl, exn_grl$tx_id)
 
