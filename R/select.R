@@ -176,9 +176,9 @@ setMethod("keys", "src_organism",
             table <- left_join(table, tbl(x, i))
         }
         if ("entrez.x" %in% colnames(table))
-            table <- rename(table, entrez = .data$entrez.x)
+            table <- rename(table, entrez = "entrez.x")
         else if ("ensembl.x" %in% colnames(table))
-            table <- rename(table, ensembl = .data$ensembl.x)
+            table <- rename(table, ensembl = "ensembl.x")
         fields <- setdiff(fields, keep)
     }
     table %>% dplyr::select(cnames)

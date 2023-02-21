@@ -336,7 +336,7 @@
 
     table <-
         table %>%
-        rename(chrom = .data$tx_chrom, strand = .data$tx_strand)
+        rename(chrom = "tx_chrom", strand = "tx_strand")
 
     fields <- unique(
         c("chrom", "start", "end", "strand", "tx_id", "tx_name",
@@ -400,8 +400,8 @@
                           .data$exon_end)) %>%
         filter(.data$start <= .data$end) %>% collect(n=Inf) %>% tibble::as_tibble()
 
-    table <- rename(table, chrom = .data$exon_chrom)
-    table <- rename(table, strand = .data$exon_strand)
+    table <- rename(table, chrom = "exon_chrom")
+    table <- rename(table, strand = "exon_strand")
 
     fields <- unique(
         c("chrom", "start", "end", "strand", "tx_id", "exon_id", "exon_name",
