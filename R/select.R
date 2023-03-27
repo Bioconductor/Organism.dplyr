@@ -97,7 +97,10 @@ setMethod("columns", "src_organism", .getFields)
     testForValidKeytype(x, keytype)
     
     table <- tbl(x, .findTable(x, keytype))
-    res <- table %>% dplyr::select(keytype) %>% filter(!is.na(keytype)) %>% 
+    res <- table |>
+        dplyr::select(dplyr::all_of(keytype)) |>
+        filter(!is.na(keytype)) |>
+        
         collect(n=Inf)
     
     if (length(res) == 0L)
@@ -181,7 +184,8 @@ setMethod("keys", "src_organism",
             table <- rename(table, ensembl = "ensembl.x")
         fields <- setdiff(fields, keep)
     }
-    table %>% dplyr::select(cnames)
+    table |>
+        dplyr::select(dplyr::all_of(cnames))
 }
 
 #' @rdname select
