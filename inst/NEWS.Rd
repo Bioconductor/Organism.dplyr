@@ -1,6 +1,15 @@
 \name{Organism.dplyr-NEWS}
 \title{Organism.dplyr News}
 
+\section{CHANGES IN VERSION 1.30.0}{
+  \subsection{BUG FIXES}{
+    \itemize{
+      \item \code{src_ucsc()} failed to correctly handle new 'hs1'
+      resources (T2T genomes) for 'human'
+    }
+  }
+}
+
 \section{CHANGES IN VERSION 1.14.0}{
   \subsection{NEW FEATURES}{
     \itemize{
