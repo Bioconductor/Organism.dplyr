@@ -34,6 +34,56 @@ test_that("src_organism_constructor", {
     .deleteTempTables(src)
 })
 
+test_that(".src_ucsc_builds() and friends work", {
+    expect_error(.src_ucsc_builds(""))
+    expect_error(.src_ucsc_builds("humanz"))
+
+    human <- .src_ucsc_builds("human")
+    expect_true(NROW(human) > 1L)
+    expect_identical(.src_ucsc_organism(human), "homo sapiens")
+    expect_identical(.src_ucsc_binomial(human), "Hsapiens")
+    expect_identical(.src_ucsc_org(human), "org.Hs.eg.db")
+    expect_identical(.src_ucsc_ids(human), c("hg38", "hg19", "hs1"))
+
+    mouse <- .src_ucsc_builds("mouse")
+    expect_true(NROW(mouse) > 1L)
+    expect_identical(.src_ucsc_organism(mouse), "mus musculus")
+    expect_identical(.src_ucsc_binomial(mouse), "Mmusculus")
+    expect_identical(.src_ucsc_org(mouse), "org.Mm.eg.db")
+    expect_identical(.src_ucsc_ids(mouse), c("mm39", "mm10", "mm9"))
+})
+
+test_that(".src_ucsc_txdb_packages() works", {
+    ## assumes that Suggests: packages are installed
+    organism <- "human"
+    builds <- .src_ucsc_builds(organism)
+    binomial <- .src_ucsc_binomial(builds)
+    pkgs <- .src_ucsc_txdb_packages(organism, binomial)
+    expect_true("TxDb.Hsapiens.UCSC.hg38.knownGene" %in% pkgs)
+
+    organism <- "mouse"
+    builds <- .src_ucsc_builds(organism)
+    binomial <- .src_ucsc_binomial(builds)
+    pkgs <- .src_ucsc_txdb_packages(organism, binomial)
+    expect_true("TxDb.Mmusculus.UCSC.mm10.ensGene" %in% pkgs)
+})
+
+test_that(".src_ucsc_missing_id_and_genome() works", {
+    organism <- "human"
+    builds <- .src_ucsc_builds(organism)
+    binomial <- .src_ucsc_binomial(builds)
+    pkgs <- .src_ucsc_txdb_packages(organism, binomial)
+    txdb <- .src_ucsc_missing_id_and_genome(organism, builds, pkgs)
+    expect_true(startsWith(txdb, "TxDb.Hsapiens.UCSC"))
+
+    organism <- "mouse"
+    builds <- .src_ucsc_builds(organism)
+    binomial <- .src_ucsc_binomial(builds)
+    pkgs <- .src_ucsc_txdb_packages(organism, binomial)
+    txdb <- .src_ucsc_missing_id_and_genome(organism, builds, pkgs)
+    expect_true(startsWith(txdb, "TxDb.Mmusculus.UCSC"))
+})
+
 test_that("src_ucsc_constructor", {
     expect_error(src_ucsc())
     expect_error(src_ucsc("FOO"))

@@ -99,7 +99,7 @@
 #'
 #' @rdname src
 #'
-#' @importFrom  dplyr %>% arrange as.tbl collect compute desc distinct filter 
+#' @importFrom  dplyr %>% arrange as.tbl collect compute desc distinct filter
 #'     full_join inner_join is.tbl left_join mutate order_by rename right_join
 #'     select_ src src_tbls summarise summarize tbl union union_all
 #' @importFrom dbplyr build_sql src_sql src_dbi tbl_sql
@@ -260,6 +260,87 @@ src_organism <- function(txdb=NULL, dbpath=NULL, overwrite=FALSE) {
     }
 }
 
+.src_ucsc_builds <- function(organism) {
+    filename <- system.file(
+        package = "GenomeInfoDb", "extdata", "dataFiles",
+        "genomeMappingTbl.csv"
+    )
+    builds <- read.csv(filename, header = TRUE, stringsAsFactors = FALSE)
+    idx <- rowSums(builds[,1:2] == tolower(organism)) > 0
+    if (!any(idx))
+        stop(
+            "\n",
+            "  could not match organism '", organism, "';\n",
+            "  see 'commonName' field of 'GenomeInfoDb::listOrganisms()'"
+        )
+    builds[idx,]
+}
+
+.src_ucsc_organism <- function(builds) {
+    unique(builds$organism)
+}
+
+.src_ucsc_binomial <- function(builds) {
+    organism <- .src_ucsc_organism(builds)
+     sub("([A-z]).* ([[:alpha:]]+)", "\\U\\1\\L\\2", organism, perl=TRUE)
+}
+
+.src_ucsc_org <- function(builds) {
+    organism <- .src_ucsc_organism(builds)
+    twoletter <- sub("([A-z]).* ([a-z]).*", "\\U\\1\\L\\2", organism, perl=TRUE)
+    sprintf("org.%s.eg.db", twoletter)
+}
+
+.src_ucsc_ids <- function(builds) {
+    ids <- unique(builds$ucscID)
+    id_n <- as.integer(sub("^[^[:digit:]]*", "", ids))
+    ids[order(id_n, decreasing = TRUE)]
+}
+
+.src_ucsc_txdb_packages <- function(organism, binomial) {
+    pkgs <- grep("TxDb", row.names(installed.packages()), value=TRUE)
+    pkgs <- grep(binomial, pkgs, value=TRUE)
+    if (length(pkgs) == 0)
+        stop(
+            "\n",
+            "  could not find installed TxDb package for '", organism, "'\n",
+            "    binomial = ", binomial, "\n",
+            "see 'BiocManager::available(\"TxDb\")'"
+        )
+    pkgs
+}
+
+.src_ucsc_missing_id_and_genome <- function(organism, builds, pkgs) {
+    binomial <- .src_ucsc_binomial(builds)
+    ids <- .src_ucsc_ids(builds) # all possible genomes
+    resources <- c("knownGene", "ensGene", "refGene") # specified in docs
+
+    found <- FALSE
+    for (id in ids) {
+        for (resource in resources) {
+            txdb <- sprintf("TxDb.%s.UCSC.%s.%s", binomial, id, resource)
+            if (txdb %in% pkgs) {
+                found <- TRUE
+                break
+            }
+        }
+        if (found)
+            break
+    }
+
+    if (!found)
+        stop(
+            "\n",
+            "  could not find installed TxDb package for '", organism, "'\n",
+            "    binomial = ", binomial, "\n",
+            "    genomes = " , paste(ids, collapse = ", "), "\n",
+            "    resources = ", paste(resources, collapse = ", "), "\n",
+            "  see 'BiocManager::available(\"TxDb\")'"
+        )
+
+    txdb
+}
+
 #' @param organism organism or common name
 #'
 #' @param genome genome name
@@ -279,71 +360,40 @@ src_organism <- function(txdb=NULL, dbpath=NULL, overwrite=FALSE) {
 #' @export
 src_ucsc <- function(organism, genome = NULL, id = NULL,
                      dbpath=NULL, verbose=TRUE) {
-    stopifnot(is.character(organism), length(organism) == 1L)
+    stopifnot(is.character(organism), length(organism) == 1L, !is.na(organism))
     if (!missing(genome))
         stopifnot(is.character(genome), length(genome) == 1L)
     if (!missing(id))
         stopifnot(is.character(id), length(id) == 1L)
 
-    # OrgDb
-    filename <- system.file(
-        package = "GenomeInfoDb", "extdata", "dataFiles",
-        "genomeMappingTbl.csv")
-    builds <- read.csv(filename, header = TRUE, stringsAsFactors = FALSE)
-    idx <- rowSums(builds[,1:2] == tolower(organism)) > 0
-    if (!any(idx))
-        stop("could not match organism ", organism, ";",
-             "\n  see 'GenomeInfoDb::listSpecies()'")
-    builds <- builds[idx,]
+    ## OrgDb
+    builds <- .src_ucsc_builds(organism)
+    binomial <- .src_ucsc_binomial(builds)
+    org <- .src_ucsc_org(builds)
 
-    species <- tail(builds$organism, 1L)
-    twoletter <-
-        sub("([A-z]).* ([a-z]).*", "\\U\\1\\L\\2", species, perl=TRUE)
-    binomial <- sub("([A-z]).* ([[:alpha:]]+)", "\\U\\1\\L\\2", species,
-                    perl=TRUE)
-    org <- sprintf("org.%s.eg.db", twoletter)
+    ## TxDb
+    pkgs <- .src_ucsc_txdb_packages(organism, binomial)
 
-    # TxDb
-    pkgs <- grep("TxDb", row.names(installed.packages()), value=TRUE)
-    pkgs <- grep(binomial, pkgs, value=TRUE)
-    if (length(pkgs) == 0)
-        stop(
-            "no TxDb package installed matching '", binomial,
-            "' for organism '", organism, "'",
-            "\n  see 'BiocManager::available(\"TxDb\")'"
-        )
-
-    found <- FALSE
-    if (missing(id) & missing(genome)) {
-        ids <- c("knownGene", "ensGene", "refGene")
-        genome <- tail(builds$ucscID, 1L)
-        for (id in ids) {
-            txdb <- sprintf("TxDb.%s.UCSC.%s.%s", binomial, genome, id)
-            if (txdb %in% pkgs) {
-                found <- TRUE
-                break
-            }
-        }
+    if (missing(id) && missing(genome)) {
+        txdb <- .src_ucsc_missing_id_and_genome(organism, builds, pkgs)
     } else if (missing(id)) {
         txdb <- .findPkg(pkgs, genome)
     } else if (missing(genome)) {
         txdb <- .findPkg(pkgs, id)
     } else {
         txdb <- sprintf("TxDb.%s.UCSC.%s.%s", binomial, genome, id)
-        if (txdb %in% pkgs)
-            found <- TRUE
+        if (!txdb %in% pkgs)
+            txdb <- NULL
     }
 
-    if (!is.null(txdb))
-        found <- TRUE
 
-    if (!found)
+    if (is.null(txdb))
         stop("could not guess TxDb package for:",
              "\n  organism = ", organism,
              if (!missing(genome))
                  "\n  genome = ", genome,
              if (!missing(id))
-                 "\n  genome = ", id)
+                 "\n  id = ", id)
 
     if (verbose)
         message("using ", org, ", ", txdb)
@@ -409,7 +459,7 @@ src_tbls.src_organism <- function(x, ...) {
 }
 
 #' @param src An src_organism object
-#' 
+#'
 #' @param .load_tbl_only a logic(1) that indicates whether only to load
 #'  the table instead of also loading the pacakge in the temporary database.
 #'  Default value is FALSE.
