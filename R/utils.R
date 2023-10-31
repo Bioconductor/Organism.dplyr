@@ -25,3 +25,11 @@ mm10light <- function() {
         package="Organism.dplyr", "extdata", "light.mm10.ensGene.sqlite"
     )
 }
+
+is_scalar <- function(x) {
+    identical(length(x), 1L) && !is.na(x)
+}
+
+is_scalar_character <- function(x) {
+    is_scalar(x) && is.character(x)
+}

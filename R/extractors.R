@@ -125,14 +125,14 @@
     all_select_values <- unique(.fields(filter))
     tbls <- setdiff(src_tbls(x), main_ranges)
     names(tbls) <- tbls
-    colnames <- lapply(tbls, function(tbl) colnames(tbl(x, tbl, .load_tbl_only=TRUE)))
+    colnames <- lapply(tbls, dbListFields, conn = x$con)
     mapped <- Map(
         function(nms, value) nms[nms %in% value],
         colnames,
         MoreArgs=list(c(x$schema, all_select_values))
     )
     mapped <- mapped[lengths(mapped) > 1]
-    main_map <- list(colnames(tbl(x, main_ranges, .load_tbl_only=TRUE)))
+    main_map <- list(dbListFields(x$con, main_ranges))
     names(main_map) <- main_ranges
     c(main_map, mapped)
 }
@@ -166,7 +166,7 @@
     table_names <- .tableNames(x, filter, main_ranges)
     add_tables <- setdiff(names(table_names), dbListTables(x$db))
     for (i in add_tables) {
-        table <- tbl(x, i, .load_tbl_only=TRUE) %>% collect(n=Inf)
+        table <- tbl(x$con, i) |> collect(n=Inf)
         dbWriteTable(x$db, i, table)
     }
     table <- tbl(x$db, main_ranges)
