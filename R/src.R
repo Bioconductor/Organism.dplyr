@@ -429,7 +429,8 @@ supportedOrganisms <- function() {
 
 #' @param .data A tbl.
 #'
-#' @description DEPRECATED: Please use equivalent select() method.
+#' @description `select_.tbl_organism()` is DEPRECATED, please use
+#'     `select()`.
 #'
 #' @param ... Comma separated list of unquoted expressions. You can treat
 #' variable names like they are positions. Use positive values to select
@@ -460,12 +461,17 @@ src_tbls.src_organism <- function(x, ...) {
 
 #' @param src An src_organism object
 #'
-#' @param .load_tbl_only a logic(1) that indicates whether only to load
-#'  the table instead of also loading the pacakge in the temporary database.
-#'  Default value is FALSE.
+#' @param from character(1) name of temporary table in `src`.
 #'
-#' @return A tibble of the requested table coming from the temporary database
-#'  of the src_organism object.
+#' @details
+#'
+#' The `tbl.src_organism()` parameter `.load_tbl_only` has been
+#' removed. The function behaves as `.load_tbl_only = FALSE` (the
+#' previous default); for `.load_tbl_only = TRUE`, use `tbl(src$con,
+#' ...)`.
+#'
+#' @return A tibble of the requested table coming from the temporary
+#'     database of the src_organism object.
 #'
 #' @examples
 #' ## Look at data in table "id"
@@ -477,23 +483,24 @@ src_tbls.src_organism <- function(x, ...) {
 #' @rdname src
 #' @importFrom DBI dbListTables dbWriteTable
 #' @export
-tbl.src_organism <- function(src, ..., .load_tbl_only = FALSE) {
-    args <- list(...)
-    if (length(args) == 0)
-        stop("tbl name required.")
-    table <- args[[1]]
-    tbl <- NextMethod(src, ...)
-    if (!.load_tbl_only && src$dbpath == "") {
-        if (!(table %in% dbListTables(src$db))) {
-            tbl <- tbl %>% collect(n=Inf)
-            dbWriteTable(src$db, table, tbl)
+tbl.src_organism <- function(src, from, ...) {
+    stopifnot(
+        is_scalar_character(from),
+        !".load_tbl_only" %in% names(list(...))
+    )
+
+    tbl <- NextMethod("tbl")
+    if (!nzchar(src$dbpath)) {
+        if (!(from %in% dbListTables(src$db))) {
+            tbl <- collect(tbl, n=Inf)
+            dbWriteTable(src$db, from, tbl)
         }
-        tbl <- tbl(src$db, table)
+        tbl <- tbl(src$db, from)
     }
+
     class(tbl) <- c("tbl_organism", class(tbl))
     tbl
 }
-
 
 setOldClass("src_organism")
 

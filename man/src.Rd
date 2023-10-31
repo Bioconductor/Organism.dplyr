@@ -21,7 +21,7 @@ supportedOrganisms()
 
 \method{src_tbls}{src_organism}(x, ...)
 
-\method{tbl}{src_organism}(src, ..., .load_tbl_only = FALSE)
+\method{tbl}{src_organism}(src, from, ...)
 
 \S4method{orgPackageName}{src_organism}(x)
 
@@ -61,22 +61,21 @@ variables; use negative values to drop variables.}
 
 \item{src}{An src_organism object}
 
-\item{.load_tbl_only}{a logic(1) that indicates whether only to load
-the table instead of also loading the pacakge in the temporary database.
-Default value is FALSE.}
+\item{from}{character(1) name of temporary table in `src`.}
 }
 \value{
 \code{src_organism()} and \code{src_ucsc()} returns a dplyr
     \code{src_dbi} instance representing the data tables.
 
-A tibble of the requested table coming from the temporary database
- of the src_organism object.
+A tibble of the requested table coming from the temporary
+    database of the src_organism object.
 }
 \description{
 The database provides a convenient way to map between gene, transcript,
 and protein identifiers.
 
-DEPRECATED: Please use equivalent select() method.
+`select_.tbl_organism()` is DEPRECATED, please use
+    `select()`.
 }
 \details{
 \code{src_organism()} and \code{src_ucsc()} are meant to be a building block
@@ -89,6 +88,11 @@ given organism name, genome and/or id.
 
 supportedOrganisms() provides all supported organisms in this package with
 corresponding OrgDb and TxDb.
+
+The `tbl.src_organism()` parameter `.load_tbl_only` has been
+removed. The function behaves as `.load_tbl_only = FALSE` (the
+previous default); for `.load_tbl_only = TRUE`, use `tbl(src$con,
+...)`.
 }
 \examples{
 ## create human sqlite database with TxDb.Hsapiens.UCSC.hg38.knownGene and

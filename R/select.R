@@ -1,7 +1,8 @@
+#' @importFrom RSQLite dbListFields
 .getFields <-
     function(x)
 {
-    fields <- lapply(src_tbls(x), function(table) colnames(tbl(x, table, .load_tbl_only=TRUE)))
+    fields <- lapply(src_tbls(x), dbListFields, conn = x$con)
     unique(unlist(fields, use.names=FALSE))
 }
 
@@ -209,7 +210,10 @@ select_tbl <- function (x, keys, columns, keytype) {
 }
 
 .select <- function (x, keys, columns, keytype) {
-    res <- select_tbl(x, keys, columns, keytype) %>% collect(Inf) %>% as.data.frame
+    res <-
+        select_tbl(x, keys, columns, keytype) |>
+        collect(n = Inf) |>
+        as.data.frame()
     res[order(res[,keytype]),]
 }
  
