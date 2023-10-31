@@ -4,6 +4,10 @@
 \section{CHANGES IN VERSION 1.30.0}{
   \subsection{BUG FIXES}{
     \itemize{
+      \item (v. 1.30.1) avoid non-generic arguments in tbl.src_organism,
+      closing
+      \url{https://github.com/Bioconductor/Organism.dplyr/issues/19}
+
       \item \code{src_ucsc()} failed to correctly handle new 'hs1'
       resources (T2T genomes) for 'human'
     }
