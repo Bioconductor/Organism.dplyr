@@ -78,13 +78,14 @@ and protein identifiers.
     `select()`.
 }
 \details{
-\code{src_organism()} and \code{src_ucsc()} are meant to be a building block
-for \code{\link{src_organism}}, which provides an integrated
+\code{src_organism()} and \code{src_ucsc()} are meant to be building blocks
+for \code{\link{src_organism}} objects, which provide an integrated
 presentation of identifiers and genomic coordinates.
 
 \code{src_organism()} creates a dplyr database integrating org.* and TxDb.*
 information by given TxDb. And \code{src_ucsc()} creates the database by
-given organism name, genome and/or id.
+given organism name, genome and/or id. Note that \code{src_ucsc()} requires
+the \pkg{GenomeInfoDb} package to be installed.
 
 supportedOrganisms() provides all supported organisms in this package with
 corresponding OrgDb and TxDb.

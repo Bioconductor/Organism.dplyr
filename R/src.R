@@ -58,13 +58,14 @@
 #' The database provides a convenient way to map between gene, transcript,
 #' and protein identifiers.
 #'
-#' \code{src_organism()} and \code{src_ucsc()} are meant to be a building block
-#' for \code{\link{src_organism}}, which provides an integrated
+#' \code{src_organism()} and \code{src_ucsc()} are meant to be building blocks
+#' for \code{\link{src_organism}} objects, which provide an integrated
 #' presentation of identifiers and genomic coordinates.
 #'
 #' \code{src_organism()} creates a dplyr database integrating org.* and TxDb.*
 #' information by given TxDb. And \code{src_ucsc()} creates the database by
-#' given organism name, genome and/or id.
+#' given organism name, genome and/or id. Note that \code{src_ucsc()} requires
+#' the \pkg{GenomeInfoDb} package to be installed.
 #'
 #' supportedOrganisms() provides all supported organisms in this package with
 #' corresponding OrgDb and TxDb.
@@ -110,7 +111,7 @@
 #' @importFrom tibble as_tibble
 #' @importFrom tools file_ext
 #' @importFrom AnnotationDbi dbfile
-#' @importFrom GenomeInfoDb as.data.frame
+#' @importFrom Seqinfo as.data.frame
 #'
 #' @examples
 #' ## create human sqlite database with TxDb.Hsapiens.UCSC.hg38.knownGene and
@@ -271,7 +272,7 @@ src_organism <- function(txdb=NULL, dbpath=NULL, overwrite=FALSE) {
         stop(
             "\n",
             "  could not match organism '", organism, "';\n",
-            "  see 'commonName' field of 'GenomeInfoDb::listOrganisms()'"
+            "  see 'commonName' field of 'Seqinfo::listOrganisms()'"
         )
     builds[idx,]
 }
@@ -355,8 +356,8 @@ src_organism <- function(txdb=NULL, dbpath=NULL, overwrite=FALSE) {
 #' \dontrun{human <- src_ucsc("human")}
 #'
 #' @rdname src
-#' @importFrom GenomeInfoDb genomeBuilds
 #' @importFrom utils read.csv tail installed.packages
+#' @importFrom S4Vectors wmsg
 #' @export
 src_ucsc <- function(organism, genome = NULL, id = NULL,
                      dbpath=NULL, verbose=TRUE) {
@@ -365,6 +366,12 @@ src_ucsc <- function(organism, genome = NULL, id = NULL,
         stopifnot(is.character(genome), length(genome) == 1L)
     if (!missing(id))
         stopifnot(is.character(id), length(id) == 1L)
+
+    if (!requireNamespace("GenomeInfoDb", quietly=TRUE))
+        stop("Could not load package GenomeInfoDb. Is it installed?\n\n  ",
+             wmsg("Note that the src_ucsc() function requires ",
+                  "the GenomeInfoDb package. Please install it with:"),
+             "\n\n    BiocManager::install(\"GenomeInfoDb\")")
 
     ## OrgDb
     builds <- .src_ucsc_builds(organism)
@@ -539,7 +546,7 @@ setMethod("orgPackageName", "src_organism",
 #' ## seqinfo of src_organism object
 #' seqinfo(src)
 #'
-#' @importFrom GenomeInfoDb Seqinfo seqinfo
+#' @importFrom Seqinfo Seqinfo seqinfo
 #' @rdname src
 #' @exportMethod seqinfo
 setMethod("seqinfo", "src_organism",

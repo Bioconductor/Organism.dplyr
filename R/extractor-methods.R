@@ -114,7 +114,7 @@
 #' @export threeUTRsByTranscript_tbl transcripts transcripts_tbl transcriptsBy
 #' @export transcriptsBy_tbl 
 #'
-#' @importFrom GenomeInfoDb seqinfo<- seqlevels seqlevels<-
+#' @importFrom Seqinfo seqinfo<- seqlevels seqlevels<-
 #' @importFrom GenomicFeatures transcripts exons cds genes intronsByTranscript
 #'      fiveUTRsByTranscript transcriptsBy exonsBy cdsBy promoters
 #'      threeUTRsByTranscript
